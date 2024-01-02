@@ -43,6 +43,7 @@ export default function RootLayout({
   return (
     <StoreProvider>
       <html lang="en" className={`${lucy.variable} ${rethink.variable}`}>
+        
         <body className={inter.className}>{children}</body>
       </html></StoreProvider >
   )

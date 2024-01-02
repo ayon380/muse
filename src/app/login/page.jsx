@@ -19,20 +19,6 @@ const Home = () => {
   const router = useRouter();
   const auth = getAuth();
   const db = getFirestore(app);
-  const provider = new GoogleAuthProvider();
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      const userData = {
-        displayName: user.displayName,
-        email: user.email,
-        photoURL: user.photoURL,
-        uid: user.uid,
-        // Add other user data as needed
-      };
-      dispatch(setUser(userData));
-      router.push("/feed");
-    }
-  });
   const checkIfUserExists = async (email) => {
     try {
       const userRef = doc(db, "users", email);
@@ -43,26 +29,43 @@ const Home = () => {
       return false;
     }
   };
-  
+  const provider = new GoogleAuthProvider();
+  onAuthStateChanged(auth, async (user) => {
+    if (user) {
+      const q = await checkIfUserExists(user.email);
+      console.log(q);
+      if (user && q) {
+        const userData = {
+          displayName: user.displayName,
+          email: user.email,
+          photoURL: user.photoURL,
+          uid: user.uid,
+          // Add other user data as needed
+        };
+        dispatch(setUser(userData));
+        router.push("/feed");
+      }
+    }
+  });
+
   const handleLogin = async () => {
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
       // Check if the user's email is already registered
-   console.log(user.email);
+      console.log(user.email);
       const userExists = await checkIfUserExists(user.email);
-console.log(userExists);
+      console.log(userExists);
       if (!userExists) {
         // Redirect to the signup screen
         router.push("/signup");
         return;
       }
       // User is already registered, proceed with login
-      auth.setPersistence(auth, 'session');
+      auth.setPersistence(auth, "session");
       dispatch(setUser(user));
       toast.success("Logged In");
-
       // Redirect to the feed screen after a delay
       setTimeout(() => {
         router.push("/feed");
@@ -83,7 +86,7 @@ console.log(userExists);
           <Link href="/">Muse</Link>
         </div>
         <div className="btn mt-10  flex justify-center ">
-          <button className="fd font-rethink mb-10" onClick={handleLogin}>
+          <button className="fd font-rethink mb-10 px-10" onClick={handleLogin}>
             Log In With Google
           </button>
         </div>

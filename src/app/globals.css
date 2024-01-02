@@ -10,7 +10,9 @@ html {
     -moz-animation: AnimationName 46s ease infinite;
     animation: AnimationName 46s ease infinite;
 }
-
+.react-icons {
+    vertical-align: middle;
+  }
 @-webkit-keyframes AnimationName {
     0%{background-position:0% 42%}
     50%{background-position:100% 59%}
@@ -27,24 +29,23 @@ html {
     100%{background-position:0% 42%}
 }
 .fd {
-    display: inline-block;
-    outline: 0;
+    /* display: inline-block; */
+    /* outline: 0; */
     cursor: pointer;
     border: none;
-    padding: 0 56px;
-    height: 45px;
+    height: auto;
     line-height: 45px;
     border-radius: 7px;
-    background-color: #0070f3;
+    background-color: #006ae2;
     color: white;
-    font-weight: 400;
-    font-size: 16px;
+    /* font-weight: 400; */
+    /* font-size: 16px; */
     box-shadow: 0 4px 14px 0 rgb(0 118 255 / 39%);
     transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
   }
   
   .fd:hover {
-    background: rgba(0, 118, 255, 0.9);
+    background: rgba(16, 128, 255, 0.9);
     box-shadow: 0 6px 20px rgb(0 118 255 / 23%);
   }
   
