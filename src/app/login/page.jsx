@@ -1,5 +1,5 @@
 "use client";
-
+import "../styles/gradients.css";
 import Link from "next/link";
 import {
   getAuth,
@@ -7,18 +7,18 @@ import {
   GoogleAuthProvider,
   onAuthStateChanged,
 } from "firebase/auth";
+import { browserLocalPersistence, setPersistence } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { getFirestore } from "firebase/firestore";
 import app from "@/lib/firebase/firebaseConfig";
 import toast, { Toaster } from "react-hot-toast";
-import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
-import { setUser } from "../../store/features/UserSlice.ts";
+// import { setUser } from "../../store/features/UserSlice.ts";
 const Home = () => {
-  const dispatch = useDispatch();
   const router = useRouter();
   const auth = getAuth();
   const db = getFirestore(app);
+  const user = auth.currentUser;
   const checkIfUserExists = async (email) => {
     try {
       const userRef = doc(db, "users", email);
@@ -30,19 +30,11 @@ const Home = () => {
     }
   };
   const provider = new GoogleAuthProvider();
-  onAuthStateChanged(auth, async (user) => {
+  onAuthStateChanged(auth, async () => {
     if (user) {
       const q = await checkIfUserExists(user.email);
       console.log(q);
       if (user && q) {
-        const userData = {
-          displayName: user.displayName,
-          email: user.email,
-          photoURL: user.photoURL,
-          uid: user.uid,
-          // Add other user data as needed
-        };
-        dispatch(setUser(userData));
         router.push("/feed");
       }
     }
@@ -63,8 +55,7 @@ const Home = () => {
         return;
       }
       // User is already registered, proceed with login
-      auth.setPersistence(auth, "session");
-      dispatch(setUser(user));
+      setPersistence(auth, browserLocalPersistence);
       toast.success("Logged In");
       // Redirect to the feed screen after a delay
       setTimeout(() => {

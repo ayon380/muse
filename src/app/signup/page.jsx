@@ -1,5 +1,6 @@
 // pages/signup.js
 "use client";
+import '../styles/gradients.css'
 import React, { useEffect } from "react";
 import Link from "next/link";
 import "react-date-picker/dist/DatePicker.css";
@@ -143,6 +144,7 @@ const Signup = () => {
   const [name, setName] = React.useState("");
   const [state, setState] = React.useState("Andaman & Nicobar");
   const [city, setCity] = React.useState("");
+  const [signupprocess, setsignuppocess] = React.useState(false);
   const auth = getAuth();
   const db = getFirestore(app);
   const storage = getStorage(app);
@@ -319,6 +321,7 @@ const Signup = () => {
 
   const handleSignup = async () => {
     try {
+      setsignuppocess(true);
       if (user)
         dispatch(
           setUser({
@@ -340,38 +343,40 @@ const Signup = () => {
       // Save additional user data to Firestore
       const userRef = doc(db, "users", user.email);
       const usernameref = doc(db, "username", userName);
-      const userData = {
-        email: user.email,
-        displayName: user.displayName,
-        photoURL: user.photoURL,
-        uid: user.uid,
-        userName: userName,
-        fullname: name,
-        state: state,
-        city: city,
-        gender: gender,
-        dob: dob,
-        bio: bio,
-        pubpriv: pubpriv,
-        // Add other user data as needed
-      };
+     
       const usernameData = {
         email: user.email,
       };
-      console.log(userData);
       try {
-        const storage = getStorage(app);
         await setDoc(usernameref, usernameData);
-        await setDoc(userRef, userData);
-        const storagePFPRef = ref(storage, `images/${userName}/${file.name}`);
+        
+        const storagePFPRef = ref(storage, `images/${userName}/PFP/${file.name}`);
         const snapshot = await uploadBytes(storagePFPRef, file);
         console.log("Image uploaded successfully:", snapshot.ref.fullPath);
         const downloadURL = await getDownloadURL(snapshot.ref);
         console.log("File available at", downloadURL);
+        const userData = {
+          email: user.email,
+          displayName: user.displayName,
+          photoURL: user.photoURL,
+          uid: user.uid,
+          userName: userName,
+          fullname: name,
+          state: state,
+          city: city,
+          gender: gender,
+          dob: dob,
+          bio: bio,
+          pubpriv: pubpriv,
+          pfp: downloadURL,
+          // Add other user data as needed
+        };
+        await setDoc(userRef, userData);
       } catch (err) {
         toast.error(`Error Signing Upc: ${err.message}`);
         return;
       }
+      setsignuppocess(false);
       // Redirect to the home page after successful signup
       router.push("/feed");
     } catch (error) {
@@ -503,7 +508,7 @@ const Signup = () => {
                     Other
                   </button>
                 </div>
-                <div className="flex justify-center">
+                <div className="flex text-black justify-center">
                   <DatePicker
                     value={dob}
                     onChange={(dob) => {
@@ -620,13 +625,13 @@ const Signup = () => {
             <div className="flex justify-center">
               {signupstate > 1 && signupstate < 5 ? (
                 <div className="po flex justify-center my-5 ">
-                  <button className=" fd btn px-10" onClick={prevstate()}>
+                  <button className=" fd btn mr-6 px-10" onClick={prevstate()}>
                     Prev
                   </button>
                 </div>
               ) : null}
               {signupstate != 4 ? (
-                <div className="po ml-5 flex justify-center my-5">
+                <div className="po  flex justify-center my-5">
                   <button className=" fd btn px-10" onClick={nextstate()}>
                     Next
                   </button>
@@ -636,7 +641,9 @@ const Signup = () => {
             {signupstate === 4 ? (
               <div className="po flex justify-center my-5">
                 <button className=" fd btn px-10" onClick={handleSignup}>
-                  Let&apos;s goooo🎉🎉
+                  {signupprocess
+                    ? "Creating Account..."
+                    : "Let&apos;s goooo🎉🎉"}
                 </button>
               </div>
             ) : null}
