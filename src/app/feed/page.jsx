@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import "../styles/feed.css";
-import Post from "../../components/post";
+import Post from "../../components/Post";
 import { FaRegHeart } from "react-icons/fa6";
 import { FaShare } from "react-icons/fa";
 import { MdOutlineReportGmailerrorred } from "react-icons/md";
