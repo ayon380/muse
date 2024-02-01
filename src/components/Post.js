@@ -15,13 +15,13 @@ const Post = ({ userdata }) => {
         navigator.share({
           title: "Muse",
           text: "Muse",
-          url: "https://muse-ten.vercel.app/",
+          url: "https://muse-mauve.vercel.app",
         });
       };
       const ReportPost = async () => {
         router.push(`/report/${post_id}`);
       };
-    console.log(userdata);
+    // console.log(userdata);
     return (
         <div className='font-rethink'>
             <div className="card ">

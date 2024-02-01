@@ -5,36 +5,17 @@ import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import "../styles/feed.css";
 import Post from "../../components/Post";
-import { FaRegHeart } from "react-icons/fa6";
-import { FaShare } from "react-icons/fa";
-import { MdOutlineReportGmailerrorred } from "react-icons/md";
 import { useHorizontalScroll } from "../../externalfn/horizontalscroll";
 import Image from "next/image";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
-// ... (your imports)
-const DropdownMenu = ({ onLogout, onSettings }) => {
-  return (
-    <div className="absolute right-0 mt-16 w-48 bg-white border rounded-md overflow-hidden shadow-md z-10">
-      <button
-        className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-        onClick={onLogout}
-      >
-        Logout
-      </button>
-      <button
-        className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-        onClick={onSettings}
-      >
-        Settings
-      </button>
-    </div>
-  );
-};
+import dynamic from "next/dynamic";
 
+const CreatePost = dynamic(() => import("../../components/CreatePost"));
 const Home = () => {
   const scrollRef = useHorizontalScroll();
   const auth = getAuth(app);
   const [user, setUser] = useState(auth.currentUser);
+  const [createpostmenu, setcreatepostmenu] = useState(false);
   const router = useRouter();
   const [userdata, setUserData] = useState(null);
   const [stories, setStories] = useState([]);
@@ -83,7 +64,9 @@ const Home = () => {
       setUser(user);
       if (user) {
         getuserdata(user);
-        console.log(user);
+        // console.log(user);
+      } else {
+        router.push("/login");
       }
     });
 
@@ -98,16 +81,6 @@ const Home = () => {
     } catch (error) {
       console.error("Sign-out error:", error.message);
     }
-  };
-  const SharePost = async () => {
-    navigator.share({
-      title: "Muse",
-      text: "Muse",
-      url: "https://muse-ten.vercel.app/",
-    });
-  };
-  const ReportPost = async () => {
-    router.push(`/report/${post_id}`);
   };
   useEffect(() => {
     const handleGlobalClick = (event) => {
@@ -129,28 +102,91 @@ const Home = () => {
       document.removeEventListener("click", handleGlobalClick);
     };
   }, [showDropdown]);
-
+  const handleCreatePost = () => {
+    setcreatepostmenu(!createpostmenu);
+  };
+  const DropdownMenu = ({ onLogout, onSettings }) => {
+    return (
+      <div className="absolute right-0 mt-16 w-48 bg-white border rounded-md overflow-hidden shadow-md z-10">
+        <button
+          className="block text-center w-full px-4 py-2  text-sm text-gray-700 hover:bg-gray-100"
+          onClick={() => {
+            router.push(`/${userdata.userName}`);
+          }}
+        >
+          My Profile
+        </button>
+        <button
+          className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+          onClick={onLogout}
+        >
+          Logout
+        </button>
+        <button
+          className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+          onClick={onSettings}
+        >
+          Settings
+        </button>
+      </div>
+    );
+  };
   return (
-    <div className="h-screen font-rethink text-black bg-white dark:bg-black dark:text-white">
+    <div className="h-screen font-rethink relative text-black bg-white dark:bg-black dark:text-white">
+      {createpostmenu ? (
+        <>
+          <div
+            className="fixed inset-0 bg-black opacity-50 z-10"
+            onClick={() => setcreatepostmenu(false)}
+          ></div>
+          <div className="absolute inset-0 flex items-center justify-center z-20">
+            <div className="bg-gray-900 createpostcanvas relative z-10">
+              <button
+                className="absolute -top-96 z-30 -right-64 text-white hover:text-gray-300 focus:outline-none"
+                onClick={() => setcreatepostmenu(false)}
+              >
+                Close
+              </button>
+              <CreatePost
+                onClose={() => setcreatepostmenu(false)}
+                userdata={userdata}
+              />
+            </div>
+          </div>
+        </>
+      ) : null}
       <div className="flex justify-between">
         <div className="kl font-lucy text-6xl">Muse</div>
-        <Image className="text-white" src={"/icon.png"} width={100} height={100} alt="" />
-        <div onClick={handleProfileClick} className="lk">
-          {userdata ? (
+        <div className="io flex">
+          <div
+            className="createpost h-16 w-16 cursor-pointer"
+            onClick={() => handleCreatePost()}
+          >
             <Image
-              className="rounded-full h-16 w-16 object-cover cursor-pointer"
-              src={userdata.pfp}
+              className="text-white"
+              src={"/icon.png"}
               width={100}
               height={100}
-              alt="Profile Picture"
+              alt=""
             />
-          ) : (
-            "Loading Image"
+          </div>
+          <div onClick={handleProfileClick} className="lk">
+            {userdata ? (
+              <Image
+                className="rounded-full h-16 w-16 object-cover cursor-pointer"
+                src={userdata.pfp}
+                width={100}
+                height={100}
+                alt="Profile Picture"
+              />
+            ) : (
+              "Loading Image"
+            )}
+          </div>
+          {showDropdown && (
+            <DropdownMenu onLogout={handleLogout} onSettings={handleSettings} />
           )}
         </div>
-        {showDropdown && (
-          <DropdownMenu onLogout={handleLogout} onSettings={handleSettings} />
-        )}
       </div>
       <div className="stories">
         {/* <div className="h1 italic font-lucy text-4xl">Stories</div> */}
