@@ -10,7 +10,7 @@ import Image from "next/image";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 import dynamic from "next/dynamic";
 
-const CreatePost = dynamic(() => import("../../components/CreatePost"));
+const CreatePost = dynamic(() => import("../../components/Createpost"));
 const Home = () => {
   const scrollRef = useHorizontalScroll();
   const auth = getAuth(app);
