@@ -5,18 +5,25 @@ import app from "@/lib/firebase/firebaseConfig";
 import { getFirestore } from "firebase/firestore";
 import { doc, getDoc } from "firebase/firestore";
 // import { get } from "http";
+import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import Link from "next/link";
+const FeedPost=dynamic(()=>import('@/components/FeedPost'),{ssr:false});
 const Page = ({ params }) => {
   const { slug } = params;
+  const router = useRouter();
+  const searchParams=useSearchParams();
+  const postno = searchParams.get('postno') || -1
+  console.log(postno);
   const [userdata, setUserData] = React.useState(null);
   const [showDropdown, setShowDropdown] = React.useState(false);
   const [currentuserdata, setCurrentUserData] = React.useState(null);
   const auth = getAuth(app);
   const user = auth.currentUser;
   const db = getFirestore(app);
-  const router = useRouter();
+ 
   console.log(user);
   const emaillookup = async () => {
     const userRef = doc(db, "username", slug);
@@ -54,7 +61,7 @@ const Page = ({ params }) => {
       if (user) getuserdata(user.email, 2);
     };
     fun();
-  }, [user]);
+  }, [user,postno]);
   const DropdownMenu = ({ onLogout, onSettings }) => {
     return (
       <div className="absolute right-0 mt-16 w-48 bg-white border rounded-md overflow-hidden shadow-md z-10">
@@ -99,8 +106,7 @@ const Page = ({ params }) => {
   const handleProfileClick = () => {
     setShowDropdown(!showDropdown);
   };
-  const openPost = (data) => {
-  }
+  const openPost = (data) => {};
   return (
     <div className="h-screen font-rethink relative text-black bg-white dark:bg-black dark:text-white">
       <div className="flex justify-between">
@@ -126,40 +132,47 @@ const Page = ({ params }) => {
           )}
         </div>
       </div>
-      <div className="heading">
-        {userdata ? (
-          <div className="flex">
-            <Image
-              className="rounded-full h-16 w-16 object-cover cursor-pointer"
-              src={userdata.pfp}
-              width={100}
-              height={100}
-              alt="Profile Picture"
-            />
-            <div className="fff">
-              <div className="textt">{userdata.userName}</div>
-              <div className="ed">{userdata.bio}</div>
-            </div>
-          </div>
-        ) : null}
-      </div>
-      {userdata ? (
-        <>
-          {userdata.posts.map((post) => (
-            <div key={post} className="flex"> 
+      <div className="contetn">
+        <div className="heading">
+          {userdata ? (
+            <div className="flex">
               <Image
-                className="h-16 w-16 object-cover cursor-pointer"
-                src={post.mediaFiles[0]}
+                className="rounded-full h-16 w-16 object-cover cursor-pointer"
+                src={userdata.pfp}
                 width={100}
                 height={100}
                 alt="Profile Picture"
-                onClick={() => {openPost(userdata)}}
               />
-              {/* {post.caption} */}
+              <div className="fff">
+                <div className="textt">{userdata.userName}</div>
+                <div className="ed">{userdata.bio}</div>
+              </div>
             </div>
-          ))}
-        </>
-      ) : null}
+          ) : null}
+        </div>
+        {userdata ? (
+          <>
+            {userdata.posts.map((post,index) => (
+              <div key={index} className="flex">
+                <Link href={`/${userdata.userName}/?postno=${index}`} >
+                  <Image
+                    className="h-16 w-16 object-cover cursor-pointer"
+                    src={post.mediaFiles[0]}
+                    width={100}
+                    height={100}
+                    alt="Profile Picture"
+                    onClick={() => {
+                      openPost(userdata);
+                    }}
+                  />
+                </Link>
+              </div>
+            ))}
+          </>
+        ) : null}
+      </div>
+      dsfdlsfksdlfksl;df
+      {postno>=0 && userdata ?<FeedPost postno={postno} userdata={userdata} />:null}
     </div>
   );
 };
