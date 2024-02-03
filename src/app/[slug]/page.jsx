@@ -10,12 +10,12 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-const FeedPost=dynamic(()=>import('@/components/FeedPost'),{ssr:false});
+const FeedPost = dynamic(() => import("@/components/FeedPost"), { ssr: false });
 const Page = ({ params }) => {
   const { slug } = params;
   const router = useRouter();
-  const searchParams=useSearchParams();
-  const postno = searchParams.get('postno') || -1
+  const searchParams = useSearchParams();
+  const postno = searchParams.get("postno") || -1;
   console.log(postno);
   const [userdata, setUserData] = React.useState(null);
   const [showDropdown, setShowDropdown] = React.useState(false);
@@ -23,7 +23,7 @@ const Page = ({ params }) => {
   const auth = getAuth(app);
   const user = auth.currentUser;
   const db = getFirestore(app);
- 
+
   console.log(user);
   const emaillookup = async () => {
     const userRef = doc(db, "username", slug);
@@ -61,7 +61,7 @@ const Page = ({ params }) => {
       if (user) getuserdata(user.email, 2);
     };
     fun();
-  }, [user,postno]);
+  }, [user, postno]);
   const DropdownMenu = ({ onLogout, onSettings }) => {
     return (
       <div className="absolute right-0 mt-16 w-48 bg-white border rounded-md overflow-hidden shadow-md z-10">
@@ -152,9 +152,9 @@ const Page = ({ params }) => {
         </div>
         {userdata ? (
           <>
-            {userdata.posts.map((post,index) => (
+            {userdata.posts.map((post, index) => (
               <div key={index} className="flex">
-                <Link href={`/${userdata.userName}/?postno=${index}`} >
+                <Link href={`/${userdata.userName}/?postno=${index}`}>
                   <Image
                     className="h-16 w-16 object-cover cursor-pointer"
                     src={post.mediaFiles[0]}
@@ -172,7 +172,9 @@ const Page = ({ params }) => {
         ) : null}
       </div>
       dsfdlsfksdlfksl;df
-      {postno>=0 && userdata ?<FeedPost postno={postno} userdata={userdata} />:null}
+      {postno >= 0 && userdata ? (
+        <FeedPost postno={postno} userdata={userdata} />
+      ) : null}
     </div>
   );
 };

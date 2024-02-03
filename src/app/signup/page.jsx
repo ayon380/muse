@@ -337,6 +337,9 @@ const Signup = () => {
             dob: dob,
             bio: bio,
             pubpriv: pubpriv,
+            following: [],
+            followers: [],
+            
           })
         );
 
