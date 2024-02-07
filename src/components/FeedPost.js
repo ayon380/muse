@@ -1,21 +1,30 @@
-import React from 'react'
+import React from 'react';
 import { FaRegHeart } from "react-icons/fa6";
 import { FaShare } from "react-icons/fa";
 import { MdOutlineReportGmailerrorred } from "react-icons/md";
 import { FaComments } from "react-icons/fa";
 import { TiHeartFullOutline } from "react-icons/ti";
 import Image from "next/image";
-const post_id = '55rt'
 import AliceCarousel from 'react-alice-carousel';
 import "react-alice-carousel/lib/alice-carousel.css";
 import "react-image-gallery/styles/css/image-gallery.css";
 import { useRouter } from 'next/navigation';
-import ReactPlayer from 'react-player'
-const Post = ({ userdata, postno }) => {
-    const [liked, setLiked] = React.useState(false)
-    const router = useRouter()
-    console.log('feedpost component');
-    // const userdata=userdata;
+import ReactPlayer from 'react-player';
+import toast from 'react-hot-toast';
+import { updateDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { doc, increment } from 'firebase/firestore';
+import { getFirestore } from 'firebase/firestore';
+import app from '@/lib/firebase/firebaseConfig';
+
+const Post = ({ userdata, post, onClose, currentuserdata }) => {
+    const [liked, setLiked] = React.useState(false);
+    const [likeCount, setLikeCount] = React.useState(0);
+    const router = useRouter();
+    const [isModalOpen, setIsModalOpen] = React.useState(true);
+    const db = getFirestore(app); // Get Firestore instance
+    const [showcomments, setshowcomments] = React.useState(false);
+
+    // Function to share post
     const SharePost = async () => {
         navigator.share({
             title: "Muse",
@@ -23,10 +32,19 @@ const Post = ({ userdata, postno }) => {
             url: "https://muse-mauve.vercel.app",
         });
     };
+
+    // Function to report post
     const ReportPost = async () => {
         router.push(`/report/${post_id}`);
     };
-    // console.log(userdata);
+
+    // Function to handle modal close
+    const handleClose = () => {
+        setIsModalOpen(false);
+        onClose();
+    };
+
+    // Function to format Firebase timestamp
     function formatFirebaseTimestamp(firebaseTimestamp) {
         // Check if the timestamp is valid
         if (!firebaseTimestamp || !(firebaseTimestamp instanceof Date)) {
@@ -62,14 +80,52 @@ const Post = ({ userdata, postno }) => {
         }
     }
 
+    // Function to check if the post is liked by the current user
+    const checkIfLiked = () => {
+        if (post && currentuserdata) {
+            return post.likes.includes(currentuserdata.userName);
+        }
+    };
 
+    React.useEffect(() => {
+        if (userdata && currentuserdata) {
+            const isLiked = checkIfLiked();
+            setLiked(isLiked);
+            setLikeCount(post ? post.likecount : 0); // Set initial like count
+        }
+    }, [userdata, currentuserdata, post]);
 
-    const getimagearray = () => {
-        if (userdata && postno >= 0 && userdata.posts[postno]) {
+    // Function to handle like/unlike
+    const handleLike = async () => {
+        setLiked(prevLiked => !prevLiked); // Toggle liked state
+        try {
+            const f = !liked;
+            if (f) {
+                // If not already liked, add user to likes array and increment like count
+                await updateDoc(doc(db, 'posts', post.id), {
+                    likes: arrayUnion(currentuserdata.userName),
+                    likecount: increment(1)
+                });
+                setLikeCount(prevCount => prevCount + 1); // Update like count locally
+            } else {
+                // If already liked, remove user from likes array and decrement like count
+                await updateDoc(doc(db, 'posts', post.id), {
+                    likes: arrayRemove(currentuserdata.userName),
+                    likecount: increment(-1)
+                });
+                setLikeCount(prevCount => prevCount - 1); // Update like count locally
+            }
+        } catch (error) {
+            toast.error('Error !!' + error.message);
+        }
+    };
+
+    // Function to render media array
+    const getImageArray = () => {
+        if (userdata && post) {
             let mediaArray = [];
-
-            for (let i = 0; i < userdata.posts[postno].mediaFiles.length; i++) {
-                const mediaFile = userdata.posts[postno].mediaFiles[i];
+            for (let i = 0; i < post.mediaFiles.length; i++) {
+                const mediaFile = post.mediaFiles[i];
                 if (mediaFile.includes('jpeg') || mediaFile.includes('png') || mediaFile.includes('jpg') || mediaFile.includes('gif')) {
                     mediaArray.push(
                         <Image key={`image-${i}`} src={mediaFile} width={500} height={500} alt="Post Image" />
@@ -80,63 +136,64 @@ const Post = ({ userdata, postno }) => {
                     );
                 }
             }
-
             return mediaArray;
         }
     };
 
     return (
-        <div className='font-rethink'>
-            <div className="card ">
-                <div className="c1 flex justify-between ">
-                    <div className="c11 flex m-2 ">
-                        <div className="img1">
-                            {userdata ? (
-                                <Image
-                                    className="rounded-full h-12 w-12 mr-1 object-cover cursor-pointer"
-                                    src={userdata.pfp}
-                                    width={100}
-                                    height={100}
-                                    alt="Profile Picture"
-                                />
-                            ) : (
-                                "Loading Image"
-                            )}
+        <div className={`fixed inset-0 z-50 bg-opacity-70 overflow-y-auto flex justify-center transition-opacity duration-300 backdrop-blur-sm items-center ${isModalOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+            <div className="absolute inset-0 bg-black bg-opacity-50 transition-opacity" onClick={handleClose}></div>
+            <div className="bg-white dark:bg-gray-700 text-black dark:text-white bg-opacity-70 backdrop-blur-sm rounded-lg p-8 transition-transform duration-300 transform-gpu scale-100 lg:scale-75">
+                <div className='font-rethink w-96'>
+                    <div className="card">
+                        <div className="c1 flex justify-between">
+                            <div className="c11 flex m-2">
+                                <div className="img1 h-16 w-16  overflow-hidden">
+                                    {userdata ? (
+                                        <Image
+                                            className="rounded-full h-12 w-12 mr-1 object-cover cursor-pointer"
+                                            src={userdata.pfp}
+                                            width={100}
+                                            height={100}
+                                            alt="Profile Picture"
+                                        />
+                                    ) : (
+                                        "Loading Image"
+                                    )}
+                                </div>
+                                {userdata ? (
+                                    <>
+                                        <div className="name text-xl mt-2 mr-6 font-bold font-rethink">{userdata.userName}</div>
+                                        <div className="time mt-3">{post && formatFirebaseTimestamp(post.timestamp.toDate())}</div>
+                                    </>
+                                ) : null}
+                            </div>
+                            <div className="l12 mt-2 flex text-3xl">
+                                <div className="share cursor-pointer mr-3" onClick={() => SharePost()}>
+                                    <FaShare />
+                                </div>
+                                <div className="report cursor-pointer mr-3" onClick={() => ReportPost()}>
+                                    <MdOutlineReportGmailerrorred />
+                                </div>
+                            </div>
                         </div>
-                        {userdata ? <><div className="name  text-xl mt-2 mr-6 font-bold font-rethink">{userdata.userName}</div>
-                            <div className="time mt-3">{formatFirebaseTimestamp(userdata.posts[postno].timestamp.toDate())}</div></> : null}
-                    </div>
-                    <div className="l12 mt-2 flex text-3xl ">
-                        <div
-                            className="share cursor-pointer mr-3"
-                            onClick={() => SharePost()}
-                        >
-                            <FaShare />
+                        {post ? <AliceCarousel items={getImageArray()}></AliceCarousel> : null}
+                        {post ? <div className="caption text-xl font-bold m-1">{post.caption}</div> : null}
+                        <div className="like flex">
+                            <div className="btnl text-2xl" onClick={handleLike}>
+                                {!liked ? <FaRegHeart /> : <TiHeartFullOutline style={{ color: 'red' }} />}
+                                <div />
+                            </div>
+                            <div className="likes text-xl font-bold">{likeCount} likes</div>
                         </div>
-                        <div
-                            className="report cursor-pointer mr-3"
-                            onClick={() => ReportPost()}
-                        >
-                            <MdOutlineReportGmailerrorred />
+                        <div className="comments flex font-bold">
+                            <FaComments />
                         </div>
                     </div>
-                </div>
-                {userdata.posts[postno] ? <AliceCarousel items={getimagearray()}></AliceCarousel> : null}
-                {userdata.posts[postno] ? <div className="caption text-xl font-bold m-1">{userdata.posts[postno].caption}</div> : null}
-                <div className="like flex ">
-                    <div className="btnl text-2xl " onClick={() => (setLiked(!liked))}>
-                        {liked ? <FaRegHeart /> : <TiHeartFullOutline style={{ color: 'red' }} />}
-                        <div />
-                    </div>
-                    <div className="likes text-xl font-bold">1,000 likes</div>
-                </div>
-                <div className="comments flex font-bold">
-                    <FaComments />
-                    sick Asfff lets goo
                 </div>
             </div>
         </div>
-    )
-}
+    );
+};
 
-export default Post
+export default Post;

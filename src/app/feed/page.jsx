@@ -1,20 +1,30 @@
 "use client";
 import app from "@/lib/firebase/firebaseConfig";
 import React, { useEffect, useState } from "react";
-import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
+import {
+  deleteUser,
+  getAuth,
+  onAuthStateChanged,
+  signOut,
+} from "firebase/auth";
 import { useRouter } from "next/navigation";
 import "../styles/feed.css";
 import Post from "../../components/Post";
+import { deleteDoc } from "firebase/firestore";
+import { getStorage, deleteObject } from "firebase/storage";
 import { useHorizontalScroll } from "../../externalfn/horizontalscroll";
 import Image from "next/image";
+import { ref } from "firebase/storage";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 import dynamic from "next/dynamic";
+import toast, { Toaster } from "react-hot-toast";
 
 const CreatePost = dynamic(() => import("../../components/Createpost"));
 const Home = () => {
   const scrollRef = useHorizontalScroll();
   const auth = getAuth(app);
   const [user, setUser] = useState(auth.currentUser);
+  const storage = getStorage(app);
   const [createpostmenu, setcreatepostmenu] = useState(false);
   const router = useRouter();
   const [userdata, setUserData] = useState(null);
@@ -93,7 +103,7 @@ const Home = () => {
         setShowDropdown(false);
       }
     };
-
+   
     // Add the global click event listener
     document.addEventListener("click", handleGlobalClick);
 
@@ -102,9 +112,40 @@ const Home = () => {
       document.removeEventListener("click", handleGlobalClick);
     };
   }, [showDropdown]);
+  useEffect(() => {
+    if (!user) router.push("/login");
+  }, [user]);
   const handleCreatePost = () => {
     setcreatepostmenu(!createpostmenu);
   };
+
+  const deleteacc = async () => {
+    try {
+      console.log("delete");
+      // Delete user data from Firestore
+      const userdocref = doc(db, "users", user.email);
+      const emailuserref = doc(db, "username", userdata.userName);
+      await deleteDoc(userdocref);
+      await deleteDoc(emailuserref);
+
+      // Delete user images from Firebase Storage
+      const imagesref = ref(storage, "images/", userdata.userName);
+      console.log(imagesref);
+      await deleteObject(imagesref);
+
+      // Delete the user account
+      await deleteUser(auth.currentUser);
+      for (let i = 0; i < userdata.posts.length; i++) {
+        const postref = doc(db, "posts", userdata.posts[i]);
+        await deleteDoc(postref);
+      }
+      // Route the user to the home page
+      router.push("/");
+    } catch (error) {
+      toast.error("Delete account error:", error.message);
+    }
+  };
+
   const DropdownMenu = ({ onLogout, onSettings }) => {
     return (
       <div className="absolute right-0 mt-16 w-48 bg-white border rounded-md overflow-hidden shadow-md z-10">
@@ -124,6 +165,12 @@ const Home = () => {
         </button>
         <button
           className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+          onClick={deleteacc}
+        >
+          Delete Account
+        </button>
+        <button
+          className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
           onClick={onSettings}
         >
           Settings
@@ -133,6 +180,7 @@ const Home = () => {
   };
   return (
     <div className="h-screen font-rethink relative text-black bg-white dark:bg-black dark:text-white">
+      <Toaster />
       {createpostmenu ? (
         <>
           <div
@@ -141,12 +189,6 @@ const Home = () => {
           ></div>
           <div className="absolute inset-0 flex items-center justify-center z-20">
             <div className="bg-gray-900 createpostcanvas relative z-10">
-              <button
-                className="absolute -top-96 z-30 -right-64 text-white hover:text-gray-300 focus:outline-none"
-                onClick={() => setcreatepostmenu(false)}
-              >
-                Close
-              </button>
               <CreatePost
                 onClose={() => setcreatepostmenu(false)}
                 userdata={userdata}

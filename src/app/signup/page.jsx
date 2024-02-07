@@ -1,6 +1,7 @@
 // pages/signup.js
 "use client";
-import '../styles/gradients.css'
+import imageCompression from "browser-image-compression";
+import "../styles/gradients.css";
 import React, { useEffect } from "react";
 import Link from "next/link";
 import "react-date-picker/dist/DatePicker.css";
@@ -22,6 +23,11 @@ import { useRouter } from "next/navigation";
 import toast, { Toaster } from "react-hot-toast";
 import Image from "next/image";
 import DatePicker from "react-date-picker";
+const options = {
+  maxSizeMB: 1,
+  maxWidthOrHeight: 1000,
+  useWebWorker: true,
+};
 const Signup = () => {
   const dispatch = useDispatch();
   var state_arr = new Array(
@@ -305,6 +311,8 @@ const Signup = () => {
   const fileTypes = ["JPG", "PNG"];
   const [bio, setBio] = React.useState("");
   const [file, setFile] = React.useState(null);
+  const [profession, setProfession] = React.useState("");
+  const [org, setOrg] = React.useState("");
   const [pubpriv, setPubPriv] = React.useState("Private");
   const [fileDataURL, setFileDataURL] = React.useState(null);
   const handlePPChange = (file) => {
@@ -338,23 +346,31 @@ const Signup = () => {
             bio: bio,
             pubpriv: pubpriv,
             following: [],
+            postcount: 0,
+            followingcount: 0,
+            followerscount: 0,
             followers: [],
-            
+            profession: profession,
+            org: org,
           })
         );
 
       // Save additional user data to Firestore
       const userRef = doc(db, "users", user.email);
       const usernameref = doc(db, "username", userName);
-     
+
       const usernameData = {
         email: user.email,
       };
       try {
         await setDoc(usernameref, usernameData);
-        
-        const storagePFPRef = ref(storage, `images/${userName}/PFP/${file.name}`);
-        const snapshot = await uploadBytes(storagePFPRef, file);
+
+        const storagePFPRef = ref(
+          storage,
+          `images/${userName}/PFP/${file.name}`
+        );
+        const compressedFile = await imageCompression(file, options);
+        const snapshot = await uploadBytes(storagePFPRef, compressedFile);
         console.log("Image uploaded successfully:", snapshot.ref.fullPath);
         const downloadURL = await getDownloadURL(snapshot.ref);
         console.log("File available at", downloadURL);
@@ -371,7 +387,18 @@ const Signup = () => {
           dob: dob,
           bio: bio,
           pubpriv: pubpriv,
+          posts: [],
+          postcount: 0,
+          taggedPosts: [],
           pfp: downloadURL,
+          following: [],
+          postcount: 0,
+          followingcount: 0,
+          followerscount: 0,
+          followers: [],
+          profession: profession,
+          org: org,
+          closefriends: [],
           // Add other user data as needed
         };
         await setDoc(userRef, userData);
@@ -452,6 +479,22 @@ const Signup = () => {
                     placeholder="Full Name"
                   />
                 </div>
+                <div className="flex justify-center mt-4">
+                  <input
+                    className="input bg-transparent border-white border-2 dark:text-black  dark:border-black p-2 rounded-xl shadow-2xl focus:border-2 dark:focus:border-black focus:outline-none placeholder-current placeholder-white dark:placeholder-black"
+                    onChange={(e) => setProfession(e.target.value)}
+                    value={profession}
+                    placeholder="Profession Student/Employee"
+                  />
+                </div>
+                <div className="flex justify-center mt-4">
+                  <input
+                    className="input bg-transparent border-white border-2 dark:text-black  dark:border-black p-2 rounded-xl shadow-2xl focus:border-2 dark:focus:border-black focus:outline-none placeholder-current placeholder-white dark:placeholder-black"
+                    onChange={(e) => setOrg(e.target.value)}
+                    value={org}
+                    placeholder="Organization University/Employer Organization"
+                  />
+                </div>
                 <div className="flex justify-center">
                   <select
                     className="input w-64 bg-transparent border-white border-2 dark:text-black  dark:border-black p-2 rounded-xl my-5 shadow-2xl focus:border-2 dark:focus:border-black focus:outline-none placeholder-current placeholder-white dark:placeholder-black"
@@ -524,15 +567,19 @@ const Signup = () => {
               // Profile Picture , Bio, Interests
               <div>
                 {" "}
-                <div className="txt mx-20">
-                  <div className="kl my-5">
+                <div className="txt mx-20 ">
+                  <div className="kl my-5 text-center">
                     Upload your Profile Picture
-                    <div className="fg text-xs text-gray-700">
+                    <div className="fg text-xs opacity-70">
                       Smile, it is contagious! 😊
                     </div>
                   </div>
                   <FileUploader
-                    styles={{ color: "white" }}
+                    styles={{
+                      color: "white",
+                      display: "flex",
+                      justifyContent: "center",
+                    }}
                     handleChange={handlePPChange}
                     name="Profile Picture"
                     types={fileTypes}
@@ -549,13 +596,13 @@ const Signup = () => {
                       src={fileDataURL}
                     ></Image>
                   ) : (
-                    <div className="border pt-9 text-gray-700 text-xs w-24 text-center rounded-full">
+                    <div className="border pt-9 opacity-70 text-xs w-24 text-center rounded-full">
                       Profile Image
                     </div>
                   )}
                 </div>
                 <div className="qw mx-20">Bio</div>
-                <div className="kp text-xs text-gray-700 mx-20">
+                <div className="kp text-xs opacity-70 mx-20">
                   Spice up your profile – Introduce yourself in a groove,
                   sprinkle some interests, and jazz it up with a funky flair!
                   🚀✨ #BeYouBeFunky
@@ -644,9 +691,7 @@ const Signup = () => {
             {signupstate === 4 ? (
               <div className="po flex justify-center my-5">
                 <button className=" fd btn px-10" onClick={handleSignup}>
-                  {signupprocess
-                    ? "Creating Account..."
-                    : "Let&apos;s goooo🎉🎉"}
+                  {signupprocess ? "Creating Account..." : "Let's goooo🎉🎉"}
                 </button>
               </div>
             ) : null}
