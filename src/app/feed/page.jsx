@@ -8,6 +8,7 @@ import {
   signOut,
 } from "firebase/auth";
 import { useRouter } from "next/navigation";
+import "../styles/gradients.css";
 import "../styles/feed.css";
 import Post from "../../components/Post";
 import { deleteDoc } from "firebase/firestore";
@@ -52,12 +53,6 @@ const Home = () => {
     // You can navigate to a settings page or show a modal, etc.
   };
   const getuserdata = async (currentUser) => {
-    if (!currentUser) {
-      // User is not authenticated
-      router.push("/login");
-      return;
-    }
-
     const userRef = doc(db, "users", currentUser.email);
     const docSnap = await getDoc(userRef);
 
@@ -72,16 +67,16 @@ const Home = () => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
-      if (user) {
-        getuserdata(user);
-        // console.log(user);
-      } else {
+      if (!user) {
+        // Redirect to login screen if user is not logged in
         router.push("/login");
+      } else {
+        getuserdata(user);
       }
     });
 
     return () => unsubscribe();
-  }, [auth]);
+  }, [auth, router]);
 
   const handleLogout = async () => {
     try {
@@ -103,7 +98,7 @@ const Home = () => {
         setShowDropdown(false);
       }
     };
-   
+
     // Add the global click event listener
     document.addEventListener("click", handleGlobalClick);
 
@@ -112,9 +107,9 @@ const Home = () => {
       document.removeEventListener("click", handleGlobalClick);
     };
   }, [showDropdown]);
-  useEffect(() => {
-    if (!user) router.push("/login");
-  }, [user]);
+  // useEffect(() => {
+  //   if (!user) router.push("/login");
+  // }, [user]);
   const handleCreatePost = () => {
     setcreatepostmenu(!createpostmenu);
   };
@@ -146,251 +141,309 @@ const Home = () => {
     }
   };
 
-  const DropdownMenu = ({ onLogout, onSettings }) => {
-    return (
-      <div className="absolute right-0 mt-16 w-48 bg-white border rounded-md overflow-hidden shadow-md z-10">
-        <button
-          className="block text-center w-full px-4 py-2  text-sm text-gray-700 hover:bg-gray-100"
-          onClick={() => {
-            router.push(`/${userdata.userName}`);
-          }}
-        >
-          My Profile
-        </button>
-        <button
-          className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-          onClick={onLogout}
-        >
-          Logout
-        </button>
-        <button
-          className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-          onClick={deleteacc}
-        >
-          Delete Account
-        </button>
-        <button
-          className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
-          onClick={onSettings}
-        >
-          Settings
-        </button>
-      </div>
-    );
-  };
+  // const DropdownMenu = ({ onLogout, onSettings }) => {
+  //   return (
+  //     <div className="absolute right-0 mt-16 w-48 bg-white border rounded-md overflow-hidden shadow-md z-10">
+  //       <button
+  //         className="block text-center w-full px-4 py-2  text-sm text-gray-700 hover:bg-gray-100"
+  //         onClick={() => {
+  //           router.push(`/${userdata.userName}`);
+  //         }}
+  //       >
+  //         My Profile
+  //       </button>
+  //       <button
+  //         className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+  //         onClick={onLogout}
+  //       >
+  //         Logout
+  //       </button>
+  //       <button
+  //         className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+  //         onClick={deleteacc}
+  //       >
+  //         Delete Account
+  //       </button>
+  //       <button
+  //         className="block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+  //         onClick={onSettings}
+  //       >
+  //         Settings
+  //       </button>
+  //     </div>
+  //   );
+  // };
+  // {createpostmenu ? (
+  //   <>
+  //     <div
+  //       className="fixed inset-0 bg-black opacity-50 z-10"
+  //       onClick={() => setcreatepostmenu(false)}
+  //     ></div>
+  //     <div className="absolute inset-0 flex items-center justify-center z-20">
+  //       <div className="bg-gray-900 createpostcanvas relative z-10">
+  //         <CreatePost
+  //           onClose={() => setcreatepostmenu(false)}
+  //           userdata={userdata}
+  //         />
+  //       </div>
+  //     </div>
+  //   </>
+  // ) : null}
+  // <div className="flex justify-between">
+  //   <div className="kl font-lucy text-6xl">Muse</div>
+  //   <div className="io flex">
+  //     <div
+  //       className="createpost h-16 w-16 cursor-pointer"
+  //       onClick={() => handleCreatePost()}
+  //     >
+  //       <Image
+  //         className="text-white"
+  //         src={"/icon.png"}
+  //         width={100}
+  //         height={100}
+  //         alt=""
+  //       />
+  //     </div>
+  //     <div onClick={handleProfileClick} className="lk">
+  //       {userdata ? (
+  //         <Image
+  //           className="rounded-full h-16 w-16 object-cover cursor-pointer"
+  //           src={userdata.pfp}
+  //           width={100}
+  //           height={100}
+  //           alt="Profile Picture"
+  //         />
+  //       ) : (
+  //         "Loading Image"
+  //       )}
+  //     </div>
+  //     {showDropdown && (
+  //       <DropdownMenu onLogout={handleLogout} onSettings={handleSettings} />
+  //     )}
+  //   </div>
+  // </div>
+  // <div className="stories">
+  //   {/* <div className="h1 italic font-lucy text-4xl">Stories</div> */}
+  //   <div ref={scrollRef} className="flex overflow-x-auto  ">
+  //     {userdata ? (
+  //       <>
+  //         <Image
+  //           className="rounded-full h-16 w-16 object-cover border-green-500 border-2 p-1 m-1 cursor-pointer"
+  //           src={userdata.pfp}
+  //           width={100}
+  //           height={100}
+  //           alt="Profile Picture"
+  //         />
+  //         <Image
+  //           className="rounded-full h-16 w-16 object-cover border-pink-500 border-2 p-1 m-1 cursor-pointer"
+  //           src={userdata.pfp}
+  //           width={100}
+  //           height={100}
+  //           alt="Profile Picture"
+  //         />
+  //         <Image
+  //           className="rounded-full h-16 w-16 object-cover border-green-500 border-2 p-1 m-1 cursor-pointer"
+  //           src={userdata.pfp}
+  //           width={100}
+  //           height={100}
+  //           alt="Profile Picture"
+  //         />
+  //         <Image
+  //           className="rounded-full h-16 w-16 object-cover border-pink-500 border-2 p-1 m-1 cursor-pointer"
+  //           src={userdata.pfp}
+  //           width={100}
+  //           height={100}
+  //           alt="Profile Picture"
+  //         />
+  //         <Image
+  //           className="rounded-full h-16 w-16 object-cover border-green-500 border-2 p-1 m-1 cursor-pointer"
+  //           src={userdata.pfp}
+  //           width={100}
+  //           height={100}
+  //           alt="Profile Picture"
+  //         />
+  //         <Image
+  //           className="rounded-full h-16 w-16 object-cover border-pink-500 border-2 p-1 m-1 cursor-pointer"
+  //           src={userdata.pfp}
+  //           width={100}
+  //           height={100}
+  //           alt="Profile Picture"
+  //         />
+  //         <Image
+  //           className="rounded-full h-16 w-16 object-cover border-green-500 border-2 p-1 m-1 cursor-pointer"
+  //           src={userdata.pfp}
+  //           width={100}
+  //           height={100}
+  //           alt="Profile Picture"
+  //         />
+  //         <Image
+  //           className="rounded-full h-16 w-16 object-cover border-pink-500 border-2 p-1 m-1 cursor-pointer"
+  //           src={userdata.pfp}
+  //           width={100}
+  //           height={100}
+  //           alt="Profile Picture"
+  //         />
+  //         <Image
+  //           className="rounded-full h-16 w-16 object-cover border-green-500 border-2 p-1 m-1 cursor-pointer"
+  //           src={userdata.pfp}
+  //           width={100}
+  //           height={100}
+  //           alt="Profile Picture"
+  //         />
+  //         <Image
+  //           className="rounded-full h-16 w-16 object-cover border-pink-500 border-2 p-1 m-1 cursor-pointer"
+  //           src={userdata.pfp}
+  //           width={100}
+  //           height={100}
+  //           alt="Profile Picture"
+  //         />
+  //         <Image
+  //           className="rounded-full h-16 w-16 object-cover border-green-500 border-2 p-1 m-1 cursor-pointer"
+  //           src={userdata.pfp}
+  //           width={100}
+  //           height={100}
+  //           alt="Profile Picture"
+  //         />
+  //         <Image
+  //           className="rounded-full h-16 w-16 object-cover border-pink-500 border-2 p-1 m-1 cursor-pointer"
+  //           src={userdata.pfp}
+  //           width={100}
+  //           height={100}
+  //           alt="Profile Picture"
+  //         />
+  //         <Image
+  //           className="rounded-full h-16 w-16 object-cover border-green-500 border-2 p-1 m-1 cursor-pointer"
+  //           src={userdata.pfp}
+  //           width={100}
+  //           height={100}
+  //           alt="Profile Picture"
+  //         />
+  //         <Image
+  //           className="rounded-full h-16 w-16 object-cover border-pink-500 border-2 p-1 m-1 cursor-pointer"
+  //           src={userdata.pfp}
+  //           width={100}
+  //           height={100}
+  //           alt="Profile Picture"
+  //         />
+  //         <Image
+  //           className="rounded-full h-16 w-16 object-cover border-green-500 border-2 p-1 m-1 cursor-pointer"
+  //           src={userdata.pfp}
+  //           width={100}
+  //           height={100}
+  //           alt="Profile Picture"
+  //         />
+  //         <Image
+  //           className="rounded-full h-16 w-16 object-cover border-pink-500 border-2 p-1 m-1 cursor-pointer"
+  //           src={userdata.pfp}
+  //           width={100}
+  //           height={100}
+  //           alt="Profile Picture"
+  //         />
+  //         <Image
+  //           className="rounded-full h-16 w-16 object-cover border-pink-500 border-2 p-1 m-1 cursor-pointer"
+  //           src={userdata.pfp}
+  //           width={100}
+  //           height={100}
+  //           alt="Profile Picture"
+  //         />
+  //         <Image
+  //           className="rounded-full h-16 w-16 object-cover border-pink-500 border-2 p-1 m-1 cursor-pointer"
+  //           src={userdata.pfp}
+  //           width={100}
+  //           height={100}
+  //           alt="Profile Picture"
+  //         />
+  //         <Image
+  //           className="rounded-full h-16 w-16 object-cover border-pink-500 border-2 p-1 m-1 cursor-pointer"
+  //           src={userdata.pfp}
+  //           width={100}
+  //           height={100}
+  //           alt="Profile Picture"
+  //         />
+  //         <Image
+  //           className="rounded-full h-16 w-16 object-cover border-pink-500 border-2 p-1 m-1 cursor-pointer"
+  //           src={userdata.pfp}
+  //           width={100}
+  //           height={100}
+  //           alt="Profile Picture"
+  //         />
+  //         <Image
+  //           className="rounded-full h-16 w-16 object-cover border-pink-500 border-2 p-1 m-1 cursor-pointer"
+  //           src={userdata.pfp}
+  //           width={100}
+  //           height={100}
+  //           alt="Profile Picture"
+  //         />
+  //       </>
+  //     ) : null}
+  //   </div>
+  // </div>
+  // <div className="content flex justify-center">
+  //   <div className="posts max-w-4xl">
+  //     {userdata ? <Post userdata={userdata} /> : null}
+  //   </div>
+  // </div>}
   return (
-    <div className="h-screen font-rethink relative text-black bg-white dark:bg-black dark:text-white">
+    <div className="h-screen flex items-center font-rethink relative text-black ">
       <Toaster />
-      {createpostmenu ? (
-        <>
-          <div
-            className="fixed inset-0 bg-black opacity-50 z-10"
-            onClick={() => setcreatepostmenu(false)}
-          ></div>
-          <div className="absolute inset-0 flex items-center justify-center z-20">
-            <div className="bg-gray-900 createpostcanvas relative z-10">
-              <CreatePost
-                onClose={() => setcreatepostmenu(false)}
-                userdata={userdata}
-              />
+      {userdata && (
+        <div className="main  tndmain w-full bg-white rounded-2xl bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-40 shadow-2xl border-1 border-black mx-4 align-middle ">
+          <div className="flex">
+            <div className="main1 w-1/4">
+              <div className="text-8xl font-lucy text-center mt-4 text-black">
+                Muse
+              </div>
+              <div className="flex justify-center">
+                <div className="pfp my-4 ">
+                  <Image
+                    className="rounded-full h-24 object-cover w-24"
+                    src={userdata.pfp}
+                    width={100}
+                    height={100}
+                    alt=""
+                  />
+                </div>
+              </div>
+              <div className="usernamw text-center font-bold text-2xl">
+                {userdata.userName}
+              </div>
+              <div className="bio text-center opacity-80">{userdata.bio}</div>
+              <div className="flex justify-around ml-2">
+                <div className="followers text-center w-16">
+                  <div className="text-2xl font-bold">
+                    {userdata.followers.length}
+                  </div>
+                  <div className="text-sm">Followers</div>
+                </div>
+                <div className="following text-center w-16 ">
+                  <div className="text-2xl font-bold">
+                    {userdata.following.length}
+                  </div>
+                  <div className="text-sm ">Following</div>
+                </div>
+                <div className="posts">
+                  <div className="text-2xl font-bold w-16">
+                    {userdata.posts.length}
+                  </div>
+                  <div className="text-sm -ml-2">Posts</div>
+                </div>
+              </div>
+              <div className="options">
+                <div className="explore">
+                  <div className="text-2xl font-bold text-center">Explore</div>
+                </div>
+                <div className="settings">
+                  <div className="text-2xl font-bold text-center">Settings</div>
+                </div>
+                <div></div>
+              </div>
+            </div>
+            <div className="main2 rounded-2xl  w-4/5 bg-gray-700  backdrop-blur-3xl shadow-xl opacity-25">
+              sadasd
             </div>
           </div>
-        </>
-      ) : null}
-      <div className="flex justify-between">
-        <div className="kl font-lucy text-6xl">Muse</div>
-        <div className="io flex">
-          <div
-            className="createpost h-16 w-16 cursor-pointer"
-            onClick={() => handleCreatePost()}
-          >
-            <Image
-              className="text-white"
-              src={"/icon.png"}
-              width={100}
-              height={100}
-              alt=""
-            />
-          </div>
-          <div onClick={handleProfileClick} className="lk">
-            {userdata ? (
-              <Image
-                className="rounded-full h-16 w-16 object-cover cursor-pointer"
-                src={userdata.pfp}
-                width={100}
-                height={100}
-                alt="Profile Picture"
-              />
-            ) : (
-              "Loading Image"
-            )}
-          </div>
-          {showDropdown && (
-            <DropdownMenu onLogout={handleLogout} onSettings={handleSettings} />
-          )}
         </div>
-      </div>
-      <div className="stories">
-        {/* <div className="h1 italic font-lucy text-4xl">Stories</div> */}
-        <div ref={scrollRef} className="flex overflow-x-auto  ">
-          {userdata ? (
-            <>
-              <Image
-                className="rounded-full h-16 w-16 object-cover border-green-500 border-2 p-1 m-1 cursor-pointer"
-                src={userdata.pfp}
-                width={100}
-                height={100}
-                alt="Profile Picture"
-              />
-              <Image
-                className="rounded-full h-16 w-16 object-cover border-pink-500 border-2 p-1 m-1 cursor-pointer"
-                src={userdata.pfp}
-                width={100}
-                height={100}
-                alt="Profile Picture"
-              />
-              <Image
-                className="rounded-full h-16 w-16 object-cover border-green-500 border-2 p-1 m-1 cursor-pointer"
-                src={userdata.pfp}
-                width={100}
-                height={100}
-                alt="Profile Picture"
-              />
-              <Image
-                className="rounded-full h-16 w-16 object-cover border-pink-500 border-2 p-1 m-1 cursor-pointer"
-                src={userdata.pfp}
-                width={100}
-                height={100}
-                alt="Profile Picture"
-              />
-              <Image
-                className="rounded-full h-16 w-16 object-cover border-green-500 border-2 p-1 m-1 cursor-pointer"
-                src={userdata.pfp}
-                width={100}
-                height={100}
-                alt="Profile Picture"
-              />
-              <Image
-                className="rounded-full h-16 w-16 object-cover border-pink-500 border-2 p-1 m-1 cursor-pointer"
-                src={userdata.pfp}
-                width={100}
-                height={100}
-                alt="Profile Picture"
-              />
-              <Image
-                className="rounded-full h-16 w-16 object-cover border-green-500 border-2 p-1 m-1 cursor-pointer"
-                src={userdata.pfp}
-                width={100}
-                height={100}
-                alt="Profile Picture"
-              />
-              <Image
-                className="rounded-full h-16 w-16 object-cover border-pink-500 border-2 p-1 m-1 cursor-pointer"
-                src={userdata.pfp}
-                width={100}
-                height={100}
-                alt="Profile Picture"
-              />
-              <Image
-                className="rounded-full h-16 w-16 object-cover border-green-500 border-2 p-1 m-1 cursor-pointer"
-                src={userdata.pfp}
-                width={100}
-                height={100}
-                alt="Profile Picture"
-              />
-              <Image
-                className="rounded-full h-16 w-16 object-cover border-pink-500 border-2 p-1 m-1 cursor-pointer"
-                src={userdata.pfp}
-                width={100}
-                height={100}
-                alt="Profile Picture"
-              />
-              <Image
-                className="rounded-full h-16 w-16 object-cover border-green-500 border-2 p-1 m-1 cursor-pointer"
-                src={userdata.pfp}
-                width={100}
-                height={100}
-                alt="Profile Picture"
-              />
-              <Image
-                className="rounded-full h-16 w-16 object-cover border-pink-500 border-2 p-1 m-1 cursor-pointer"
-                src={userdata.pfp}
-                width={100}
-                height={100}
-                alt="Profile Picture"
-              />
-              <Image
-                className="rounded-full h-16 w-16 object-cover border-green-500 border-2 p-1 m-1 cursor-pointer"
-                src={userdata.pfp}
-                width={100}
-                height={100}
-                alt="Profile Picture"
-              />
-              <Image
-                className="rounded-full h-16 w-16 object-cover border-pink-500 border-2 p-1 m-1 cursor-pointer"
-                src={userdata.pfp}
-                width={100}
-                height={100}
-                alt="Profile Picture"
-              />
-              <Image
-                className="rounded-full h-16 w-16 object-cover border-green-500 border-2 p-1 m-1 cursor-pointer"
-                src={userdata.pfp}
-                width={100}
-                height={100}
-                alt="Profile Picture"
-              />
-              <Image
-                className="rounded-full h-16 w-16 object-cover border-pink-500 border-2 p-1 m-1 cursor-pointer"
-                src={userdata.pfp}
-                width={100}
-                height={100}
-                alt="Profile Picture"
-              />
-              <Image
-                className="rounded-full h-16 w-16 object-cover border-pink-500 border-2 p-1 m-1 cursor-pointer"
-                src={userdata.pfp}
-                width={100}
-                height={100}
-                alt="Profile Picture"
-              />
-              <Image
-                className="rounded-full h-16 w-16 object-cover border-pink-500 border-2 p-1 m-1 cursor-pointer"
-                src={userdata.pfp}
-                width={100}
-                height={100}
-                alt="Profile Picture"
-              />
-              <Image
-                className="rounded-full h-16 w-16 object-cover border-pink-500 border-2 p-1 m-1 cursor-pointer"
-                src={userdata.pfp}
-                width={100}
-                height={100}
-                alt="Profile Picture"
-              />
-              <Image
-                className="rounded-full h-16 w-16 object-cover border-pink-500 border-2 p-1 m-1 cursor-pointer"
-                src={userdata.pfp}
-                width={100}
-                height={100}
-                alt="Profile Picture"
-              />
-              <Image
-                className="rounded-full h-16 w-16 object-cover border-pink-500 border-2 p-1 m-1 cursor-pointer"
-                src={userdata.pfp}
-                width={100}
-                height={100}
-                alt="Profile Picture"
-              />
-            </>
-          ) : null}
-        </div>
-      </div>
-      <div className="content flex justify-center">
-        <div className="posts max-w-4xl">
-          {userdata ? <Post userdata={userdata} /> : null}
-        </div>
-      </div>
+      )}
     </div>
   );
 };

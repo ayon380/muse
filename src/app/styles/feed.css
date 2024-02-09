@@ -1,3 +1,7 @@
-html{
-    background-color: white !important;
+.tndmain{
+    height: 97%;
+    /* border-radius: 22px; */
+}
+.main2{
+    height: 97vh;
 }

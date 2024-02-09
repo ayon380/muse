@@ -359,12 +359,7 @@ const Signup = () => {
       const userRef = doc(db, "users", user.email);
       const usernameref = doc(db, "username", userName);
 
-      const usernameData = {
-        email: user.email,
-      };
       try {
-        await setDoc(usernameref, usernameData);
-
         const storagePFPRef = ref(
           storage,
           `images/${userName}/PFP/${file.name}`
@@ -374,6 +369,11 @@ const Signup = () => {
         console.log("Image uploaded successfully:", snapshot.ref.fullPath);
         const downloadURL = await getDownloadURL(snapshot.ref);
         console.log("File available at", downloadURL);
+        const usernameData = {
+          email: user.email,
+          pfp: downloadURL,
+        };
+        await setDoc(usernameref, usernameData);
         const userData = {
           email: user.email,
           displayName: user.displayName,

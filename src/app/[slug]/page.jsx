@@ -1,6 +1,6 @@
 "use client";
 import { getAuth, signOut } from "firebase/auth";
-import React, { use, useEffect, useReducer } from "react";
+import React, { useEffect } from "react";
 import app from "@/lib/firebase/firebaseConfig";
 import { getFirestore } from "firebase/firestore";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
@@ -54,15 +54,17 @@ const Page = ({ params }) => {
       const postRef = doc(db, "posts", userdata.posts[i]);
       const docSnap = await getDoc(postRef);
       if (docSnap.exists()) {
-        console.log("Document data:", docSnap.data());
+        // console.log("Document data:", docSnap.data());
         setPosts((posts) => [...posts, docSnap.data()]);
       } else {
         console.log("No such document!");
         // Handle the case where user data doesn't exist
       }
+      // console.log(docSnap.data());
     }
+   
   };
-  console.log(user);
+  // console.log(user);
   const emaillookup = async () => {
     const userRef = doc(db, "username", slug);
     const docSnap = await getDoc(userRef);
