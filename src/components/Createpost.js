@@ -132,7 +132,11 @@ const CreatePost = ({ onClose, userdata }) => {
         <div className="mb-4">
           <label className="block text-sm font-bold mb-2">Upload Photos or Videos (up to 10)</label>
           <input
-            className=""
+            className="file:mr-4 file:py-2 file:px-4
+            file:rounded-full file:border-0
+            file:text-sm file:font-semibold
+            file:bg-violet-50 file:text-violet-700
+            hover:file:bg-violet-100"
             type="file"
             accept="image/*, video/*"
             onChange={handleFileChange}

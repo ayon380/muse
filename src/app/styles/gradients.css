@@ -1,7 +1,6 @@
-/* Set default background colors */
 :root {
-    --background-light: linear-gradient(304deg, #ff0000, #a300ff, #f2f7ab, #ffc100);
-    --background-dark: linear-gradient(304deg, #ff0000, #a300ff, #f2f7ab, #ffc100);
+    --background-light: linear-gradient(304deg,  #f2f7ab, #ffc100);
+    --background-dark: linear-gradient(304deg, #ff0000, #a300ff,black);
 }
 
 /* Automatically switch between light and dark mode based on system preference */
@@ -19,10 +18,10 @@
 
 /* Background size and animation */
 html {
-    background-size: 800% 800%;
-    -webkit-animation: AnimationName 46s ease infinite;
-    -moz-animation: AnimationName 46s ease infinite;
-    animation: AnimationName 46s ease infinite;
+    background-size: 1600% 1600%; /* Increase background size for smoother animation */
+    -webkit-animation: AnimationName 23s linear infinite; /* Adjusted animation duration */
+    -moz-animation: AnimationName 23s linear infinite;
+    animation: AnimationName 23s linear infinite;
 }
 
 /* React icons styling */
@@ -33,16 +32,13 @@ html {
 /* Keyframes animation */
 @-webkit-keyframes AnimationName {
     0% {background-position: 0% 42%}
-    50% {background-position: 100% 59%}
-    100% {background-position: 0% 42%}
+    100% {background-position: 100% 59%} /* Adjusted animation endpoints */
 }
 @-moz-keyframes AnimationName {
     0% {background-position: 0% 42%}
-    50% {background-position: 100% 59%}
-    100% {background-position: 0% 42%}
+    100% {background-position: 100% 59%}
 }
 @keyframes AnimationName {
     0% {background-position: 0% 42%}
-    50% {background-position: 100% 59%}
-    100% {background-position: 0% 42%}
+    100% {background-position: 100% 59%}
 }
