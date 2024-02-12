@@ -128,7 +128,7 @@ const SideBar = ({ usage, data }) => {
         }
     };
     return (
-        <div className="">
+        <div className="bg-white dark:bg-black  rounded-xl bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-40 shadow-2xl border-1 border-black lpo">
             {userdata && (
                 <div className="main1 w-96">
                     <div className="text-8xl font-lucy text-center mt-4 ">
@@ -182,16 +182,19 @@ const SideBar = ({ usage, data }) => {
                     ) : null}
                     <div className="options flex flex-col justify-evenly h-3/5 items-center">
                         <div className="explore">
+                            <div className="text-2xl font-bold text-center cursor-pointer" onClick={() => router.push('/feed')}>Feed</div>
+                        </div>
+                        <div className="explore">
                             <div className="text-2xl font-bold text-center">Explore</div>
                         </div>
                         <div className="Reels">
                             <div className="text-2xl font-bold text-center">Reels</div>
                         </div>
                         <div className="messages">
-                            <div className="text-2xl font-bold text-center">Messages</div>
+                            <div className="text-2xl font-bold text-center cursor-pointer" onClick={() => { router.push('/feed/messages') }}>Messages</div>
                         </div>
                         <div className="settings cursor-pointer ">
-                            <div className="text-2xl font-bold  text-center " onClick={() => router.push('/feed/settings')}>Settings</div>
+                            <div className="text-2xl font-bold cursor-pointer  text-center " onClick={() => router.push('/feed/settings')}>Settings</div>
                         </div>
                         <div className="logout">
                             <div

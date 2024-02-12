@@ -358,7 +358,12 @@ const Signup = () => {
       // Save additional user data to Firestore
       const userRef = doc(db, "users", user.email);
       const usernameref = doc(db, "username", userName);
-
+      const chatref = doc(db, "chats", userName);
+      const chatData = {
+        rooms: [],
+        userName: userName,
+      };
+      await setDoc(chatref, chatData);
       try {
         const storagePFPRef = ref(
           storage,
@@ -372,6 +377,8 @@ const Signup = () => {
         const usernameData = {
           email: user.email,
           pfp: downloadURL,
+          userName: userName,
+          fullname: name,
         };
         await setDoc(usernameref, usernameData);
         const userData = {

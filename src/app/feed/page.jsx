@@ -11,14 +11,23 @@ import { useRouter } from "next/navigation";
 import "../styles/gradients.css";
 import "../styles/feed.css";
 import Post from "../../components/Post";
+import {
+  collection,
+  getDocs,
+  limit,
+  query,
+  where,
+  orderBy,
+} from "firebase/firestore";
 import { deleteDoc } from "firebase/firestore";
 import { getStorage, deleteObject } from "firebase/storage";
 import { useHorizontalScroll } from "../../externalfn/horizontalscroll";
 import Image from "next/image";
 import { ref } from "firebase/storage";
-import { getFirestore, doc, getDoc } from "firebase/firestore";
+import { getFirestore, getDoc, doc } from "firebase/firestore";
 import dynamic from "next/dynamic";
 import toast, { Toaster } from "react-hot-toast";
+import Link from "next/link";
 
 const CreatePost = dynamic(() => import("../../components/Createpost"));
 const Home = () => {
@@ -29,7 +38,49 @@ const Home = () => {
   const router = useRouter();
   const [userdata, setUserData] = useState(null);
   const db = getFirestore(app);
+  const [searchResults, setSearchResults] = useState([]);
   const [searchtext, setSearchtext] = useState("");
+  const searchUsers = async () => {
+    try {
+      console.log("Searching users..." + searchtext);
+
+      // Query for userName
+      const userNameQuery = query(
+        collection(db, "username"),
+        where("userName", ">=", searchtext),
+        orderBy("userName"),
+        limit(5)
+      );
+      const userNameSnapshot = await getDocs(userNameQuery);
+
+      // Query for fullname
+      const fullNameQuery = query(
+        collection(db, "username"),
+        where("fullname", ">=", searchtext),
+        orderBy("fullname"),
+        limit(5)
+      );
+      const fullNameSnapshot = await getDocs(fullNameQuery);
+
+      // Combine results
+      const results = [];
+      userNameSnapshot.forEach((doc) => {
+        results.push({ ...doc.data() });
+      });
+      fullNameSnapshot.forEach((doc) => {
+        const data = doc.data();
+        if (!results.some((result) => result.userName === data.userName)) {
+          results.push(data);
+        }
+      });
+
+      console.log("Search results:", results);
+      setSearchResults(results);
+    } catch (error) {
+      console.error("Error searching users:", error);
+    }
+  };
+
   const getuserdata = async (currentUser) => {
     const userRef = doc(db, "users", currentUser.email);
     const docSnap = await getDoc(userRef);
@@ -57,11 +108,19 @@ const Home = () => {
 
     return () => unsubscribe();
   }, [auth, router]);
+  useEffect(() => {
+    if (searchtext.length > 0) {
+      searchUsers();
+    } else {
+      setSearchResults([]);
+    }
+  }, [searchtext]);
+
   return (
-    <div className="w-full">
+    <div className=" ml-5 w-full">
       {userdata && (
         <div>
-          <div className="main2 rounded-2xl bg-opacity-20  bg-gray-800 shadow-2xl  ">
+          <div className="main2 rounded-2xl bg-white bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-20 shadow-2xl border-1 border-black ">
             <div className="flex ">
               <div className="search ml-5 mt-5">
                 <input
@@ -72,9 +131,7 @@ const Home = () => {
                   placeholder="Search"
                   // Add hover and focus styles
                   style={{
-                    // Initial styles
-                    background: "rgba(192,192,192,0.5)", // Initial background color with opacity
-                    // Hover styles
+                    background: "rgba(192,192,192,0.5)",
                     ":hover": {
                       transform: "scale(1.2)", // Scale up on hover
                       background: "rgba(192,192,192,0.7)", // Lighter background on hover
@@ -86,6 +143,17 @@ const Home = () => {
                     },
                   }}
                 />
+                {searchResults.length > 0 && searchtext.length > 0 && (
+                  <div className="search-results absolute bg-black z-10 w-96">
+                    <ul>
+                      {searchResults.map((user) => (
+                        <Link href={`/${user.userName}`}>
+                          <li key={user.id}>{user.userName}</li>
+                        </Link>
+                      ))}
+                    </ul>
+                  </div>
+                )}
                 <div className="stories mt-4">
                   <div className="je font-lucy text-5xl">Stories</div>
                   <div className="fp flex mt-2 overflow-x-auto">
