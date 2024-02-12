@@ -147,7 +147,7 @@ const Home = () => {
                   <div className="search-results absolute bg-black z-10 w-96">
                     <ul>
                       {searchResults.map((user) => (
-                        <Link href={`/${user.userName}`}>
+                        <Link key={user} href={`/${user.userName}`}>
                           <li key={user.id}>{user.userName}</li>
                         </Link>
                       ))}
