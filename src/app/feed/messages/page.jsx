@@ -13,6 +13,7 @@ import "../../styles/feed.css";
 import {
   collection,
   getDocs,
+  onSnapshot,
   limit,
   query,
   where,
@@ -30,6 +31,7 @@ import { getFirestore, getDoc, doc } from "firebase/firestore";
 import dynamic from "next/dynamic";
 import toast, { Toaster } from "react-hot-toast";
 import Link from "next/link";
+import { set } from "react-hook-form";
 const Home = () => {
   const auth = getAuth(app);
   const [user, setUser] = useState(auth.currentUser);
@@ -40,6 +42,8 @@ const Home = () => {
   const db = getFirestore(app);
   const [searchResults, setSearchResults] = useState([]);
   const [roomid, setRoomid] = useState("");
+  const [messagetext, setMessagetext] = useState("");
+  const [messages, setMessages] = useState([{}]);
   const [chatwindow, setChatwindow] = useState("none");
   const [searchtext, setSearchtext] = useState("");
   const [chatloading, setChatloading] = useState(false);
@@ -177,9 +181,10 @@ const Home = () => {
         const commonChatDocs = currentUserChatDocs.filter((doc) => {
           return chatWindowChatDocs.some((otherDoc) => otherDoc.id === doc.id);
         });
-        if (commonChatDocs.length > 0)
+        if (commonChatDocs.length > 0) {
           console.log("Common Chat Docs: ", commonChatDocs[0].id);
-        else console.log("No common chat docs found");
+          setRoomid(commonChatDocs[0].id);
+        } else console.log("No common chat docs found");
         // Set chPrevChat based on whether common chat documents were found
         setchprevchat(commonChatDocs.length > 0);
       } catch (error) {
@@ -191,6 +196,23 @@ const Home = () => {
       setchprevchat(false);
     }
   };
+  useEffect(() => {
+    let unsubscribe;
+
+    const disc = async () => {
+      unsubscribe = await displaychat();
+    };
+
+    if (roomid !== "") {
+      disc();
+    }
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe(); // Call unsubscribe when component unmounts
+      }
+    };
+  }, [roomid]);
 
   const startchat = async () => {
     try {
@@ -253,7 +275,64 @@ const Home = () => {
       toast.error("Error " + error.message);
     }
   };
+  const displaychat = async () => {
+    try {
+      if (userdata && roomid !== "") {
+        console.log("Displaying chat...");
+        const msgref = collection(db, "messages");
+        const q = query(
+          msgref,
+          where("roomid", "==", roomid),
+          orderBy("timestamp")
+        );
 
+        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+          let messages = [];
+          querySnapshot.forEach((doc) => {
+            console.log(doc.id, " => ", doc.data());
+            messages.push(doc.data());
+          });
+          setMessages(messages);
+        });
+
+        // Return unsubscribe function to detach listener when needed
+        return unsubscribe;
+      }
+    } catch (error) {
+      console.error("Error displaying chat:", error.message);
+      toast.error("Error " + error.message);
+    }
+  };
+
+  const sendMesage = async () => {
+    try {
+      if (userdata) {
+        if (roomid !== "") {
+          const msgref = collection(db, "messages");
+          const msgdata = {
+            sender: userdata.userName,
+            text: messagetext,
+            timestamp: Date.now(),
+            readstatus: false,
+            roomid: roomid,
+          };
+          const q = await addDoc(msgref, msgdata);
+          const msgroomref = doc(db, "messagerooms", roomid);
+          const msgroomdata = {
+            messages: arrayUnion(q.id),
+          };
+          await updateDoc(msgroomref, msgroomdata);
+          setMessagetext("");
+          toast.success("Message sent");
+        } else {
+          toast.error("No chat selected");
+        }
+      }
+    } catch (error) {
+      console.error("Error sending message:", error.message); // Log any errors that occur
+      toast.error("Error " + error.message);
+    }
+  };
   useEffect(() => {
     checkprevchat();
   }, [roomid]);
@@ -330,12 +409,42 @@ const Home = () => {
                   </div>
                 ))}
             </div>
-            <div className="chatwindow w-3/4 border-2 mx-6 bg-gray-700  bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-10 shadow-2xl border-none rounded-2xl  ">
+            <div className="chatwindow w-3/4 border-2 mx-6 bg-gray-700  bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-10 shadow-2xl border-none rounded-2xl  relative">
               {roomid == "" ? (
                 <></>
               ) : (
                 <>
-                  <div>{roomid}ssas</div>
+                  <div>
+                    {messages.map((message) => (
+                      <div
+                        key={message.timestamp + message.sender + message.text}
+                      >
+                        {message.sender == userdata.userName ? (
+                          <div className="ko   right-0">
+                           {message.sender} {message.text}
+                          </div>
+                        ) : (
+                          <>
+                            <div className="ko  float right-0">
+                            {message.sender}{message.text}
+                            </div>
+                          </>
+                        )}
+                      
+                      </div>
+                    ))}
+                    <div className="textbox absolute bottom-0">
+                      rtrt
+                      <input
+                        type="text"
+                        value={messagetext}
+                        onChange={(e) => setMessagetext(e.target.value)}
+                      ></input>
+                      <button onClick={sendMesage} className="send">
+                        Send
+                      </button>
+                    </div>
+                  </div>
                 </>
               )}
               {chatloading && (
