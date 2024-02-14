@@ -1,12 +1,7 @@
 "use client";
 import app from "@/lib/firebase/firebaseConfig";
-import React, { use, useEffect, useState } from "react";
-import {
-  deleteUser,
-  getAuth,
-  onAuthStateChanged,
-  signOut,
-} from "firebase/auth";
+import React, { useEffect, useState } from "react";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import "../../styles/gradients.css";
 import "../../styles/feed.css";
@@ -23,15 +18,13 @@ import {
   setDoc,
   addDoc,
 } from "firebase/firestore";
-import { deleteDoc } from "firebase/firestore";
+import PFP from "@/components/PFP";
 import { getStorage, deleteObject } from "firebase/storage";
 import Image from "next/image";
-import { ref } from "firebase/storage";
 import { getFirestore, getDoc, doc } from "firebase/firestore";
 import dynamic from "next/dynamic";
 import toast, { Toaster } from "react-hot-toast";
 import Link from "next/link";
-import { set } from "react-hook-form";
 const Home = () => {
   const auth = getAuth(app);
   const [user, setUser] = useState(auth.currentUser);
@@ -45,6 +38,7 @@ const Home = () => {
   const [messagetext, setMessagetext] = useState("");
   const [messages, setMessages] = useState([{}]);
   const [chatwindow, setChatwindow] = useState("none");
+  const [chatuserdata, setChatuserdata] = useState("");
   const [searchtext, setSearchtext] = useState("");
   const [chatloading, setChatloading] = useState(false);
   const [chprevchat, setchprevchat] = useState(false);
@@ -108,7 +102,14 @@ const Home = () => {
       console.error("Error searching users:", error);
     }
   };
-
+  const getpfp = async (username) => {
+    const useref = doc(db, "username", username);
+    const userSnap = await getDoc(useref);
+    if (userSnap.exists()) {
+      console.log("Document data:", userSnap.data().pfp);
+      return userSnap.data().pfp;
+    }
+  };
   const getuserdata = async (currentUser) => {
     const userRef = doc(db, "users", currentUser.email);
     const docSnap = await getDoc(userRef);
@@ -183,6 +184,11 @@ const Home = () => {
         });
         if (commonChatDocs.length > 0) {
           console.log("Common Chat Docs: ", commonChatDocs[0].id);
+          const usref = doc(db, "username", chatwindow);
+          const usnap = await getDoc(usref);
+          if (usnap.exists()) {
+            setChatuserdata(usnap.data());
+          }
           setRoomid(commonChatDocs[0].id);
         } else console.log("No common chat docs found");
         // Set chPrevChat based on whether common chat documents were found
@@ -283,13 +289,14 @@ const Home = () => {
         const q = query(
           msgref,
           where("roomid", "==", roomid),
-          orderBy("timestamp")
+          orderBy("timestamp"),
+          limit(50)
         );
 
         const unsubscribe = onSnapshot(q, (querySnapshot) => {
           let messages = [];
           querySnapshot.forEach((doc) => {
-            console.log(doc.id, " => ", doc.data());
+            // console.log(doc.id, " => ", doc.data());
             messages.push(doc.data());
           });
           setMessages(messages);
@@ -336,6 +343,12 @@ const Home = () => {
   useEffect(() => {
     checkprevchat();
   }, [roomid]);
+  const messagesEndRef = React.useRef(null);
+
+  useEffect(() => {
+    // Scroll to the bottom of the chat window when messages update
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
   const creategroup = () => {};
   return (
     <div className="ml-5 w-full">
@@ -390,7 +403,7 @@ const Home = () => {
               {followingusersdata &&
                 followingusersdata.map((user) => (
                   <div
-                    className="key"
+                    className="key cursor-pointer"
                     key={user.userName}
                     onClick={() => setChatwindow(user.userName)}
                   >
@@ -414,33 +427,71 @@ const Home = () => {
                 <></>
               ) : (
                 <>
-                  <div>
+                  <div className="overflow-y-auto h-full pb-16  w-full">
                     {messages.map((message) => (
                       <div
+                        className="px-6"
                         key={message.timestamp + message.sender + message.text}
                       >
                         {message.sender == userdata.userName ? (
-                          <div className="ko   right-0">
-                           {message.sender} {message.text}
+                          <div className="ko flex justify-end my-5 ">
+                            <div className="e  text-right bg-purple-400 p-3 rounded-xl">
+                              <div className="flex justify-end">
+                                <div className="td text-sm">
+                                  {message.sender}
+                                </div>
+                                <Image
+                                  className="rounded-full h-5 w-5 ml-1"
+                                  src={userdata.pfp}
+                                  alt="Profile Pic"
+                                  height={50}
+                                  width={50}
+                                />
+                              </div>
+                              <div className="fg text-xl">{message.text}</div>
+                            </div>
                           </div>
                         ) : (
                           <>
-                            <div className="ko  float right-0">
-                            {message.sender}{message.text}
+                            <div className="ko  flex right-0 my-5">
+                              <div className="e bg-purple-400 p-3 rounded-xl">
+                                <div className="flex">
+                                  <Image
+                                    src={chatuserdata.pfp}
+                                    className="rounded-full h-5 w-5 mr-1"
+                                    alt="Profile Pic"
+                                    height={50}
+                                    width={50}
+                                  />
+                                  <div className="td text-sm">
+                                    {message.sender}
+                                  </div>
+                                </div>
+                                <div className="fg text-xl">{message.text}</div>
+                              </div>
                             </div>
                           </>
                         )}
-                      
                       </div>
                     ))}
-                    <div className="textbox absolute bottom-0">
-                      rtrt
+                    <div ref={messagesEndRef} />
+                    <div className="textbox absolute flex bottom-0 w-full m-2">
                       <input
                         type="text"
+                        placeholder="Type a message..."
+                        className="placeholder-italic w-full h-12 text-2xl p-2  rounded-xl text-black border-black transition-all duration-300 outline-none shadow-2xl hover:shadow-3xl focus:shadow-3xl  "
                         value={messagetext}
                         onChange={(e) => setMessagetext(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            sendMesage();
+                          }
+                        }}
                       ></input>
-                      <button onClick={sendMesage} className="send">
+                      <button
+                        onClick={sendMesage}
+                        className="send bg-blue-500  fd px-6 ml-2 mr-4 "
+                      >
                         Send
                       </button>
                     </div>
@@ -449,10 +500,10 @@ const Home = () => {
               )}
               {chatloading && (
                 <>
-                  <div>Loading......</div>
+                  <div className="w-full text-center align-middle">Loading......</div>
                 </>
               )}
-              {roomid === "" && chatwindow !== "none" ? (
+              {roomid == "" && (
                 <div className="df">
                   <div className="pfp ml-2 cursor-pointer">
                     <Image
@@ -478,7 +529,8 @@ const Home = () => {
                     <></>
                   )}
                 </div>
-              ) : (
+              )}
+              {chatwindow === "none" && (
                 <div className="text-3xl text-center align-middle mt-56 my-10">
                   Select a chat to start messaging
                 </div>
