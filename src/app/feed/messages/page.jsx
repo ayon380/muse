@@ -9,10 +9,13 @@ import {
   collection,
   getDocs,
   onSnapshot,
+  arrayRemove,
+  doc,
   limit,
   query,
   where,
   arrayUnion,
+  deleteDoc,
   orderBy,
   updateDoc,
   setDoc,
@@ -21,7 +24,7 @@ import {
 import PFP from "@/components/PFP";
 import { getStorage, deleteObject } from "firebase/storage";
 import Image from "next/image";
-import { getFirestore, getDoc, doc } from "firebase/firestore";
+import { getFirestore, getDoc } from "firebase/firestore";
 import dynamic from "next/dynamic";
 import toast, { Toaster } from "react-hot-toast";
 import Link from "next/link";
@@ -284,23 +287,40 @@ const Home = () => {
       toast.error("Error " + error.message);
     }
   };
+  const updatereadstatus = async (id) => {
+    try {
+      const msgref = doc(db, "messages", id);
+      await updateDoc(msgref, {
+        readstatus: true,
+      });
+    } catch (error) {
+      console.error("Error updating read status:", error.message);
+      toast.error("Error " + error.message);
+    }
+  };
   const displaychat = async () => {
     try {
       if (userdata && roomid !== "") {
         console.log("Displaying chat...");
         const msgref = collection(db, "messages");
+
         const q = query(
           msgref,
           where("roomid", "==", roomid),
-          orderBy("timestamp","desc"),
+          orderBy("timestamp", "desc"),
           limit(50)
         );
-
         const unsubscribe = onSnapshot(q, (querySnapshot) => {
           let messages = [];
-          querySnapshot.forEach((doc) => {
+          querySnapshot.forEach(async (doc) => {
             // console.log(doc.id, " => ", doc.data());
             messages.push(doc.data());
+            if (
+              !doc.data().readstatus &&
+              doc.data().sender !== userdata.userName
+            ) {
+              updatereadstatus(doc.id);
+            }
           });
           setMessages(messages.reverse());
         });
@@ -327,9 +347,13 @@ const Home = () => {
           };
           const q = await addDoc(msgref, msgdata);
           const msgroomref = doc(db, "messagerooms", roomid);
+          const qwref = doc(db, "messages", q.id);
           const msgroomdata = {
             messages: arrayUnion(q.id),
           };
+          await updateDoc(qwref, {
+            id: q.id,
+          });
           await updateDoc(msgroomref, msgroomdata);
           setMessagetext("");
           toast.success("Message sent");
@@ -479,18 +503,39 @@ const Home = () => {
   );
   const messageRef = React.useRef(null);
 
-  // Function to handle sending the message
-  const sendMessage = () => {
-    // Implement sending message logic here
-    const messageContent = messageRef.current.textContent;
-    console.log('Message sent:', messageContent);
-    // Clear the message content after sending
-    messageRef.current.textContent = '';
-  };
-  const fetchchats = async () => {
-    const chatref = doc(db, "chats", userdata.userName);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false); // State to track dropdown visibility
+  const [selectedMessage, setSelectedMessage] = useState(null); // State to track selected message
 
-  }
+  // Function to handle message copy
+  const handleCopy = (text) => {
+    navigator.clipboard.writeText(text);
+    toast.success("Message Copied"); // Copy the message text to the clipboard
+    setIsDropdownOpen(false); // Close the dropdown
+  };
+
+  // Function to handle message deletion
+  const handleDelete = async () => {
+    try {
+      // Implement deletion logic here using selectedMessage
+      const msgrromref = doc(db, "messagerooms", roomid);
+      const msgrromdata = {
+        messages: arrayRemove(selectedMessage.id),
+      };
+      await updateDoc(msgrromref, msgrromdata);
+      const messageRef = doc(db, "messages", selectedMessage.id);
+      await deleteDoc(messageRef); // Delete the message document
+      toast.success("Message deleted"); // Show success message
+      setIsDropdownOpen(false); // Close the dropdown
+      console.log("Deleting message:", selectedMessage);
+    } catch (error) {
+      console.error("Error deleting message:", error.message);
+      toast.error("Error deleting message: " + error.message);
+    }
+  };
+  const handledropdown = (message) => {
+    setIsDropdownOpen(!isDropdownOpen);
+    setSelectedMessage(message);
+  };
   const creategroup = () => {};
   return (
     <div className="ml-5 w-full">
@@ -578,22 +623,49 @@ const Home = () => {
                         {message.sender == userdata.userName ? (
                           <div className="ko flex justify-end my-5 ">
                             <div className="e  text-right bg-purple-400 p-3 rounded-xl">
-                              <div className="flex justify-end">
-                                <div className="time text-xs mr-2 mt-1">
-                                  {convertToChatTime(message.timestamp)}
+                              <div
+                                className="lp"
+                                onClick={() => handledropdown(message)}
+                              >
+                                <div className="flex justify-end">
+                                  <div className="time text-xs mr-2 mt-1">
+                                    {convertToChatTime(message.timestamp)}
+                                  </div>
+                                  <div className="td text-sm font-bold">
+                                    {message.sender}
+                                  </div>
+                                  <Image
+                                    className="rounded-full h-5 w-5 ml-1"
+                                    src={userdata.pfp}
+                                    alt="Profile Pic"
+                                    height={50}
+                                    width={50}
+                                  />
                                 </div>
-                                <div className="td text-sm font-bold">
-                                  {message.sender}
-                                </div>
-                                <Image
-                                  className="rounded-full h-5 w-5 ml-1"
-                                  src={userdata.pfp}
-                                  alt="Profile Pic"
-                                  height={50}
-                                  width={50}
-                                />
+                                <div className="fg text-xl">{message.text}</div>
                               </div>
-                              <div className="fg text-xl">{message.text}</div>
+                              {isDropdownOpen && selectedMessage == message && (
+                                <div className="dropdown-menu  mt-4">
+                                  {message.readstatus ? (
+                                    <>seen</>
+                                  ) : (
+                                    <>delivered</>
+                                  )}
+                                  <button
+                                    className=" ml-2 dropdown-item mr-2"
+                                    onClick={() => handleCopy(message.text)}
+                                  >
+                                    Copy
+                                  </button>
+                                  <button
+                                    className="dropdown-item"
+                                    onClick={handleDelete}
+                                  >
+                                    Delete
+                                  </button>
+                                  {/* Delete button */}
+                                </div>
+                              )}
                             </div>
                           </div>
                         ) : (
@@ -636,7 +708,7 @@ const Home = () => {
                           }
                         }}
                       ></input>
-                      
+
                       <button
                         onClick={sendMesage}
                         disabled={messagetext.length === 0}
