@@ -39,6 +39,7 @@ const Home = () => {
   const [roomid, setRoomid] = useState("");
   const [messagetext, setMessagetext] = useState("");
   const [messages, setMessages] = useState([{}]);
+  const [chats, setChats] = useState([]);
   const [chatwindow, setChatwindow] = useState("none");
   const [chatuserdata, setChatuserdata] = useState("");
   const [searchtext, setSearchtext] = useState("");
@@ -291,7 +292,7 @@ const Home = () => {
         const q = query(
           msgref,
           where("roomid", "==", roomid),
-          orderBy("timestamp"),
+          orderBy("timestamp","desc"),
           limit(50)
         );
 
@@ -301,9 +302,8 @@ const Home = () => {
             // console.log(doc.id, " => ", doc.data());
             messages.push(doc.data());
           });
-          setMessages(messages);
+          setMessages(messages.reverse());
         });
-
         // Return unsubscribe function to detach listener when needed
         return unsubscribe;
       }
@@ -487,6 +487,10 @@ const Home = () => {
     // Clear the message content after sending
     messageRef.current.textContent = '';
   };
+  const fetchchats = async () => {
+    const chatref = doc(db, "chats", userdata.userName);
+
+  }
   const creategroup = () => {};
   return (
     <div className="ml-5 w-full">
