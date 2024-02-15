@@ -34,6 +34,8 @@ const Home = () => {
   const [userdata, setUserData] = useState(null);
   const db = getFirestore(app);
   const [searchResults, setSearchResults] = useState([]);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [downloadProgress, setDownloadProgress] = useState(0);
   const [roomid, setRoomid] = useState("");
   const [messagetext, setMessagetext] = useState("");
   const [messages, setMessages] = useState([{}]);
@@ -190,6 +192,7 @@ const Home = () => {
             setChatuserdata(usnap.data());
           }
           setRoomid(commonChatDocs[0].id);
+          setChatloading(false);
         } else console.log("No common chat docs found");
         // Set chPrevChat based on whether common chat documents were found
         setchprevchat(commonChatDocs.length > 0);
@@ -197,7 +200,6 @@ const Home = () => {
         console.error("Error checking previous chat:", error);
         // Handle the error
       }
-      setChatloading(false);
     } else {
       setchprevchat(false);
     }
@@ -349,6 +351,142 @@ const Home = () => {
     // Scroll to the bottom of the chat window when messages update
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+  function convertToChatTime(timestamp) {
+    const now = new Date();
+    const messageDate = new Date(timestamp);
+
+    // Check if messageDate is today or yesterday
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+
+    if (messageDate >= today) {
+      const formattedTime = messageDate.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "numeric",
+      });
+      return `Today at ${formattedTime}`;
+    } else if (messageDate >= yesterday) {
+      const formattedTime = messageDate.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "numeric",
+      });
+      return `Yesterday at ${formattedTime}`;
+    } else {
+      const days = [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+      ];
+      const day = days[messageDate.getDay()];
+      const formattedDate = messageDate.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      });
+      const formattedTime = messageDate.toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "numeric",
+      });
+      return `${day}, ${formattedDate} at ${formattedTime}`;
+    }
+  }
+
+  // Function to handle media upload
+  const handleMediaUpload = async (file, mediaType) => {
+    try {
+      // Reset upload progress
+      setUploadProgress(0);
+
+      // Calculate total bytes of the file
+      const totalBytes = file.size;
+
+      // Upload file to Firebase Storage
+      const storageRef = ref(storage, `media/${file.name}`);
+      const uploadTask = uploadBytesResumable(storageRef, file);
+
+      // Update upload progress
+      uploadTask.on("state_changed", (snapshot) => {
+        const progress = (snapshot.bytesTransferred / totalBytes) * 100;
+        setUploadProgress(progress);
+      });
+
+      // Wait for upload to complete
+      await uploadTask;
+
+      // Get download URL
+      const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+
+      // Call sendMediaMessage with downloadURL
+      sendMediaMessage(downloadURL, mediaType);
+    } catch (error) {
+      console.error("Error uploading media:", error.message);
+      toast.error("Error uploading media: " + error.message);
+    }
+  };
+
+  // Function to handle media download
+  const handleMediaDownload = async (mediaURL) => {
+    try {
+      // Reset download progress
+      setDownloadProgress(0);
+
+      // Create a reference to the media file
+      const mediaRef = ref(storage, mediaURL);
+
+      // Get metadata (e.g., total bytes)
+      const metadata = await getMetadata(mediaRef);
+      const totalBytes = metadata.size;
+
+      // Download media file
+      const downloadTask = getDownloadURL(mediaRef);
+
+      // Update download progress
+      downloadTask.on("state_changed", (snapshot) => {
+        const progress = (snapshot.bytesTransferred / totalBytes) * 100;
+        setDownloadProgress(progress);
+      });
+
+      // Wait for download to complete
+      await downloadTask;
+    } catch (error) {
+      console.error("Error downloading media:", error.message);
+      toast.error("Error downloading media: " + error.message);
+    }
+  };
+
+  // Function to handle sending media message
+  const sendMediaMessage = async (mediaURL, mediaType) => {
+    // Implement sending media message logic here
+    // This function will be called after media upload completes
+  };
+
+  // JSX for upload progress bar
+  const uploadProgressBar = (
+    <div className="progress-bar">
+      <div className="progress" style={{ width: `${uploadProgress}%` }}></div>
+    </div>
+  );
+
+  // JSX for download progress bar
+  const downloadProgressBar = (
+    <div className="progress-bar">
+      <div className="progress" style={{ width: `${downloadProgress}%` }}></div>
+    </div>
+  );
+  const messageRef = React.useRef(null);
+
+  // Function to handle sending the message
+  const sendMessage = () => {
+    // Implement sending message logic here
+    const messageContent = messageRef.current.textContent;
+    console.log('Message sent:', messageContent);
+    // Clear the message content after sending
+    messageRef.current.textContent = '';
+  };
   const creategroup = () => {};
   return (
     <div className="ml-5 w-full">
@@ -437,7 +575,10 @@ const Home = () => {
                           <div className="ko flex justify-end my-5 ">
                             <div className="e  text-right bg-purple-400 p-3 rounded-xl">
                               <div className="flex justify-end">
-                                <div className="td text-sm">
+                                <div className="time text-xs mr-2 mt-1">
+                                  {convertToChatTime(message.timestamp)}
+                                </div>
+                                <div className="td text-sm font-bold">
                                   {message.sender}
                                 </div>
                                 <Image
@@ -463,8 +604,11 @@ const Home = () => {
                                     height={50}
                                     width={50}
                                   />
-                                  <div className="td text-sm">
+                                  <div className="td text-sm font-bolda">
                                     {message.sender}
+                                  </div>
+                                  <div className="time text-xs ml-2 mt-1">
+                                    {convertToChatTime(message.timestamp)}
                                   </div>
                                 </div>
                                 <div className="fg text-xl">{message.text}</div>
@@ -488,9 +632,11 @@ const Home = () => {
                           }
                         }}
                       ></input>
+                      
                       <button
                         onClick={sendMesage}
-                        className="send bg-blue-500  fd px-6 ml-2 mr-4 "
+                        disabled={messagetext.length === 0}
+                        className="send bg-blue-500  fd px-6 ml-2 mr-4 disabled:bg-blue-300"
                       >
                         Send
                       </button>
@@ -500,10 +646,12 @@ const Home = () => {
               )}
               {chatloading && (
                 <>
-                  <div className="w-full text-center align-middle">Loading......</div>
+                  <div className="w-full text-center align-middle">
+                    Loading......
+                  </div>
                 </>
               )}
-              {roomid == "" && (
+              {roomid == "" && chatwindow != "none" && (
                 <div className="df">
                   <div className="pfp ml-2 cursor-pointer">
                     <Image

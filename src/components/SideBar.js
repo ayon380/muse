@@ -89,6 +89,10 @@ const SideBar = ({ usage, data }) => {
         }
     }, [userdata, profileData]);
     const handleLogout = () => {
+        auth.signOut().then(() => {
+            // Sign-out successful.
+            router.push("/login");
+        });
     }
     const handlefollow = async () => {
         // Update follow state using the functional form
