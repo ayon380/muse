@@ -1,4 +1,4 @@
-html {
+/* html {
 	background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
 	background-size: 400% 400%;
 	animation: gradient 15s ease infinite;
@@ -18,10 +18,13 @@ html {
 }
 .lpo{
     height: 97vh;
-}
+} */
 /* .pol{
 	width: 100%;
 } */
 .chatwindow{
-	height: 81vh;
+	height: 84.5vh;
+}
+html{
+	background-image: url("/gta.jpeg");
 }

@@ -1,9 +1,10 @@
 "use client";
 import app from "@/lib/firebase/firebaseConfig";
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import "../../styles/gradients.css";
+// import GroupChat from "@/components/GroupChat";
 import "../../styles/feed.css";
 import {
   collection,
@@ -21,13 +22,13 @@ import {
   setDoc,
   addDoc,
 } from "firebase/firestore";
-import PFP from "@/components/PFP";
+// import dynamic from "next/dynamic"
 import { getStorage, deleteObject } from "firebase/storage";
 import Image from "next/image";
 import { getFirestore, getDoc } from "firebase/firestore";
 import dynamic from "next/dynamic";
+const GroupChat = dynamic(() => import("@/components/GroupChat"));
 import toast, { Toaster } from "react-hot-toast";
-import Link from "next/link";
 const Home = () => {
   const auth = getAuth(app);
   const [user, setUser] = useState(auth.currentUser);
@@ -35,39 +36,91 @@ const Home = () => {
   const [createpostmenu, setcreatepostmenu] = useState(false);
   const router = useRouter();
   const [userdata, setUserData] = useState(null);
+  const [pfps, setPfps] = useState({});
   const db = getFirestore(app);
   const [searchResults, setSearchResults] = useState([]);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [downloadProgress, setDownloadProgress] = useState(0);
   const [roomid, setRoomid] = useState("");
   const [messagetext, setMessagetext] = useState("");
+  const [chattype, setChattype] = useState("p");
   const [messages, setMessages] = useState([{}]);
   const [chats, setChats] = useState([]);
+  const [opengrpchatcreate, setopengrpchatcreate] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false); // State to track dropdown visibility
+  const [selectedMessage, setSelectedMessage] = useState(null);
   const [chatwindow, setChatwindow] = useState("none");
   const [chatuserdata, setChatuserdata] = useState("");
   const [searchtext, setSearchtext] = useState("");
   const [chatloading, setChatloading] = useState(false);
   const [chprevchat, setchprevchat] = useState(false);
+  const [otherchats, setOtherchats] = useState([]);
   const [followingusersdata, setFollowingUsersdata] = useState([]);
-  const getfollowingusers = async () => {
+  const getroomdata = async (id) => {
+    const roomref = doc(db, "messagerooms", id);
+    const roomsnap = await getDoc(roomref);
+    if (roomsnap.exists()) {
+      // console.log("Document data:", roomsnap.data());
+      return roomsnap.data();
+    }
+  };
+  const getchats = async () => {
     try {
-      if (userdata) {
-        const followingusers = [];
-        console.log("getfollowingusers runningg.........");
-        for (let i = 0; i < userdata.followingcount; i++) {
-          const userRef = doc(db, "username", userdata.following[i]);
-          const docSnap = await getDoc(userRef);
-          if (docSnap.exists()) {
-            followingusers.push(docSnap.data());
+      if (!userdata) return;
+
+      const charef = doc(db, "chats", userdata.userName);
+      const chasnap = await getDoc(charef);
+
+      if (chasnap.exists()) {
+        // console.log("Document data:", chasnap.data());
+        const chatrooms = [];
+
+        // Fetch message data for all rooms
+        const roomDataPromises = chasnap.data().rooms.map(async (roomId) => {
+          const roomData = await getroomdata(roomId);
+          if (roomData.type == "p") {
+            getpfp(
+              roomData.participants[0] == userdata.userName
+                ? roomData.participants[1]
+                : roomData.participants[0]
+            );
           }
-        }
-        console.log(followingusers);
-        setFollowingUsersdata(followingusers);
+          const lastMessageId =
+            roomData.messages.length > 0
+              ? roomData.messages[roomData.messages.length - 1]
+              : null;
+          if (lastMessageId) {
+            const messageData = await getDoc(
+              doc(db, "messages", lastMessageId)
+            );
+            roomData.lastMessageTimestamp = messageData.data().timestamp;
+          } else {
+            roomData.lastMessageTimestamp = 0; // Set a default timestamp for rooms without messages
+          }
+          return roomData;
+        });
+
+        // Wait for all message data to be fetched
+        const chatroomsWithTimestamp = await Promise.all(roomDataPromises);
+
+        // Sort the chatrooms array based on the timestamp of the last message in each room
+        chatroomsWithTimestamp.sort(
+          (a, b) => b.lastMessageTimestamp - a.lastMessageTimestamp
+        );
+
+        // console.log("After sorting:", chatroomsWithTimestamp);
+        setChats(chatroomsWithTimestamp);
       }
     } catch (error) {
+      console.error("Error getting chats:", error.message);
       toast.error("Error " + error.message);
     }
   };
+
+  useEffect(() => {
+    console.log(otherchats);
+  }, [otherchats]);
+  useEffect(() => {
+    getchats();
+  }, [userdata]);
   const searchUsers = async () => {
     try {
       console.log("Searching users..." + searchtext);
@@ -109,11 +162,11 @@ const Home = () => {
     }
   };
   const getpfp = async (username) => {
+    if (pfps[username]) return;
     const useref = doc(db, "username", username);
     const userSnap = await getDoc(useref);
     if (userSnap.exists()) {
-      console.log("Document data:", userSnap.data().pfp);
-      return userSnap.data().pfp;
+      pfps[username] = userSnap.data().pfp;
     }
   };
   const getuserdata = async (currentUser) => {
@@ -131,11 +184,13 @@ const Home = () => {
     setcreatepostmenu(!createpostmenu);
   };
   useEffect(() => {
+    if (userdata) {
+      getchats();
+    }
+  }, [roomid, messages]);
+  useEffect(() => {
     checkprevchat();
   }, [chatwindow]);
-  useEffect(() => {
-    getfollowingusers();
-  }, [userdata]);
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
@@ -156,57 +211,59 @@ const Home = () => {
     }
   }, [searchtext]);
   const checkprevchat = async () => {
-    console.log("Checking previous chat...");
     setChatloading(true);
-    if (userdata) {
+    if (userdata && !roomid) {
       try {
+        console.log("Checking previous chat...");
         // Construct the query to find the chat document where the current user is a participant
-        const currentUserChatQuery = query(
-          collection(db, "messagerooms"),
-          where("type", "==", "p"),
-          where("participants", "array-contains", userdata.userName)
-        );
+        if (chattype == "p") {
+          const currentUserChatQuery = query(
+            collection(db, "messagerooms"),
+            where("type", "==", "p"),
+            where("participants", "array-contains", userdata.userName)
+          );
 
-        // Execute the query for the current user
-        const currentUserQuerySnapshot = await getDocs(currentUserChatQuery);
+          // Execute the query for the current user
+          const currentUserQuerySnapshot = await getDocs(currentUserChatQuery);
 
-        // Construct the query to find the chat document where the chat window user is a participant
-        const chatWindowChatQuery = query(
-          collection(db, "messagerooms"),
-          where("type", "==", "p"),
-          where("participants", "array-contains", chatwindow)
-        );
+          // Construct the query to find the chat document where the chat window user is a participant
+          const chatWindowChatQuery = query(
+            collection(db, "messagerooms"),
+            where("type", "==", "p"),
+            where("participants", "array-contains", chatwindow)
+          );
 
-        // Execute the query for the chat window user
-        const chatWindowQuerySnapshot = await getDocs(chatWindowChatQuery);
+          // Execute the query for the chat window user
+          const chatWindowQuerySnapshot = await getDocs(chatWindowChatQuery);
 
-        // Combine the results of both queries
-        const currentUserChatDocs = currentUserQuerySnapshot.docs;
-        const chatWindowChatDocs = chatWindowQuerySnapshot.docs;
+          // Combine the results of both queries
+          const currentUserChatDocs = currentUserQuerySnapshot.docs;
+          const chatWindowChatDocs = chatWindowQuerySnapshot.docs;
 
-        // Check if there's any document that exists in both result sets
-        const commonChatDocs = currentUserChatDocs.filter((doc) => {
-          return chatWindowChatDocs.some((otherDoc) => otherDoc.id === doc.id);
-        });
-        if (commonChatDocs.length > 0) {
-          console.log("Common Chat Docs: ", commonChatDocs[0].id);
-          const usref = doc(db, "username", chatwindow);
-          const usnap = await getDoc(usref);
-          if (usnap.exists()) {
-            setChatuserdata(usnap.data());
-          }
-          setRoomid(commonChatDocs[0].id);
-          setChatloading(false);
-        } else console.log("No common chat docs found");
-        // Set chPrevChat based on whether common chat documents were found
-        setchprevchat(commonChatDocs.length > 0);
+          // Check if there's any document that exists in both result sets
+          const commonChatDocs = currentUserChatDocs.filter((doc) => {
+            return chatWindowChatDocs.some(
+              (otherDoc) => otherDoc.id === doc.id
+            );
+          });
+          if (commonChatDocs.length > 0) {
+            console.log("Common Chat Docs: ", commonChatDocs[0].id);
+            const usref = doc(db, "username", chatwindow);
+            const usnap = await getDoc(usref);
+            if (usnap.exists()) {
+              setChatuserdata(usnap.data());
+            }
+            setRoomid(commonChatDocs[0].id);
+          } else console.log("No common chat docs found");
+          // Set chPrevChat based on whether common chat documents were found
+          setchprevchat(commonChatDocs.length > 0);
+        }
       } catch (error) {
         console.error("Error checking previous chat:", error);
         // Handle the error
       }
-    } else {
-      setchprevchat(false);
     }
+    setchprevchat(false);
   };
   useEffect(() => {
     let unsubscribe;
@@ -216,12 +273,14 @@ const Home = () => {
     };
 
     if (roomid !== "") {
+      console.log("Room Id:", roomid);
       disc();
     }
 
     return () => {
       if (unsubscribe) {
-        unsubscribe(); // Call unsubscribe when component unmounts
+        unsubscribe();
+        setMessages([]); // Call unsubscribe when component unmounts
       }
     };
   }, [roomid]);
@@ -300,7 +359,9 @@ const Home = () => {
   };
   const displaychat = async () => {
     try {
-      if (userdata && roomid !== "") {
+      if (userdata && roomid) {
+        // if (chattype == "p") {
+        console.log(roomid);
         console.log("Displaying chat...");
         const msgref = collection(db, "messages");
 
@@ -373,7 +434,8 @@ const Home = () => {
 
   useEffect(() => {
     // Scroll to the bottom of the chat window when messages update
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messages.length != 0)
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
   function convertToChatTime(timestamp) {
     const now = new Date();
@@ -420,91 +482,8 @@ const Home = () => {
   }
 
   // Function to handle media upload
-  const handleMediaUpload = async (file, mediaType) => {
-    try {
-      // Reset upload progress
-      setUploadProgress(0);
 
-      // Calculate total bytes of the file
-      const totalBytes = file.size;
-
-      // Upload file to Firebase Storage
-      const storageRef = ref(storage, `media/${file.name}`);
-      const uploadTask = uploadBytesResumable(storageRef, file);
-
-      // Update upload progress
-      uploadTask.on("state_changed", (snapshot) => {
-        const progress = (snapshot.bytesTransferred / totalBytes) * 100;
-        setUploadProgress(progress);
-      });
-
-      // Wait for upload to complete
-      await uploadTask;
-
-      // Get download URL
-      const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-
-      // Call sendMediaMessage with downloadURL
-      sendMediaMessage(downloadURL, mediaType);
-    } catch (error) {
-      console.error("Error uploading media:", error.message);
-      toast.error("Error uploading media: " + error.message);
-    }
-  };
-
-  // Function to handle media download
-  const handleMediaDownload = async (mediaURL) => {
-    try {
-      // Reset download progress
-      setDownloadProgress(0);
-
-      // Create a reference to the media file
-      const mediaRef = ref(storage, mediaURL);
-
-      // Get metadata (e.g., total bytes)
-      const metadata = await getMetadata(mediaRef);
-      const totalBytes = metadata.size;
-
-      // Download media file
-      const downloadTask = getDownloadURL(mediaRef);
-
-      // Update download progress
-      downloadTask.on("state_changed", (snapshot) => {
-        const progress = (snapshot.bytesTransferred / totalBytes) * 100;
-        setDownloadProgress(progress);
-      });
-
-      // Wait for download to complete
-      await downloadTask;
-    } catch (error) {
-      console.error("Error downloading media:", error.message);
-      toast.error("Error downloading media: " + error.message);
-    }
-  };
-
-  // Function to handle sending media message
-  const sendMediaMessage = async (mediaURL, mediaType) => {
-    // Implement sending media message logic here
-    // This function will be called after media upload completes
-  };
-
-  // JSX for upload progress bar
-  const uploadProgressBar = (
-    <div className="progress-bar">
-      <div className="progress" style={{ width: `${uploadProgress}%` }}></div>
-    </div>
-  );
-
-  // JSX for download progress bar
-  const downloadProgressBar = (
-    <div className="progress-bar">
-      <div className="progress" style={{ width: `${downloadProgress}%` }}></div>
-    </div>
-  );
-  const messageRef = React.useRef(null);
-
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false); // State to track dropdown visibility
-  const [selectedMessage, setSelectedMessage] = useState(null); // State to track selected message
+  // State to track selected message
 
   // Function to handle message copy
   const handleCopy = (text) => {
@@ -536,85 +515,149 @@ const Home = () => {
     setIsDropdownOpen(!isDropdownOpen);
     setSelectedMessage(message);
   };
-  const creategroup = () => {};
+  const creategroup = () => {
+    setopengrpchatcreate(!opengrpchatcreate);
+  };
+  const handleclosegrpchatcreation = () => {
+    setopengrpchatcreate(false);
+  }
   return (
-    <div className="ml-5 w-full">
+    <div className="ml-5 w-full h-full">
+      <Toaster />
       {userdata && (
-        <div className="main2 rounded-2xl w-full bg-white bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-20 shadow-2xl border-1 border-black">
-          <div className="flex w-full">
-            <div className="search ml-5 mt-5 w-full">
-              <input
-                className="w-1/4 h-12 text-2xl p-2  placeholder-italic  rounded-2xl bg-gray-300 border-black transition-all duration-300 outline-none shadow-2xl hover:shadow-3xl focus:shadow-3xl  hover:bg-gray-400 focus:bg-gray-400"
-                type="text"
-                value={searchtext}
-                onChange={(e) => setSearchtext(e.target.value)}
-                placeholder="Search"
-                // Add hover and focus styles
-                style={{
-                  background: "rgba(192,192,192,0.5)",
-                  ":hover": {
-                    transform: "scale(1.2)", // Scale up on hover
-                    background: "rgba(192,192,192,0.7)", // Lighter background on hover
-                  },
-                  // Focus styles
-                  ":focus": {
-                    background: "rgba(192,192,192,0.8)", // Deeper background color when selected
-                    outline: "none", // Remove outline when selected
-                  },
-                }}
-              />
-              {/* Render search results only if there are results and search text is not empty */}
-              {searchResults.length > 0 && searchtext.length > 0 && (
-                <div className="search-results absolute bg-white dark:bg-black z-10 w-1/4">
-                  <ul>
-                    {searchResults.map((user) => (
-                      <Link href={`/${user.userName}`} key={user.id}>
-                        <li>{user.userName}</li>
-                      </Link>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              <div className="kp "></div>
+        <div className="main2 rounded-2xl w-full bg-white bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-20 shadow-2xl border-1 border-black h-full">
+          <div className="flex w-full ">
+            <div className="messages  text-5xl ml-6 mt-6 mr-6 font-lucy w-1/4 ">
+              Messages
+            </div>
+            <div className="flex justify-between w-3/4">
+              <div className="search ml-5 mt-5 ">
+                <input
+                  className=" h-12 text-2xl p-2  placeholder-italic placeholder:text-white  rounded-2xl bg-gray-300 text-white border-black transition-all duration-300 outline-none shadow-2xl hover:shadow-3xl focus:shadow-3xl  hover:bg-gray-400 focus:bg-gray-400"
+                  type="text"
+                  value={searchtext}
+                  onChange={(e) => setSearchtext(e.target.value)}
+                  placeholder="Search"
+                  // Add hover and focus styles
+                  style={{
+                    background: "rgba(192,192,192,0.5)",
+                    ":hover": {
+                      transform: "scale(1.2)", // Scale up on hover
+                      background: "rgba(192,192,192,0.7)", // Lighter background on hover
+                    },
+                    // Focus styles
+                    ":focus": {
+                      background: "rgba(192,192,192,0.8)", // Deeper background color when selected
+                      outline: "none", // Remove outline when selected
+                    },
+                  }}
+                />
+
+                {/* Render search results only if there are results and search text is not empty */}
+                {searchResults.length > 0 && searchtext.length > 0 && (
+                  <div className="search-results absolute bg-white dark:bg-black z-10 w-1/4">
+                    <ul>
+                      {searchResults.map((user) => (
+                        <div
+                          onClick={() => setChatwindow(user.userName)}
+                          key={user.id}
+                        >
+                          <li>{user.userName}</li>
+                        </div>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                <div className="kp "></div>
+              </div>
+              <button className="createchat cursor-pointer h-auto mt-5 p-3 rounded-2xl bg-purple-600 mr-10 backdrop-filter backdrop-blur-lg bg-opacity-90 shadow-2xl hover:bg-purple-700" onClick={()=>setopengrpchatcreate(true)}>
+                Create a Group
+              </button>
             </div>
           </div>
           <div className="flex justify-between mt-2 my-5 mx-6 ">
-            <div className="messages  text-5xl font-lucy">Messages</div>
-            <div className="createchat" onClick={creategroup}>
-              Create a Group
-            </div>
+            {opengrpchatcreate && <GroupChat userdata={userdata} onClose={handleclosegrpchatcreation} />}
           </div>
 
-          <div className="flex justify-between w-full  ">
-            <div className="followingusers w-1/4 m-6 overflow-y-auto">
-              {followingusersdata &&
-                followingusersdata.map((user) => (
-                  <div
-                    className="key cursor-pointer"
-                    key={user.userName}
-                    onClick={() => setChatwindow(user.userName)}
-                  >
-                    <div className="flex my-4 ">
-                      <div className="pfp mr-2">
-                        <Image
-                          className="h-10 w-10  rounded-full"
-                          src={user.pfp}
-                          height={50}
-                          width={50}
-                          alt={user.userName}
-                        ></Image>
+          <div className="flex justify-between w-full ">
+            <div
+              className="followingusers w-1/4 m-6 overflow-y-auto"
+              key={roomid}
+            >
+              {chats &&
+                chats.map((chat, index) =>
+                  chat.type == "p" ? (
+                    <div
+                      className="key cursor-pointer"
+                      key={index}
+                      onClick={() => {
+                        setRoomid(chat.roomid);
+                        setChattype("p");
+                        setChatwindow(
+                          chat.participants[0] == userdata.userName
+                            ? chat.participants[1]
+                            : chat.participants[0]
+                        );
+                      }}
+                    >
+                      <div className="flex my-4 ">
+                        <div className="pfp mr-2">
+                          {pfps[chat.participants[1]] && (
+                            <Image
+                              className="h-10 w-10 rounded-full"
+                              src={pfps[chat.participants[1]]}
+                              height={50}
+                              width={50}
+                              alt={chat.participants[1]}
+                            ></Image>
+                          )}
+                        </div>
+                        <div className="username font-bold text-xl">
+                          {chat.participants[1] == userdata.userName
+                            ? `${chat.participants[0]}`
+                            : `${chat.participants[1]}`}
+                        </div>
                       </div>
-                      <div className="username text-xl">{user.userName}</div>
                     </div>
-                  </div>
-                ))}
+                  ) : (
+                    <div
+                      className="key cursor-pointer"
+                      key={index}
+                      onClick={() => {
+                        setRoomid(chat.roomid);
+                        setChattype("g");
+                        setChatwindow(chat.title);
+                      }}
+                    >
+                      <div className="title font-bold text-xl">
+                        {chat.title}
+                      </div>
+                      {chat.participants.map(
+                        (participant) => participant + " "
+                      )}{" "}
+                    </div>
+                  )
+                )}
             </div>
-            <div className="chatwindow w-3/4 border-2 mx-6 bg-gray-700  bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-10 shadow-2xl border-none rounded-2xl  relative">
+            <div className="chatwindow w-3/4 border-2 mx-6 bg-gray-700  bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-10 shadow-2xl border-none rounded-2xl h-full relative">
               {roomid == "" ? (
                 <></>
               ) : (
                 <>
-                  <div className="overflow-y-auto h-full pb-16  w-full">
+                  <div className="overflow-y-auto h-full pb-16 pt-10 w-full">
+                    <div className="g fixed top-0 rounded-2xl h-10 pt-2 w-full text-center bg-purple-500 bg-clip-padding backdrop-filter backdrop-blur-lg bg-opacity-100 shadow-2xl  border-none">
+                      <div className="flex justify-center">
+                        <Image
+                          className="h-7 w-7 rounded-full mr-2"
+                          src={pfps[chatwindow]}
+                          height={50}
+                          width={50}
+                          alt={chatwindow}
+                        ></Image>
+                        {chatwindow}
+                      </div>
+                    </div>
+
                     {messages.map((message) => (
                       <div
                         className="px-6"
@@ -673,8 +716,9 @@ const Home = () => {
                             <div className="ko  flex right-0 my-5">
                               <div className="e bg-purple-400 p-3 rounded-xl">
                                 <div className="flex">
+                                  {console.log(pfps["sarkarsrm"])}
                                   <Image
-                                    src={chatuserdata.pfp}
+                                    src={pfps[messages.sender]}
                                     className="rounded-full h-5 w-5 mr-1"
                                     alt="Profile Pic"
                                     height={50}
@@ -720,13 +764,13 @@ const Home = () => {
                   </div>
                 </>
               )}
-              {chatloading && (
+              {/* {chatloading && (
                 <>
                   <div className="w-full text-center align-middle">
                     Loading......
                   </div>
                 </>
-              )}
+              )} */}
               {roomid == "" && chatwindow != "none" && (
                 <div className="df">
                   <div className="pfp ml-2 cursor-pointer">
@@ -754,7 +798,7 @@ const Home = () => {
                   )}
                 </div>
               )}
-              {chatwindow === "none" && (
+              {!roomid && (
                 <div className="text-3xl text-center align-middle mt-56 my-10">
                   Select a chat to start messaging
                 </div>
