@@ -1,10 +1,9 @@
 "use client";
 import app from "@/lib/firebase/firebaseConfig";
-import React, { use, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import "../../styles/gradients.css";
-// import GroupChat from "@/components/GroupChat";
 import "../../styles/feed.css";
 import {
   collection,
@@ -22,8 +21,7 @@ import {
   setDoc,
   addDoc,
 } from "firebase/firestore";
-// import dynamic from "next/dynamic"
-import { getStorage, deleteObject } from "firebase/storage";
+
 import Image from "next/image";
 import { getFirestore, getDoc } from "firebase/firestore";
 import dynamic from "next/dynamic";
@@ -32,10 +30,13 @@ import toast, { Toaster } from "react-hot-toast";
 const Home = () => {
   const auth = getAuth(app);
   const [user, setUser] = useState(auth.currentUser);
-  const storage = getStorage(app);
   const [createpostmenu, setcreatepostmenu] = useState(false);
   const router = useRouter();
   const [userdata, setUserData] = useState(null);
+  const [currentmsglength, setcurrentmsglength] = useState(50);
+  const messagesEndRef = React.useRef(null);
+  const [chatuserdata, setChatuserdata] = useState("");
+  const [maxlength, setmaxlength] = useState(0);
   const [pfps, setPfps] = useState({});
   const db = getFirestore(app);
   const [searchResults, setSearchResults] = useState([]);
@@ -48,12 +49,9 @@ const Home = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false); // State to track dropdown visibility
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [chatwindow, setChatwindow] = useState("none");
-  const [chatuserdata, setChatuserdata] = useState("");
   const [searchtext, setSearchtext] = useState("");
-  const [chatloading, setChatloading] = useState(false);
   const [chprevchat, setchprevchat] = useState(false);
-  const [otherchats, setOtherchats] = useState([]);
-  const [followingusersdata, setFollowingUsersdata] = useState([]);
+  //function to get data of messagerooms
   const getroomdata = async (id) => {
     const roomref = doc(db, "messagerooms", id);
     const roomsnap = await getDoc(roomref);
@@ -62,6 +60,7 @@ const Home = () => {
       return roomsnap.data();
     }
   };
+  //function to get chats of user
   const getchats = async () => {
     try {
       if (!userdata) return;
@@ -71,7 +70,6 @@ const Home = () => {
 
       if (chasnap.exists()) {
         // console.log("Document data:", chasnap.data());
-        const chatrooms = [];
 
         // Fetch message data for all rooms
         const roomDataPromises = chasnap.data().rooms.map(async (roomId) => {
@@ -82,6 +80,10 @@ const Home = () => {
                 ? roomData.participants[1]
                 : roomData.participants[0]
             );
+          } else {
+            roomData.participants.map(async (participant) => {
+              getpfp(participant);
+            });
           }
           const lastMessageId =
             roomData.messages.length > 0
@@ -114,10 +116,6 @@ const Home = () => {
       toast.error("Error " + error.message);
     }
   };
-
-  useEffect(() => {
-    console.log(otherchats);
-  }, [otherchats]);
   useEffect(() => {
     getchats();
   }, [userdata]);
@@ -162,13 +160,22 @@ const Home = () => {
     }
   };
   const getpfp = async (username) => {
-    if (pfps[username]) return;
-    const useref = doc(db, "username", username);
-    const userSnap = await getDoc(useref);
-    if (userSnap.exists()) {
-      pfps[username] = userSnap.data().pfp;
+    try {
+      if (!pfps[username]) {
+        const useref = doc(db, "username", username);
+        const userSnap = await getDoc(useref);
+        if (userSnap.exists()) {
+          setPfps((prevPfps) => ({
+            ...prevPfps,
+            [username]: userSnap.data().pfp,
+          }));
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching profile picture:", error);
     }
   };
+
   const getuserdata = async (currentUser) => {
     const userRef = doc(db, "users", currentUser.email);
     const docSnap = await getDoc(userRef);
@@ -179,9 +186,6 @@ const Home = () => {
       console.log("No such document!");
       // Handle the case where user data doesn't exist
     }
-  };
-  const handleCreatePost = () => {
-    setcreatepostmenu(!createpostmenu);
   };
   useEffect(() => {
     if (userdata) {
@@ -211,7 +215,7 @@ const Home = () => {
     }
   }, [searchtext]);
   const checkprevchat = async () => {
-    setChatloading(true);
+    // setChatloading(true);
     if (userdata && !roomid) {
       try {
         console.log("Checking previous chat...");
@@ -280,10 +284,11 @@ const Home = () => {
     return () => {
       if (unsubscribe) {
         unsubscribe();
+        // setcurrentmsglength(50);
         setMessages([]); // Call unsubscribe when component unmounts
       }
     };
-  }, [roomid]);
+  }, [roomid, currentmsglength]);
 
   const startchat = async () => {
     try {
@@ -357,6 +362,7 @@ const Home = () => {
       toast.error("Error " + error.message);
     }
   };
+  const [loadingold, setloadingold] = useState(false);
   const displaychat = async () => {
     try {
       if (userdata && roomid) {
@@ -364,12 +370,12 @@ const Home = () => {
         console.log(roomid);
         console.log("Displaying chat...");
         const msgref = collection(db, "messages");
-
+        console.log("Current Message Length:", currentmsglength);
         const q = query(
           msgref,
           where("roomid", "==", roomid),
           orderBy("timestamp", "desc"),
-          limit(50)
+          limit(currentmsglength)
         );
         const unsubscribe = onSnapshot(q, (querySnapshot) => {
           let messages = [];
@@ -383,9 +389,11 @@ const Home = () => {
               updatereadstatus(doc.id);
             }
           });
+
           setMessages(messages.reverse());
         });
-        // Return unsubscribe function to detach listener when needed
+        // Scroll to the bottom of the chat window when messages update
+
         return unsubscribe;
       }
     } catch (error) {
@@ -393,7 +401,25 @@ const Home = () => {
       toast.error("Error " + error.message);
     }
   };
-
+  useEffect(() => {
+    if (userdata && roomid) {
+      const getlength = async () => {
+        const msgroomref = doc(db, "messagerooms", roomid);
+        const msgroomdata = await getDoc(msgroomref);
+        if (msgroomdata.exists()) {
+          setmaxlength(msgroomdata.data().messages.length);
+        }
+      };
+      getlength();
+      setcurrentmsglength(50);
+    }
+  }, [roomid]);
+  useEffect(() => {
+    // Scroll to the bottom of the chat window when messages update
+    if (messages.length != 0 && !loadingold)
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    setloadingold(false);
+  }, [messages]);
   const sendMesage = async () => {
     try {
       if (userdata) {
@@ -430,13 +456,7 @@ const Home = () => {
   useEffect(() => {
     checkprevchat();
   }, [roomid]);
-  const messagesEndRef = React.useRef(null);
 
-  useEffect(() => {
-    // Scroll to the bottom of the chat window when messages update
-    if (messages.length != 0)
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
   function convertToChatTime(timestamp) {
     const now = new Date();
     const messageDate = new Date(timestamp);
@@ -515,12 +535,9 @@ const Home = () => {
     setIsDropdownOpen(!isDropdownOpen);
     setSelectedMessage(message);
   };
-  const creategroup = () => {
-    setopengrpchatcreate(!opengrpchatcreate);
-  };
   const handleclosegrpchatcreation = () => {
     setopengrpchatcreate(false);
-  }
+  };
   return (
     <div className="ml-5 w-full h-full">
       <Toaster />
@@ -532,51 +549,65 @@ const Home = () => {
             </div>
             <div className="flex justify-between w-3/4">
               <div className="search ml-5 mt-5 ">
-                <input
-                  className=" h-12 text-2xl p-2  placeholder-italic placeholder:text-white  rounded-2xl bg-gray-300 text-white border-black transition-all duration-300 outline-none shadow-2xl hover:shadow-3xl focus:shadow-3xl  hover:bg-gray-400 focus:bg-gray-400"
-                  type="text"
-                  value={searchtext}
-                  onChange={(e) => setSearchtext(e.target.value)}
-                  placeholder="Search"
-                  // Add hover and focus styles
-                  style={{
-                    background: "rgba(192,192,192,0.5)",
-                    ":hover": {
-                      transform: "scale(1.2)", // Scale up on hover
-                      background: "rgba(192,192,192,0.7)", // Lighter background on hover
-                    },
-                    // Focus styles
-                    ":focus": {
-                      background: "rgba(192,192,192,0.8)", // Deeper background color when selected
-                      outline: "none", // Remove outline when selected
-                    },
-                  }}
-                />
+                <div className="ser">
+                  <input
+                    className=" h-12 text-2xl p-2 rounded-2xl focus:rounded-t-2xl focus:rounded-b-none placeholder-italic placeholder:text-white   bg-gray-300 text-white border-black transition-all duration-300 outline-none shadow-2xl hover:shadow-3xl focus:shadow-3xl  hover:bg-gray-400 focus:bg-gray-400"
+                    type="text"
+                    value={searchtext}
+                    onChange={(e) => setSearchtext(e.target.value)}
+                    placeholder="Search"
+                    // Add hover and focus styles
+                    style={{
+                      background: "rgba(192,192,192,0.5)",
+                      ":hover": {
+                        transform: "scale(1.2)", // Scale up on hover
+                        background: "rgba(192,192,192,0.7)", // Lighter background on hover
+                      },
+                      // Focus styles
+                      ":focus": {
+                        background: "rgba(192,192,192,0.8)", // Deeper background color when selected
+                        outline: "none", // Remove outline when selected
+                      },
+                    }}
+                  />
 
-                {/* Render search results only if there are results and search text is not empty */}
-                {searchResults.length > 0 && searchtext.length > 0 && (
-                  <div className="search-results absolute bg-white dark:bg-black z-10 w-1/4">
-                    <ul>
-                      {searchResults.map((user) => (
-                        <div
-                          onClick={() => setChatwindow(user.userName)}
-                          key={user.id}
-                        >
-                          <li>{user.userName}</li>
-                        </div>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                <div className="kp "></div>
+                  {/* Render search results only if there are results and search text is not empty */}
+                  {searchResults.length > 0 && searchtext.length > 0 && (
+                    <div className="search-results absolute bg-white w-1/4 rounded-b-2xl z-10 ">
+                      <ul>
+                        {searchResults.length > 0 ? (
+                          searchResults.map((user) => (
+                            <div
+                              onClick={() => setChatwindow(user.userName)}
+                              key={user.id}
+                            >
+                              <li>{user.userName}</li>
+                            </div>
+                          ))
+                        ) : (
+                          <>No Users Found</>
+                        )}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+                {/* <div className="kp "></div> */}
               </div>
-              <button className="createchat cursor-pointer h-auto mt-5 p-3 rounded-2xl bg-purple-600 mr-10 backdrop-filter backdrop-blur-lg bg-opacity-90 shadow-2xl hover:bg-purple-700" onClick={()=>setopengrpchatcreate(true)}>
+              <button
+                className="createchat cursor-pointer h-auto mt-5 p-3 rounded-2xl bg-purple-600 mr-10 backdrop-filter backdrop-blur-lg bg-opacity-90 shadow-2xl hover:bg-purple-700"
+                onClick={() => setopengrpchatcreate(true)}
+              >
                 Create a Group
               </button>
             </div>
           </div>
           <div className="flex justify-between mt-2 my-5 mx-6 ">
-            {opengrpchatcreate && <GroupChat userdata={userdata} onClose={handleclosegrpchatcreation} />}
+            {opengrpchatcreate && (
+              <GroupChat
+                userdata={userdata}
+                onClose={handleclosegrpchatcreation}
+              />
+            )}
           </div>
 
           <div className="flex justify-between w-full ">
@@ -647,17 +678,30 @@ const Home = () => {
                   <div className="overflow-y-auto h-full pb-16 pt-10 w-full">
                     <div className="g fixed top-0 rounded-2xl h-10 pt-2 w-full text-center bg-purple-500 bg-clip-padding backdrop-filter backdrop-blur-lg bg-opacity-100 shadow-2xl  border-none">
                       <div className="flex justify-center">
-                        <Image
-                          className="h-7 w-7 rounded-full mr-2"
-                          src={pfps[chatwindow]}
-                          height={50}
-                          width={50}
-                          alt={chatwindow}
-                        ></Image>
+                        {chattype == "p" && (
+                          <Image
+                            className="h-7 w-7 rounded-full mr-2"
+                            src={pfps[chatwindow]}
+                            height={50}
+                            width={50}
+                            alt={chatwindow}
+                          ></Image>
+                        )}
                         {chatwindow}
                       </div>
                     </div>
-
+                    <div className="flex justify-center">
+                      {currentmsglength < maxlength && (
+                        <button
+                          onClick={() => {
+                            setcurrentmsglength(currentmsglength + 50);
+                            setloadingold(true);
+                          }}
+                        >
+                          Load older Messages{maxlength - currentmsglength}
+                        </button>
+                      )}
+                    </div>
                     {messages.map((message) => (
                       <div
                         className="px-6"
@@ -716,14 +760,16 @@ const Home = () => {
                             <div className="ko  flex right-0 my-5">
                               <div className="e bg-purple-400 p-3 rounded-xl">
                                 <div className="flex">
-                                  {console.log(pfps["sarkarsrm"])}
-                                  <Image
-                                    src={pfps[messages.sender]}
-                                    className="rounded-full h-5 w-5 mr-1"
-                                    alt="Profile Pic"
-                                    height={50}
-                                    width={50}
-                                  />
+                                  {/* {console.log(pfps[message.sender])} */}
+                                  {pfps[message.sender] && (
+                                    <Image
+                                      src={pfps[message.sender]}
+                                      className="rounded-full h-5 w-5 mr-1"
+                                      alt="Profile Pic"
+                                      height={50}
+                                      width={50}
+                                    />
+                                  )}
                                   <div className="td text-sm font-bolda">
                                     {message.sender}
                                   </div>

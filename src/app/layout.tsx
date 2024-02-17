@@ -3,9 +3,10 @@ import { Inter } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 import type { Viewport } from "next";
-import { Analytics } from '@vercel/analytics/react';
+import { Analytics } from "@vercel/analytics/react";
 import Head from "next/head";
 import StoreProvider from "@/store/StoreProvider";
+import { StrictMode } from "react";
 const lucy = localFont({
   src: "/fonts/lucy.ttf",
   variable: "--font-lucy",
@@ -57,9 +58,12 @@ export default function RootLayout({
         <meta name="theme-color" content="#4285f4" />
       </Head>
       <html lang="en" className={`${lucy.variable} ${rethink.variable}`}>
-        <body className={inter.className}>{children}
-        <Analytics/>
+        <StrictMode>
+          <body className={inter.className}>
+            {children}
+            <Analytics />
           </body>
+        </StrictMode>
       </html>
     </StoreProvider>
   );
