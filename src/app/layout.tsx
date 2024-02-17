@@ -7,6 +7,7 @@ import { Analytics } from "@vercel/analytics/react";
 import Head from "next/head";
 import StoreProvider from "@/store/StoreProvider";
 import { StrictMode } from "react";
+import { SpeedInsights } from "@vercel/speed-insights/next"
 const lucy = localFont({
   src: "/fonts/lucy.ttf",
   variable: "--font-lucy",
@@ -62,6 +63,7 @@ export default function RootLayout({
           <body className={inter.className}>
             {children}
             <Analytics />
+            <SpeedInsights />
           </body>
         </StrictMode>
       </html>
