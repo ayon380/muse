@@ -132,7 +132,7 @@ const SideBar = ({ usage, data }) => {
         }
     };
     return (
-        <div className="bg-white dark:bg-black  rounded-xl bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-40 shadow-2xl border-1 border-black lpo">
+        <div className="bg-white dark:bg-black h-full rounded-xl bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-40 shadow-2xl border-1 border-black lpo">
             {userdata && (
                 <div className="main1 w-96">
                     <div className="text-8xl font-lucy text-center mt-4 ">
