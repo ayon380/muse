@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { collection, addDoc, doc, updateDoc, query, where, orderBy, limit, getDocs, arrayUnion } from "firebase/firestore";
 import { getFirestore } from "firebase/firestore";
 import toast, { Toaster } from "react-hot-toast";
+import { on } from "events";
 
 const GroupChat = ({ userdata, onClose }) => {
     const db = getFirestore();
@@ -10,7 +11,8 @@ const GroupChat = ({ userdata, onClose }) => {
     const [chatInfo, setChatInfo] = useState("");
     const [searchtext, setSearchtext] = useState("");
     const [searchResults, setSearchResults] = useState([]);
-    const [participants, setParticipants] = useState([userdata.userName]);
+    const [usernames, setUsernames] = useState([userdata.userName]);
+    const [participants, setParticipants] = useState([userdata.uid]);
     // const [showModal, setShowModal] = useState(false);
 
     const searchUsers = async () => {
@@ -49,10 +51,12 @@ const GroupChat = ({ userdata, onClose }) => {
     };
 
     const handleAddParticipant = (participant) => {
-        if (participants.includes(participant)) {
+        if (participants.includes(participant.uid)) {
             return;
         }
-        setParticipants([...participants, participant]);
+        setUsernames([...usernames, participant.userName]);
+        setParticipants([...participants, participant.uid]);
+
     };
 
     const handleCreateGroupChat = async () => {
@@ -82,6 +86,7 @@ const GroupChat = ({ userdata, onClose }) => {
             setChatName("");
             toast.success("Group chat created successfully!");
             setChatInfo("");
+            onClose();
             setParticipants([]);
         } catch (error) {
             toast.error("Error creating group chat");
@@ -114,7 +119,7 @@ const GroupChat = ({ userdata, onClose }) => {
                     </label>
                     <label className="mb-4 block">
                         Add Participants:
-                        {participants.map((participant) => (
+                        {usernames.map((participant) => (
                             <li key={participant}>{participant}</li>
                         ))}
                         <input
@@ -128,7 +133,7 @@ const GroupChat = ({ userdata, onClose }) => {
                             <div className="search-results mt-2">
                                 <ul>
                                     {searchResults.map((user) => (
-                                        <div onClick={() => handleAddParticipant(user.userName)} key={user.id} className="cursor-pointer">
+                                        <div onClick={() => handleAddParticipant(user)} key={user.id} className="cursor-pointer">
                                             <li>{user.userName}</li>
                                         </div>
                                     ))}

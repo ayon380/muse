@@ -474,41 +474,34 @@ const Home = () => {
     yesterday.setDate(today.getDate() - 1);
 
     if (messageDate >= today) {
-      const formattedTime = messageDate.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        hour12: false,
-        minute: "numeric",
-      });
-      return `Today at ${formattedTime}`;
+        const hour = messageDate.getHours().toString().padStart(2, '0'); // Format the hour to ensure it's always two digits
+        const minute = messageDate.getMinutes().toString().padStart(2, '0'); // Format the minute to ensure it's always two digits
+        return `Today at ${hour}:${minute}`;
     } else if (messageDate >= yesterday) {
-      const formattedTime = messageDate.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "numeric",
-        hour12: false,
-      });
-      return `Yesterday at ${formattedTime}`;
+        const hour = messageDate.getHours().toString().padStart(2, '0'); // Format the hour to ensure it's always two digits
+        const minute = messageDate.getMinutes().toString().padStart(2, '0'); // Format the minute to ensure it's always two digits
+        return `Yesterday at ${hour}:${minute}`;
     } else {
-      const days = [
-        "Sunday",
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday",
-      ];
-      const day = days[messageDate.getDay()];
-      const formattedDate = messageDate.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-      });
-      const formattedTime = messageDate.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "numeric",
-      });
-      return `${day}, ${formattedDate} at ${formattedTime}`;
+        const days = [
+            "Sunday",
+            "Monday",
+            "Tuesday",
+            "Wednesday",
+            "Thursday",
+            "Friday",
+            "Saturday",
+        ];
+        const day = days[messageDate.getDay()];
+        const formattedDate = messageDate.toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+        });
+        const hour = messageDate.getHours().toString().padStart(2, '0'); // Format the hour to ensure it's always two digits
+        const minute = messageDate.getMinutes().toString().padStart(2, '0'); // Format the minute to ensure it's always two digits
+        return `${day}, ${formattedDate} at ${hour}:${minute}`;
     }
-  }
+}
+
 
   // Function to handle media upload
 
@@ -676,7 +669,7 @@ const Home = () => {
                         {chat.title}
                       </div>
                       {chat.participants.map(
-                        (participant) => participant + " "
+                        (participant) => usernames[participant] + " "
                       )}{" "}
                     </div>
                   )
