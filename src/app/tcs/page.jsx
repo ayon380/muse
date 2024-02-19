@@ -32,17 +32,17 @@ const Home = () => {
                   <p className="my-2">
                     <b className="text-xl font-bold">1.2 Definitions:</b>
                     <br />
-                    - "App" refers to Muse.
+                    - &quot;App&quot; refers to Muse.
                     <br />
-                    - "Company" refers to NoFilter LLC, the provider of the App.
+                    - &quot;Company&quot; refers to NoFilter LLC, the provider of the App.
                     <br />
-                    - "User" refers to any individual who accesses or uses the
+                    - &quot;User&quot; refers to any individual who accesses or uses the
                     App.
                     <br />
-                    - "Content" refers to any data, text, images, videos, audio,
+                    - &quot;Content&quot; refers to any data, text, images, videos, audio,
                     or other materials posted, uploaded, or shared on the App by
                     Users.
-                    <br />- "Personal Data" refers to any information that
+                    <br />- &quot;Personal Data&quot; refers to any information that
                     identifies or can be used to identify a User.
                   </p>
 
@@ -133,7 +133,7 @@ const Home = () => {
                     <b className="text-bold text-xl my-2">
                       4.3 Platform Ownership:
                     </b>{" "}
-                    The App's platform and infrastructure are owned and operated
+                    The App&apos;platform and infrastructure are owned and operated
                     by the Company. Users acknowledge that the Company retains
                     all rights, title, and interest in and to the App.
                   </p>
@@ -145,7 +145,7 @@ const Home = () => {
                     <b className="text-bold text-xl my-2">
                       5.1 Warranties Disclaimer:
                     </b>{" "}
-                    The App is provided on an "as-is" and "as-available" basis
+                    The App is provided on an &quot;as-is&quot; and &quot;as-available&quot; basis
                     without warranties of any kind, whether express or implied.
                     The Company disclaims all warranties, including but not
                     limited to the implied warranties of merchantability,

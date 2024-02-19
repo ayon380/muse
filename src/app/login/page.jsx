@@ -21,7 +21,7 @@ const Home = () => {
   const user = auth.currentUser;
   const checkIfUserExists = async (email) => {
     try {
-      const userRef = doc(db, "users", email);
+      const userRef = doc(db, "users",email);
       const userSnapshot = await getDoc(userRef);
       return userSnapshot.exists();
     } catch (error) {

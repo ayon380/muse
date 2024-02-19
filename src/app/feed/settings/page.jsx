@@ -3,7 +3,7 @@ import React from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import InputEmoji from "react-input-emoji";
-// import { FaQuestion } from "react-icons/fa6";
+import { FaQuestion } from "react-icons/fa6";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import EmojiPicker from "emoji-picker-react";
 import { useEffect } from "react";
@@ -11,7 +11,17 @@ import { FileUploader } from "react-drag-drop-files";
 import imageCompression from "browser-image-compression";
 import { getAuth } from "firebase/auth";
 import { toast, Toaster } from "react-hot-toast";
-import { getFirestore, setDoc, doc, getDoc } from "firebase/firestore";
+import {
+  getFirestore,
+  setDoc,
+  doc,
+  getDoc,
+  getDocs,
+  collection,
+  query,
+  where,
+  deleteDoc,
+} from "firebase/firestore";
 import Image from "next/image";
 import app from "@/lib/firebase/firebaseConfig";
 const Home = () => {
@@ -135,12 +145,14 @@ const Home = () => {
   const [checkStatus, setCheckStatus] = React.useState(1);
   // const [userName, setUserName] = React.useState("");
   const storage = getStorage(app);
+  const [saving, setsaving] = React.useState(false);
   const [file, setFile] = React.useState(null);
   const [formdata, setFormData] = React.useState(null);
   const [bio, setBio] = React.useState("");
   const cities = React.useRef([]);
   const [showEmoji, setshowemoji] = React.useState(false);
   const fileTypes = ["JPG", "PNG"];
+  const [deleting, setdeleting] = React.useState(false);
   const [fileDataURL, setFileDataURL] = React.useState(null);
   const getuserdata = async (user) => {
     try {
@@ -164,6 +176,7 @@ const Home = () => {
       if (!user) {
         router.push("/login");
       } else {
+        console.log(auth.currentUser.uid);
         getuserdata(user);
       }
     });
@@ -199,64 +212,153 @@ const Home = () => {
   };
   const deleteaccount = async () => {
     try {
+      setdeleting(true);
       const user = auth.currentUser;
       await deleteUser(user);
-      const userref=doc(db,"users",user.email);
-      const usernameref=doc(db,"usernames",userdata.userName);
-      const chatref=doc(db,"chats",user.userName);
-
+      const userref = doc(db, "users", user.email);
+      const usernameref = doc(db, "usernames", userdata.userName);
+      const stref=ref(storage,`images/${userdata.uid}`);
+      const chatref = doc(db, "chats", user.userName);
+      await deleteDoc(userref);
+      await deleteDoc(usernameref);
+      await deleteDoc(chatref);
+      await deleteObject(stref);
+      setdeleting(false);
+      toast.success("Account deleted successfully");
       router.push("/login");
     } catch (error) {
       console.log(error);
     }
   };
+  const handleupdate = async () => {
+    try {
+      setsaving(true);
+      const userRef = doc(db, "users", auth.currentUser.email);
+      const data = {
+        pfp: formdata.pfp,
+        fullname: formdata.fullname,
+        userName: formdata.userName,
+      };
+      // formdata.bio = bio;
+      const urref = doc(db, "username", userdata.uid);
+      const reff = ref(storage, `images/${userdata.uid}/PFP/pfp`);
+      if (file) {
+        const cf = await imageCompression(file, {
+          maxSizeMB: 1,
+          maxWidthOrHeight: 1920,
+          useWebWorker: true,
+        });
+        const ig = await uploadBytes(reff, cf);
+        const url = await getDownloadURL(ig.ref);
+        data.pfp = url;
+        formdata.pfp = url;
+      }
+      await setDoc(userRef, formdata, { merge: true });
+      await setDoc(urref, data, { merge: true });
+      toast.success(
+        "Settings updated successfully, it may take some time to reflect everywhere.."
+      );
+      setsaving(false);
+    } catch (error) {
+      toast.error(`Error updating settings: ${error.message}`);
+    }
+  };
+  const checkUserName = async () => {
+    try {
+      setCheckStatus(2);
+      if (formdata.userName) {
+        const userRef = collection(db, "username");
+        const q = query(userRef, where("userName", "==", formdata.userName));
+        const docSnap = await getDocs(q);
+        console.log("username lookup running...");
+        if (docSnap.size > 0) {
+          toast.error("Username already exists");
+
+          setCheckStatus(1);
+        } else {
+          toast.success("Username available");
+          setCheckStatus(3);
+        }
+      }
+    } catch (error) {
+      toast.error(`Error checking user existence: ${error.message}`);
+      setCheckStatus(1);
+      return false;
+    }
+  };
   return (
     <div className=" ml-5 w-full">
       <Toaster />
-      <div className="main2 rounded-2xl bg-white bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-20 shadow-2xl border-1 border-black p-6">
+      <div className="main2 rounded-2xl overflow-y-auto bg-white bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-20 shadow-2xl border-1 border-black p-6">
         <div className="heading font-lucy text-5xl  ">Settings</div>
         {userdata && (
-          <div className="body">
+          <div className="body overflow-y-auto">
             <div className="username my-6 font-bold text-xl">
               Welcome {userdata.userName}
             </div>
+            <div>
+              <div className="flex justify-center">
+                <input
+                  className="input bg-transparent border-white border-2 dark:text-black  dark:border-black p-2 rounded-xl shadow-2xl focus:border-2 dark:focus:border-black focus:outline-none placeholder-white dark:placeholder-black"
+                  onChange={(e) => {
+                    setFormData({ ...formdata, userName: e.target.value });
+                    setCheckStatus(1);
+                  }}
+                  value={formdata.userName}
+                  placeholder="UserName"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") checkUserName();
+                  }}
+                />
+              </div>
 
+              <div className="btn mt-10 flex justify-center">
+                <button
+                  className="fd font-rethink  flex mb-5 pl-6 pr-5 "
+                  onClick={checkUserName}
+                >
+                  Check
+                  <div className="lp mt-3 ml-2">
+                    {checkStatus === 1 ? (
+                      <FaQuestion />
+                    ) : checkStatus === 2 ? (
+                      <Image
+                        src="/btngif.gif"
+                        height={20}
+                        width={20}
+                        alt="gif"
+                      />
+                    ) : checkStatus === 3 ? (
+                      <Image src="/suc.png" height={20} width={20} alt="png" />
+                    ) : null}
+                  </div>
+                </button>
+              </div>
+            </div>
             <div className="name">
               <input
                 type="text"
                 className="input  bg-transparent border-white border-2 dark:text-black  dark:border-black p-2 rounded-xl shadow-2xl focus:border-2 dark:focus:border-black focus:outline-none placeholder-white dark:placeholder-black"
                 value={formdata.fullname}
                 onChange={(e) => {
-                  const emojiRegex = /[\uD800-\uDBFF][\uDC00-\uDFFF]/;
-                  if (!emojiRegex.test(e.target.value)) {
+                  {
                     setFormData({ ...formdata, fullname: e.target.value });
                   }
                 }}
                 placeholder={userdata.displayName}
-              />
+              ></input>
             </div>
             <div className="bio">
               <input
+                type="text"
                 className="input bg-transparent border-white border-2 dark:text-black  dark:border-black p-2 w-96 mt-2 rounded-xl shadow-2xl focus:border-2 dark:focus:border-black focus:outline-none placeholder-current placeholder-white dark:placeholder-black"
-                value={bio}
+                value={formdata.bio}
                 placeholder={userdata.bio}
                 onChange={(e) => {
-                  setBio(e.target.value);
+                  setFormData({ ...formdata, bio: e.target.value });
                   console.log(bio);
                 }}
-              />
-              <button onClick={() => setshowemoji(!showEmoji)}>🤣</button>
-              {showEmoji && (
-                <EmojiPicker
-                  theme="auto"
-                  style={{ position: "absolute", zIndex: 1000 }}
-                  className="relative z-10"
-                  onEmojiClick={(emoji) => {
-                    console.log(bio);
-                    setBio((prevBio) => prevBio + emoji.emoji);
-                  }}
-                />
-              )}
+              ></input>
             </div>
             <div className="txt mx-20 ">
               <div className="kl my-5 text-center">
@@ -370,38 +472,16 @@ const Home = () => {
               <button
                 className="fd btn px-10"
                 onClick={async () => {
-                  try {
-                    const userRef = doc(db, "users", auth.currentUser.email);
-                    const data = {
-                      pfp: formdata.pfp,
-                      fullname: formdata.fullname,
-                    };
-                    formdata.bio = bio;
-                    const urref = doc(db, "username", userdata.userName);
-                    const reff = ref(storage, `users/${userdata.userName}/pfp`);
-                    if (file) {
-                      const cf = await imageCompression(file, {
-                        maxSizeMB: 1,
-                        maxWidthOrHeight: 1920,
-                        useWebWorker: true,
-                      });
-                      const ig = await uploadBytes(reff, cf);
-                      const url = await getDownloadURL(ig.ref);
-                      data.pfp = url;
-                      formdata.pfp = url;
-                    }
-                    await setDoc(userRef, formdata, { merge: true });
-                    await setDoc(urref, data, { merge: true });
-                    toast.success("Settings updated successfully");
-                  } catch (error) {
-                    toast.error(`Error updating settings: ${error.message}`);
-                  }
+                  handleupdate();
                 }}
+                disabled={saving}
               >
-                Save
+                {saving ? "Saving..." : "Save"}
               </button>
-              <button onClick={deleteaccount}>Delete Account</button>
             </div>
+            <button onClick={deleteaccount} disabled={deleting}>
+              {deleting ? "Deleting Account" : " Delete Account"}
+            </button>
           </div>
         )}
       </div>

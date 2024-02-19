@@ -2,14 +2,14 @@
 import { getAuth, signOut } from "firebase/auth";
 import React, { useEffect } from "react";
 import app from "@/lib/firebase/firebaseConfig";
-import { getFirestore } from "firebase/firestore";
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { collection, getFirestore, query } from "firebase/firestore";
+import { doc, getDoc,getDocs, updateDoc, where } from "firebase/firestore";
 import { arrayUnion, arrayRemove } from "firebase/firestore";
 import { increment } from "firebase/firestore";
 // import { get } from "http";
 import "../styles/gradients.css";
 import "../styles/feed.css";
-import "../styles/slug.css"
+import "../styles/slug.css";
 import SideBar from "@/components/SideBar";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
@@ -31,7 +31,7 @@ const Page = ({ params }) => {
     if (
       userdata &&
       currentuserdata &&
-      userdata.followers.includes(currentuserdata.userName)
+      userdata.followers.includes(currentuserdata.uid)
     ) {
       console.log("checkfollow running..." + true);
       return true;
@@ -73,12 +73,13 @@ const Page = ({ params }) => {
   };
   // console.log(user);
   const emaillookup = async () => {
-    const userRef = doc(db, "username", slug);
-    const docSnap = await getDoc(userRef);
+    const userRef = collection(db, "username");
+    const q = query(userRef, where("userName", "==", slug));
+    const docSnap = await getDocs(q);
     console.log("emaillookup running...");
-    if (docSnap.exists()) {
+    if (docSnap.docs[0].exists()) {
       // console.log("Document data:", docSnap.data());
-      return docSnap.data().email;
+      return docSnap.docs[0].data().email;
     } else {
       console.log("No such document!");
       // Handle the case where user data doesn't exist
@@ -104,6 +105,7 @@ const Page = ({ params }) => {
   useEffect(() => {
     const fun = async () => {
       const em = await emaillookup();
+      console.log(em);
       getuserdata(em, 1);
       if (user) getuserdata(user.email, 2);
     };
@@ -115,7 +117,7 @@ const Page = ({ params }) => {
       userdata &&
       currentuserdata &&
       (userdata.pubpriv !== "Private" ||
-        userdata.followers.includes(currentuserdata.userName) ||
+        userdata.followers.includes(currentuserdata.uid) ||
         currentuserdata.email === user.email)
     ) {
       console.log("getposts running...");
@@ -159,8 +161,8 @@ const Page = ({ params }) => {
   };
 
   return (
-    <div className="h-screen w-screen flex items-center font-rethink relative text-black ">
-      <div className="main tndmain w-full bg-white rounded-2xl bg-clip-padding backdrop-filter backdrop-blur-2xl bg-opacity-40 shadow-2xl border-1 border-black mx-4 align-middle ">
+    <div className="h-screen w-screen dark:text-white flex items-center font-rethink relative text-black ">
+      <div className="main tndmain w-full h-full bg-white rounded-2xl bg-clip-padding backdrop-filter backdrop-blur-2xl bg-opacity-40 shadow-2xl border-1 border-black mx-4 align-middle ">
         <div className="flex">
           <SideBar usage={"slug"} data={userdata} />
           <div className="main2 w-full">
@@ -190,9 +192,7 @@ const Page = ({ params }) => {
                 />
               </div>
               <div className="posts ">
-                <div className="heading m-4 font-lucy text-6xl">
-                  Posts
-                </div>
+                <div className="heading m-4 font-lucy text-6xl">Posts</div>
                 <div className="flex pol h-5/6 flex-wrap overflow-y-auto">
                   {posts &&
                     posts.map((post, index) => (

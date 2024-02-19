@@ -19,7 +19,7 @@ const SideBar = ({ usage, data }) => {
         if (
             userdata &&
             data &&
-            userdata.followers.includes(profileData.userName)
+            userdata.followers.includes(profileData.uid)
         ) {
             console.log("checkfollow running..." + true);
             return true;
@@ -106,21 +106,21 @@ const SideBar = ({ usage, data }) => {
             if (f) {
                 console.log("adding follow");
                 await updateDoc(userRef, {
-                    followers: arrayUnion(profileData.userName),
+                    followers: arrayUnion(profileData.uid),
                     followerscount: increment(1),
                 });
                 await updateDoc(currentuserRef, {
-                    following: arrayUnion(userdata.userName),
+                    following: arrayUnion(userdata.uid),
                     followingcount: increment(1),
                 });
             } else {
                 console.log("removing follow");
                 await updateDoc(userRef, {
-                    followers: arrayRemove(profileData.userName),
+                    followers: arrayRemove(profileData.uid),
                     followerscount: increment(-1),
                 });
                 await updateDoc(currentuserRef, {
-                    following: arrayRemove(userdata.userName),
+                    following: arrayRemove(userdata.uid),
                     followingcount: increment(-1),
                 });
             }

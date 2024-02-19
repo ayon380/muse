@@ -38,6 +38,7 @@ const Home = () => {
   const [chatuserdata, setChatuserdata] = useState("");
   const [maxlength, setmaxlength] = useState(0);
   const [pfps, setPfps] = useState({});
+  const [usernames, setusernames] = useState({});
   const db = getFirestore(app);
   const [searchResults, setSearchResults] = useState([]);
   const [roomid, setRoomid] = useState("");
@@ -65,7 +66,7 @@ const Home = () => {
     try {
       if (!userdata) return;
 
-      const charef = doc(db, "chats", userdata.userName);
+      const charef = doc(db, "chats", userdata.uid);
       const chasnap = await getDoc(charef);
 
       if (chasnap.exists()) {
@@ -76,7 +77,7 @@ const Home = () => {
           const roomData = await getroomdata(roomId);
           if (roomData.type == "p") {
             getpfp(
-              roomData.participants[0] == userdata.userName
+              roomData.participants[0] == userdata.uid
                 ? roomData.participants[1]
                 : roomData.participants[0]
             );
@@ -107,6 +108,7 @@ const Home = () => {
         chatroomsWithTimestamp.sort(
           (a, b) => b.lastMessageTimestamp - a.lastMessageTimestamp
         );
+        console.log(chatroomsWithTimestamp);
 
         // console.log("After sorting:", chatroomsWithTimestamp);
         setChats(chatroomsWithTimestamp);
@@ -118,7 +120,7 @@ const Home = () => {
   };
   useEffect(() => {
     getchats();
-  }, [userdata]);
+  }, [userdata, chatwindow]);
   const searchUsers = async () => {
     try {
       console.log("Searching users..." + searchtext);
@@ -159,15 +161,21 @@ const Home = () => {
       console.error("Error searching users:", error);
     }
   };
-  const getpfp = async (username) => {
+  const getpfp = async (uid) => {
     try {
-      if (!pfps[username]) {
-        const useref = doc(db, "username", username);
+      if (!pfps[uid] && userdata) {
+        const useref = doc(db, "username", uid);
         const userSnap = await getDoc(useref);
+        console.log("Running getpfp " + userSnap.data().userName);
+        // const username = userSnap.data().userName;
         if (userSnap.exists()) {
           setPfps((prevPfps) => ({
             ...prevPfps,
-            [username]: userSnap.data().pfp,
+            [uid]: userSnap.data().pfp,
+          }));
+          setusernames((prevus) => ({
+            ...prevus,
+            [uid]: userSnap.data().userName,
           }));
         }
       }
@@ -175,6 +183,9 @@ const Home = () => {
       console.error("Error fetching profile picture:", error);
     }
   };
+  useEffect(() => {
+    getpfp(chatwindow);
+  }, [chatwindow]);
 
   const getuserdata = async (currentUser) => {
     const userRef = doc(db, "users", currentUser.email);
@@ -224,7 +235,7 @@ const Home = () => {
           const currentUserChatQuery = query(
             collection(db, "messagerooms"),
             where("type", "==", "p"),
-            where("participants", "array-contains", userdata.userName)
+            where("participants", "array-contains", userdata.uid)
           );
 
           // Execute the query for the current user
@@ -299,14 +310,14 @@ const Home = () => {
           const msgroomdata = {
             title: "",
             type: "p",
-            participants: [userdata.userName, chatwindow],
+            participants: [userdata.uid, chatwindow],
             messages: [],
             timestamp: Date.now(),
           };
           const msgroomdoc = await addDoc(msgroomref, msgroomdata);
           const id = msgroomdoc.id;
           console.log("Room Id: " + id);
-          const chatref = doc(db, "chats", userdata.userName);
+          const chatref = doc(db, "chats", userdata.uid);
           const chatSnapshot = await getDoc(chatref);
           console.log("User Chat Snapshot:", chatSnapshot.data()); // Log user chat document
 
@@ -382,14 +393,10 @@ const Home = () => {
           querySnapshot.forEach(async (doc) => {
             // console.log(doc.id, " => ", doc.data());
             messages.push(doc.data());
-            if (
-              !doc.data().readstatus &&
-              doc.data().sender !== userdata.userName
-            ) {
+            if (!doc.data().readstatus && doc.data().sender !== userdata.uid) {
               updatereadstatus(doc.id);
             }
           });
-
           setMessages(messages.reverse());
         });
         // Scroll to the bottom of the chat window when messages update
@@ -426,7 +433,7 @@ const Home = () => {
         if (roomid !== "") {
           const msgref = collection(db, "messages");
           const msgdata = {
-            sender: userdata.userName,
+            sender: userdata.uid,
             text: messagetext,
             timestamp: Date.now(),
             readstatus: false,
@@ -468,14 +475,16 @@ const Home = () => {
 
     if (messageDate >= today) {
       const formattedTime = messageDate.toLocaleTimeString("en-US", {
-        hour: "numeric",
+        hour: "2-digit",
+        hour12: false,
         minute: "numeric",
       });
       return `Today at ${formattedTime}`;
     } else if (messageDate >= yesterday) {
       const formattedTime = messageDate.toLocaleTimeString("en-US", {
-        hour: "numeric",
+        hour: "2-digit",
         minute: "numeric",
+        hour12: false,
       });
       return `Yesterday at ${formattedTime}`;
     } else {
@@ -494,7 +503,7 @@ const Home = () => {
         day: "numeric",
       });
       const formattedTime = messageDate.toLocaleTimeString("en-US", {
-        hour: "numeric",
+        hour: "2-digit",
         minute: "numeric",
       });
       return `${day}, ${formattedDate} at ${formattedTime}`;
@@ -573,17 +582,20 @@ const Home = () => {
 
                   {/* Render search results only if there are results and search text is not empty */}
                   {searchResults.length > 0 && searchtext.length > 0 && (
-                    <div className="search-results absolute bg-white w-1/4 rounded-b-2xl z-10 ">
+                    <div className="search-results cursor-pointer absolute text-black bg-white w-1/4 rounded-b-2xl z-10 ">
                       <ul>
                         {searchResults.length > 0 ? (
-                          searchResults.map((user) => (
-                            <div
-                              onClick={() => setChatwindow(user.userName)}
-                              key={user.id}
-                            >
-                              <li>{user.userName}</li>
-                            </div>
-                          ))
+                          searchResults.map(
+                            (user) =>
+                              user.uid !== userdata.uid && (
+                                <div
+                                  onClick={() => setChatwindow(user.uid)}
+                                  key={user.uid}
+                                >
+                                  <li>{user.userName}</li>
+                                </div>
+                              )
+                          )
                         ) : (
                           <>No Users Found</>
                         )}
@@ -625,7 +637,7 @@ const Home = () => {
                         setRoomid(chat.roomid);
                         setChattype("p");
                         setChatwindow(
-                          chat.participants[0] == userdata.userName
+                          chat.participants[0] == userdata.uid
                             ? chat.participants[1]
                             : chat.participants[0]
                         );
@@ -644,9 +656,9 @@ const Home = () => {
                           )}
                         </div>
                         <div className="username font-bold text-xl">
-                          {chat.participants[1] == userdata.userName
-                            ? `${chat.participants[0]}`
-                            : `${chat.participants[1]}`}
+                          {chat.participants[0] == userdata.uid
+                            ? usernames[chat.participants[1]]
+                            : usernames[chat.participants[0]]}
                         </div>
                       </div>
                     </div>
@@ -687,7 +699,7 @@ const Home = () => {
                             alt={chatwindow}
                           ></Image>
                         )}
-                        {chatwindow}
+                        {usernames[chatwindow]}
                       </div>
                     </div>
                     <div className="flex justify-center">
@@ -707,7 +719,7 @@ const Home = () => {
                         className="px-6"
                         key={message.timestamp + message.sender + message.text}
                       >
-                        {message.sender == userdata.userName ? (
+                        {message.sender == userdata.uid ? (
                           <div className="ko flex justify-end my-5 ">
                             <div className="e  text-right bg-purple-400 p-3 rounded-xl">
                               <div
@@ -719,7 +731,7 @@ const Home = () => {
                                     {convertToChatTime(message.timestamp)}
                                   </div>
                                   <div className="td text-sm font-bold">
-                                    {message.sender}
+                                    {usernames[message.sender]}
                                   </div>
                                   <Image
                                     className="rounded-full h-5 w-5 ml-1"
@@ -771,7 +783,7 @@ const Home = () => {
                                     />
                                   )}
                                   <div className="td text-sm font-bolda">
-                                    {message.sender}
+                                    {usernames[message.sender]}
                                   </div>
                                   <div className="time text-xs ml-2 mt-1">
                                     {convertToChatTime(message.timestamp)}
@@ -822,22 +834,18 @@ const Home = () => {
                   <div className="pfp ml-2 cursor-pointer">
                     <Image
                       className="h-10 w-10 rounded-full"
-                      src={
-                        followingusersdata.find(
-                          (user) => user.userName === chatwindow
-                        )?.pfp
-                      }
+                      src={pfps[chatwindow]}
                       height={50}
                       width={50}
                       alt={chatwindow}
                     ></Image>
                   </div>
                   <div className="username text-2xl mt-2 ml-2">
-                    {chatwindow}
+                    {usernames[chatwindow]}
                   </div>
                   {!chprevchat ? (
                     <button onClick={startchat}>
-                      Start Chat with {chatwindow}
+                      Start Chat with {usernames[chatwindow]}
                     </button>
                   ) : (
                     <></>

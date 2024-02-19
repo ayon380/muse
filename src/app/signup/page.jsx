@@ -357,17 +357,17 @@ const Signup = () => {
 
       // Save additional user data to Firestore
       const userRef = doc(db, "users", user.email);
-      const usernameref = doc(db, "username", userName);
-      const chatref = doc(db, "chats", userName);
+      const usernameref = doc(db, "username", user.uid);
+      const chatref = doc(db, "chats", user.uid);
       const chatData = {
         rooms: [],
-        userName: userName,
+        uid: user.uid,
       };
       await setDoc(chatref, chatData);
       try {
         const storagePFPRef = ref(
           storage,
-          `images/${userName}/PFP/${file.name}`
+          `images/${user.uid}/PFP/${file.name}`
         );
         const compressedFile = await imageCompression(file, options);
         const snapshot = await uploadBytes(storagePFPRef, compressedFile);
@@ -376,6 +376,7 @@ const Signup = () => {
         console.log("File available at", downloadURL);
         const usernameData = {
           email: user.email,
+          uid: user.uid,
           pfp: downloadURL,
           userName: userName,
           fullname: name,
@@ -402,6 +403,7 @@ const Signup = () => {
           postcount: 0,
           followingcount: 0,
           followerscount: 0,
+          uid: user.uid,
           followers: [],
           profession: profession,
           org: org,
@@ -414,6 +416,8 @@ const Signup = () => {
         return;
       }
       setsignuppocess(false);
+      toast.success("Signed Up Successfully, Redirecting to Feed Page Shortly");
+
       // Redirect to the home page after successful signup
       router.push("/feed");
     } catch (error) {
@@ -444,9 +448,11 @@ const Signup = () => {
                     onChange={handleChange}
                     value={userName}
                     placeholder="UserName"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") checkUserName();
+                    }}
                   />
                 </div>
-
                 <div className="btn mt-10 flex justify-center">
                   <button
                     className="fd font-rethink  flex mb-5 pl-6 pr-5 "
@@ -561,7 +567,9 @@ const Signup = () => {
                     Other
                   </button>
                 </div>
+
                 <div className="flex text-black justify-center">
+                  <div className="kp mt-1 mr-2">DOB</div>
                   <DatePicker
                     value={dob}
                     onChange={(dob) => {
