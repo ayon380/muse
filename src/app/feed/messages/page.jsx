@@ -544,7 +544,7 @@ const Home = () => {
     <div className="ml-5 w-full h-full">
       <Toaster />
       {userdata && (
-        <div className="main2 rounded-2xl w-full bg-white bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-20 shadow-2xl border-1 border-black h-full">
+        <div className="main2 w-full rounded-2xl   bg-white bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-20 shadow-2xl border-1 border-black h-full">
           <div className="flex w-full ">
             <div className="messages  text-5xl ml-6 mt-6 mr-6 font-lucy w-1/4 ">
               Messages

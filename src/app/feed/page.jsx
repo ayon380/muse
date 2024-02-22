@@ -144,7 +144,7 @@ const Home = () => {
                   }}
                 />
                 {searchResults.length > 0 && searchtext.length > 0 && (
-                  <div className="search-results absolute bg-black z-10 w-96">
+                  <div className="search-results absolute  bg-white z-10 w-96">
                     <ul>
                       {searchResults.map((user) => (
                         <Link key={user} href={`/${user.userName}`}>

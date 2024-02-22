@@ -52,7 +52,7 @@ const Post = ({ userdata, post, onClose, currentuserdata }) => {
                     const commentSnapshot = await getDoc(commentRef);
                     if (commentSnapshot.exists()) {
                         const commentData = commentSnapshot.data();
-                        const likedByCurrentUser = commentData.likes.includes(currentuserdata.userName);
+                        const likedByCurrentUser = commentData.likes.includes(currentuserdata.uid);
                         commentslikes.push(likedByCurrentUser);
                     }
                 } catch (error) {
@@ -141,7 +141,7 @@ const Post = ({ userdata, post, onClose, currentuserdata }) => {
     // Function to check if the posttt is liked by the current user
     const checkIfLiked = () => {
         if (posttt && currentuserdata) {
-            return posttt.likes.includes(currentuserdata.userName);
+            return posttt.likes.includes(currentuserdata.uid);
         }
     };
     React.useEffect(() => {
@@ -163,18 +163,19 @@ const Post = ({ userdata, post, onClose, currentuserdata }) => {
             if (f) {
                 // If not already liked, add user to likes array and increment like count
                 await updateDoc(doc(db, 'posts', posttt.id), {
-                    likes: arrayUnion(currentuserdata.userName),
+                    likes: arrayUnion(currentuserdata.uid),
                     likecount: increment(1)
                 });
                 setLikeCount(prevCount => prevCount + 1); // Update like count locally
             } else {
                 // If already liked, remove user from likes array and decrement like count
                 await updateDoc(doc(db, 'posts', posttt.id), {
-                    likes: arrayRemove(currentuserdata.userName),
+                    likes: arrayRemove(currentuserdata.uid),
                     likecount: increment(-1)
                 });
                 setLikeCount(prevCount => prevCount - 1); // Update like count locally
             }
+            toast.success('Post liked successfully');
         } catch (error) {
             toast.error('Error !!' + error.message);
         }
@@ -203,7 +204,8 @@ const Post = ({ userdata, post, onClose, currentuserdata }) => {
         try {
             const commentData = {
                 id: "",
-                userName: currentuserdata.userName,
+                uid: currentuserdata.uid,
+                // userName: currentuserdata.userName,
                 content: comment,
                 likes: [],
                 timestamp: new Date(),
@@ -242,7 +244,7 @@ const Post = ({ userdata, post, onClose, currentuserdata }) => {
     const postttreply = async (index) => {
         try {
             const replyData = {
-                userName: currentuserdata.userName,
+                uid: currentuserdata.uid,
                 content: reply,
             };
             const postttRef = doc(db, 'posts', posttt.id);
@@ -263,13 +265,13 @@ const Post = ({ userdata, post, onClose, currentuserdata }) => {
             const com = q.data();
             if (!commentslikes[commentIndex] && !com.likes.includes(currentuserdata.userName)) {
                 await updateDoc(commentRef, {
-                    likes: arrayUnion(currentuserdata.userName),
+                    likes: arrayUnion(currentuserdata.uid),
                     likecount: increment(1)
 
                 });
             } else {
                 await updateDoc(commentRef, {
-                    likes: arrayRemove(currentuserdata.userName),
+                    likes: arrayRemove(currentuserdata.uid),
                     likecount: increment(-1)
                 });
             }
@@ -286,8 +288,8 @@ const Post = ({ userdata, post, onClose, currentuserdata }) => {
         <div className={`fixed inset-0 z-50 bg-opacity-70 overflow-y-auto flex justify-center transition-opacity duration-300 backdrop-blur-sm items-center ${isModalOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>{posttt && <>
             <Toaster />
             <div className="absolute inset-0 bg-black bg-opacity-50 transition-opacity" onClick={handleClose}></div>
-            <div className="bg-white dark:bg-gray-700 text-black dark:text-white bg-opacity-70 backdrop-blur-sm rounded-lg p-8 transition-transform duration-300 transform-gpu scale-100 lg:scale-75">
-                {!showcomments && commentslikes ? <div className='font-rethink w-96'>
+            <div className="bg-white dark:bg-gray-700 text-black dark:text-white bg-opacity-70 backdrop-blur-sm rounded-lg p-8 transition-transform duration-300 ">
+                {!showcomments && commentslikes ? <div className='font-rethink w-auto'>
                     <div className="card">
                         <div className="c1 flex justify-between">
                             <div className="c11 flex m-2">
@@ -320,7 +322,8 @@ const Post = ({ userdata, post, onClose, currentuserdata }) => {
                                 </div>
                             </div>
                         </div>
-                        {posttt ? <AliceCarousel items={getImageArray()}></AliceCarousel> : null}
+                        {posttt ? <div className='max-w-md '>
+                        <AliceCarousel autoPlay autoHeight autoWidth items={getImageArray()}></AliceCarousel></div> : null}
                         {posttt ? <div className="caption text-xl font-bold m-1">{posttt.caption}</div> : null}
                         <div className="like flex">
                             <div className="btnl text-2xl" onClick={handleLike}>
@@ -339,7 +342,7 @@ const Post = ({ userdata, post, onClose, currentuserdata }) => {
                     : <>gfgfgf{showcomments}
                         {<div className="comments">
                             {(posttt && comments.length > 0) ? comments.map((comment, index) => (
-                                <div key={index} className="comment my-2">
+                                <div key={index} className="comment my-2 h-96">
                                     <div className="flex justify-between">
                                         <div className="commenter mr-3 text-sm font-bold">{comment.userName}</div>
 

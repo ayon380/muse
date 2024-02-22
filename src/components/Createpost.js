@@ -62,7 +62,7 @@ const CreatePost = ({ onClose, userdata }) => {
     if (user && userdata) {
       // Your existing submit logic...
       const post = {
-        userName: userdata.userName,
+        uid: user.uid,
         caption: caption,
         hashtags: extractHashtags(caption),
         mediaFiles: [],
@@ -74,7 +74,7 @@ const CreatePost = ({ onClose, userdata }) => {
         taggedUsers: [],
       };
 
-      const storageRef = ref(storage, `images/${userdata.userName}/posts`);
+      const storageRef = ref(storage, `images/${userdata.uid}/posts`);
       const mediaURLs = [];
 
       for (const file of mediaFiles) {
@@ -107,6 +107,7 @@ const CreatePost = ({ onClose, userdata }) => {
       setMediaFiles([]);
       setSubmitting(false);
       toast.success('Post created successfully');
+      
       // handleClose();
     } else {
       toast.error('Error !!' + error.message);
@@ -115,14 +116,14 @@ const CreatePost = ({ onClose, userdata }) => {
   };
 
   return (
-    <div className={`fixed inset-0 overflow-y-auto bg-opacity-70 backdrop-blur-sm flex items-center justify-center transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+    <div className={`fixed w-full inset-0 z-10 overflow-y-auto flex items-center justify-center rounded-xl bg-gray-900 bg-opacity-50 backdrop-blur-lg ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
       <Toaster />
-      <div className="bg-white text-black dark:text-white bg-opacity-70 backdrop-blur-lg border-2 border-gray-200 rounded-lg p-8 transition-transform duration-300 transform-gpu scale-100 lg:scale-75">
+      <div className="bg-white shadow-xl shadow-orange-300 dark:bg-black w-full text-black dark:text-white bg-opacity-70 backdrop-blur-lg  rounded-lg p-8 transition-transform duration-300 mx-6">
         <h1 className="text-2xl font-bold mb-4">Create a Post</h1>
         <div className="mb-4">
-          <label className="block text-sm font-bold mb-2">Caption</label>
+          <label className="block text font-bold mb-2">Caption</label>
           <textarea
-            className="resize-none border active:border-2 active:border-cyan-100 rounded w-full py-2 px-3 bg-transparent text-opacity-75"
+            className="resize-none text border active:border-2 active:border-cyan-100 rounded w-full py-2 px-3 bg-transparent text-opacity-75"
             rows="3"
             value={caption}
             onChange={handleCaptionChange}
@@ -130,7 +131,7 @@ const CreatePost = ({ onClose, userdata }) => {
         </div>
 
         <div className="mb-4">
-          <label className="block text-sm font-bold mb-2">Upload Photos or Videos (up to 10)</label>
+          <label className="block text font-bold mb-2">Upload Photos or Videos (up to 10)</label>
           <input
             className="file:mr-4 file:py-2 file:px-4
             file:rounded-full file:border-0
@@ -200,7 +201,7 @@ const CreatePost = ({ onClose, userdata }) => {
             onClick={handleSubmit}
             disabled={submitting}
           >
-            {submitting ? 'Submitting...' : 'Submit'}
+            {submitting ? 'Posting...' : 'Post'}
           </button>
         </div>
       </div>
