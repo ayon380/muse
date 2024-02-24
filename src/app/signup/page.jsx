@@ -374,6 +374,15 @@ const Signup = () => {
         console.log("Image uploaded successfully:", snapshot.ref.fullPath);
         const downloadURL = await getDownloadURL(snapshot.ref);
         console.log("File available at", downloadURL);
+        const metadataref = doc(db, "metadata", user.uid);
+        const metadata = {
+          pfp: downloadURL,
+          uid: user.uid,
+          email: user.email,
+          userName: userName,
+          hashtagmap: {},
+        };
+        await setDoc(metadataref, metadata);
         const usernameData = {
           email: user.email,
           uid: user.uid,
@@ -408,6 +417,7 @@ const Signup = () => {
           profession: profession,
           org: org,
           closefriends: [],
+          reels: [],
           // Add other user data as needed
         };
         await setDoc(userRef, userData);
@@ -453,7 +463,7 @@ const Signup = () => {
                     }}
                   />
                 </div>
-                <div className="btn mt-10 flex justify-center">
+                <div className=" mt-10 flex justify-center">
                   <button
                     className="fd font-rethink  flex mb-5 pl-6 pr-5 "
                     onClick={checkUserName}
@@ -464,7 +474,7 @@ const Signup = () => {
                         <FaQuestion />
                       ) : checkStatus === 2 ? (
                         <Image
-                          src="/btngif.gif"
+                          src="/gif.gif"
                           height={20}
                           width={20}
                           alt="gif"
@@ -668,14 +678,14 @@ const Signup = () => {
                     onClick={() => {
                       setPubPriv("Private");
                     }}
-                    className={`fd btn mr-24 px-10 ${
+                    className={`fd  mr-24 px-10 ${
                       pubpriv == "Private" ? "!bg-green-600" : null
                     }`}
                   >
                     Private
                   </button>
                   <button
-                    className={`fd btn px-10 ${
+                    className={`fd  px-10 ${
                       pubpriv == "Public" ? "!bg-red-600" : null
                     }`}
                     onClick={() => {
@@ -690,14 +700,14 @@ const Signup = () => {
             <div className="flex justify-center">
               {signupstate > 1 && signupstate < 5 ? (
                 <div className="po flex justify-center my-5 ">
-                  <button className=" fd btn mr-6 px-10" onClick={prevstate()}>
+                  <button className=" fd  mr-6 px-10" onClick={prevstate()}>
                     Prev
                   </button>
                 </div>
               ) : null}
               {signupstate != 4 ? (
                 <div className="po  flex justify-center my-5">
-                  <button className=" fd btn px-10" onClick={nextstate()}>
+                  <button className=" fd  px-10" onClick={nextstate()}>
                     Next
                   </button>
                 </div>
@@ -705,7 +715,7 @@ const Signup = () => {
             </div>
             {signupstate === 4 ? (
               <div className="po flex justify-center my-5">
-                <button className=" fd btn px-10" onClick={handleSignup}>
+                <button className=" fd  px-10" onClick={handleSignup}>
                   {signupprocess ? "Creating Account..." : "Let's goooo🎉🎉"}
                 </button>
               </div>

@@ -324,7 +324,7 @@ const Post = ({ userdata, post, onClose, currentuserdata }) => {
                         </div>
                         {posttt ? <div className='max-w-md '>
                         <AliceCarousel autoPlay autoHeight autoWidth items={getImageArray()}></AliceCarousel></div> : null}
-                        {posttt ? <div className="caption text-xl font-bold m-1">{posttt.caption}</div> : null}
+                        {posttt ? <div className="caption text-xl font-bold m-1 w-36">{posttt.caption}</div> : null}
                         <div className="like flex">
                             <div className="btnl text-2xl" onClick={handleLike}>
                                 {!liked ? <FaRegHeart /> : <TiHeartFullOutline style={{ color: 'red' }} />}

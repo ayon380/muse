@@ -9,7 +9,7 @@ import StoreProvider from "@/store/StoreProvider";
 import { StrictMode } from "react";
 import { SpeedInsights } from "@vercel/speed-insights/next"
 const lucy = localFont({
-  src: "/fonts/lucy.ttf",
+  src: "/fonts/Pacifico-Regular.ttf",
   variable: "--font-lucy",
 });
 export const viewport: Viewport = {

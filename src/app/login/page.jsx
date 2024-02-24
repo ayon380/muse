@@ -16,7 +16,7 @@ import { useRouter } from "next/navigation";
 // import { setUser } from "../../store/features/UserSlice.ts";
 const Home = () => {
   const router = useRouter();
-  const auth = getAuth();
+  const auth = getAuth(app);
   const db = getFirestore(app);
   const user = auth.currentUser;
   const checkIfUserExists = async (email) => {
@@ -76,7 +76,7 @@ const Home = () => {
         <div className="f1 font-lucy text-8xl lg:text-9xl pt-10   text-center">
           <Link href="/">Muse</Link>
         </div>
-        <div className="btn mt-10  flex justify-center ">
+        <div className=" mt-10  flex justify-center ">
           <button className="fd font-rethink mb-10 px-10" onClick={handleLogin}>
             Log In With Google
           </button>

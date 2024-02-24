@@ -7,6 +7,7 @@ import {
   onAuthStateChanged,
   signOut,
 } from "firebase/auth";
+import { firebase } from "@/lib/firebase/firebaseConfig";
 import { useRouter } from "next/navigation";
 import "../styles/gradients.css";
 import "../styles/feed.css";
@@ -38,8 +39,48 @@ const Home = () => {
   const router = useRouter();
   const [userdata, setUserData] = useState(null);
   const db = getFirestore(app);
+  const [posts, setPosts] = useState([]);
+  const [postloading, setPostLoading] = useState(true);
   const [searchResults, setSearchResults] = useState([]);
   const [searchtext, setSearchtext] = useState("");
+  async function gettoken() {
+    if (user) {
+      try {
+        const idToken = await user.getIdToken();
+        console.log(idToken);
+        return idToken;
+      } catch (error) {
+        console.log(error);
+      }
+    }
+    return null;
+  }
+
+  async function fetchData() {
+    const idToken = await gettoken();
+    if (idToken) {
+      try {
+        const response = await fetch("/api/feed", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${idToken}`,
+            email: user.email,
+          },
+        });
+        const userData = await response.json();
+        setPosts(userData.posts);
+        console.log(userData);
+        setPostLoading(false);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    }
+  }
+
+  useEffect(() => {
+    fetchData();
+  }, [user]);
   const searchUsers = async () => {
     try {
       console.log("Searching users..." + searchtext);
@@ -117,10 +158,10 @@ const Home = () => {
   }, [searchtext]);
 
   return (
-    <div className=" ml-5 w-full">
+    <div className=" ml-5 w-full h-full">
       {userdata && (
         <div>
-          <div className="main2 rounded-2xl bg-white bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-20 shadow-2xl border-1 border-black ">
+          <div className="main2 rounded-2xl bg-white bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-20 shadow-2xl border-1 border-black h-full">
             <div className="flex ">
               <div className="search ml-5 mt-5">
                 <input
@@ -306,6 +347,31 @@ const Home = () => {
                     />
                   </div>
                 </div>
+              </div>
+            </div>
+            {postloading && (
+              <div className="flex justify-center ">
+                Loading Feed..............
+              </div>
+            )}
+            <div className="pol h-full">
+              <div className="feed w-full h-full  overflow-y-auto">
+                {posts && posts.length > 0 ? (
+                  posts.map((post) => (
+                    <div className=" m-10" key={post.id}>
+                      <Image
+                        width={1000}
+                        height={1000}
+                        alt=""
+                        src={post.mediaFiles[0]}
+                      />
+                    </div>
+                  ))
+                ) : (
+                  <div className="flex justify-center items-center h-96 w-full text-3xl font-bold">
+                    No posts to show
+                  </div>
+                )}
               </div>
             </div>
           </div>

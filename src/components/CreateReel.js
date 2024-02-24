@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
 import { doc } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
-import imageCompression from "browser-image-compression";
 import { ref, uploadBytes, getDownloadURL, getStorage } from "firebase/storage";
-import Image from "next/image";
 import {
   getFirestore,
   collection,
@@ -15,19 +13,16 @@ import {
 } from "firebase/firestore";
 import app from "@/lib/firebase/firebaseConfig";
 import toast, { Toaster } from "react-hot-toast";
+
 function extractHashtags(caption) {
   const hashtags = caption.match(/#\w+/g) || [];
   const cleanedHashtags = hashtags.map((tag) => tag.substring(1).toLowerCase());
   return cleanedHashtags;
 }
-const options = {
-  maxSizeMB: 1,
-  maxWidthOrHeight: 1920,
-  useWebWorker: true,
-};
+
 const CreatePost = ({ onClose, userdata }) => {
   const [caption, setCaption] = useState("");
-  const [mediaFiles, setMediaFiles] = useState([]);
+  const [mediaFile, setMediaFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const db = getFirestore(app);
@@ -47,95 +42,70 @@ const CreatePost = ({ onClose, userdata }) => {
   };
 
   const handleFileChange = (e) => {
-    const files = e.target.files;
-    const filesArray = Array.from(files).slice(0, 10);
-    setMediaFiles([...mediaFiles, ...filesArray]);
+    const file = e.target.files[0];
+    setMediaFile(file);
   };
 
   const handleCaptionChange = (e) => {
     setCaption(e.target.value);
   };
 
-  const handleAddAnother = () => {
-    document.getElementById("fileInput").click();
-    const fileInput = document.getElementById("fileInput");
-    setMediaFiles([...mediaFiles, ...fileInput.files]);
-  };
-
-  const handleRemoveMedia = (indexToRemove) => {
-    setMediaFiles(mediaFiles.filter((_, index) => index !== indexToRemove));
-  };
-
   const handleSubmit = async () => {
     setSubmitting(true);
     if (user && userdata) {
       const hashtags = extractHashtags(caption);
-      // Your existing submit logic...
       const post = {
         uid: user.uid,
         caption: caption,
         hashtags: hashtags,
-        mediaFiles: [],
+        mediaFiles: "",
         timestamp: new Date(),
         likes: [],
         likecount: 0,
         comments: [],
         commentcount: 0,
+        viewcount: 0,
+        views: [],
         taggedUsers: [],
       };
 
-      const storageRef = ref(storage, `images/${userdata.uid}/posts`);
-      const mediaURLs = [];
-
-      for (const file of mediaFiles) {
-        if (file.type.startsWith("video/")) {
-          const fileRef = ref(storageRef, file.name);
-          await uploadBytes(fileRef, file);
-          const downloadURL = await getDownloadURL(fileRef);
-          mediaURLs.push(downloadURL);
-          continue;
-        }
-        const compressedFile = await imageCompression(file, options);
-        const fileRef = ref(storageRef, compressedFile.name);
-        await uploadBytes(fileRef, compressedFile);
+      const storageRef = ref(storage, `images/${userdata.uid}/reels`);
+      
+      if (mediaFile.type.startsWith("video/")) {
+        const fileRef = ref(storageRef, mediaFile.name);
+        await uploadBytes(fileRef, mediaFile);
         const downloadURL = await getDownloadURL(fileRef);
-        mediaURLs.push(downloadURL);
+        post.mediaFiles = downloadURL;
       }
 
-      post.mediaFiles = mediaURLs;
-
-      const postsCollectionRef = collection(db, "posts");
+      const postsCollectionRef = collection(db, "reels");
       const newPostRef = await addDoc(postsCollectionRef, post);
       const userDocRef = doc(db, "users", user.email);
       await updateDoc(userDocRef, {
-        posts: arrayUnion(newPostRef.id),
-        postcount: userdata.postcount + 1,
+        reels: arrayUnion(newPostRef.id),
+        // postcount: userdata.postcount + 1,
       });
+      
       for (let i = 0; i < hashtags.length; i++) {
-       
-        const tagRef = doc(db, "postshashtags", hashtags[i]);
+        const tagRef = doc(db, "reelshashtags", hashtags[i]);
         const tagDoc = await getDoc(tagRef);
         if (tagDoc.exists()) {
-          // Document exists, update it
-          // const tagData = tagDoc.data();
           await updateDoc(tagRef, {
             posts: arrayUnion(newPostRef.id),
           });
         } else {
-          // Document does not exist, create a new one
           await setDoc(tagRef, {
             posts: [newPostRef.id],
           });
         }
       }
+      
       await updateDoc(newPostRef, { id: newPostRef.id });
 
       setCaption("");
-      setMediaFiles([]);
+      setMediaFile(null);
       setSubmitting(false);
       toast.success("Post created successfully");
-
-      // handleClose();
     } else {
       toast.error("Error !!" + error.message);
       console.log("no user");
@@ -143,14 +113,10 @@ const CreatePost = ({ onClose, userdata }) => {
   };
 
   return (
-    <div
-      className={`fixed w-full inset-0 z-10 overflow-y-auto flex items-center justify-center rounded-xl bg-gray-900 bg-opacity-50 backdrop-blur-lg ${
-        isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-      }`}
-    >
+    <div className={`fixed w-full inset-0 z-10 overflow-y-auto flex items-center justify-center rounded-xl bg-gray-900 bg-opacity-50 backdrop-blur-lg ${isOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}>
       <Toaster />
-      <div className="bg-white shadow-xl shadow-orange-300 dark:bg-black w-full text-black dark:text-white bg-opacity-70 backdrop-blur-lg  rounded-lg p-8 transition-transform duration-300 mx-6">
-        <h1 className="text-2xl font-bold mb-4">Create a Post</h1>
+      <div className="bg-white shadow-xl shadow-orange-300 dark:bg-black w-full text-black dark:text-white bg-opacity-70 backdrop-blur-lg rounded-lg p-8 transition-transform duration-300 mx-6">
+        <h1 className="text-2xl font-bold mb-4">Create a Reel</h1>
         <div className="mb-4">
           <label className="block text font-bold mb-2">Caption</label>
           <textarea
@@ -163,7 +129,7 @@ const CreatePost = ({ onClose, userdata }) => {
 
         <div className="mb-4">
           <label className="block text font-bold mb-2">
-            Upload Photos or Videos (up to 10)
+            Upload Video
           </label>
           <input
             className="file:mr-4 file:py-2 file:px-4
@@ -172,57 +138,26 @@ const CreatePost = ({ onClose, userdata }) => {
             file:bg-violet-50 file:text-violet-700
             hover:file:bg-violet-100"
             type="file"
-            accept="image/*, video/*"
+            accept="video/*"
             onChange={handleFileChange}
           />
         </div>
-        <div className="lp h-32 max-w-96">
+        <div className="lp h-64 max-w-96">
           <div className="mb-4">
             <h2 className="text-lg font-semibold mb-2">Media Preview</h2>
             <div className="flex flex-nowrap overflow-x-auto">
-              {mediaFiles.map((file, index) => (
-                <div key={index} className="relative flex-none p-2">
-                  {file.type.startsWith("image/") ? (
-                    <Image
-                      src={URL.createObjectURL(file)}
-                      alt={`Media ${index + 1}`}
-                      width={50}
-                      height={50}
-                      className="w-32 h-16 object-cover rounded"
-                    />
-                  ) : (
-                    <video
-                      src={URL.createObjectURL(file)}
-                      alt={`Media ${index + 1}`}
-                      className="w-32 h-16 rounded"
-                      controls
-                    />
-                  )}
-                  <button
-                    className="absolute ml-1 z-10 -mt-7 text-red-500 hover:text-red-700 bg-red-300 rounded-full w-6 h-6 flex items-center justify-center focus:outline-none"
-                    onClick={() => handleRemoveMedia(index)}
-                  >
-                    &#10005;
-                  </button>
+              {mediaFile && (
+                <div className="relative flex-none p-2">
+                  <video
+                    src={URL.createObjectURL(mediaFile)}
+                    alt="Media Preview"
+                    className="h-48  rounded"
+                    controls
+                  />
                 </div>
-              ))}
+              )}
             </div>
           </div>
-        </div>
-        <div className="mt-4">
-          <button
-            className="text-gray-500 hover:underline focus:outline-none"
-            onClick={handleAddAnother}
-          >
-            Add Another
-          </button>
-          <input
-            type="file"
-            id="fileInput"
-            accept="image/*, video/*"
-            className="hidden"
-            onChange={handleFileChange}
-          />
         </div>
         <div className="flex items-center justify-between mt-4">
           <button
