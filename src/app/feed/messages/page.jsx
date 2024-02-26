@@ -462,8 +462,7 @@ const Home = () => {
   };
   useEffect(() => {
     checkprevchat();
-  }, [roomid]);
-
+  }, [roomid,chatwindow]);
   function convertToChatTime(timestamp) {
     const now = new Date();
     const messageDate = new Date(timestamp);
