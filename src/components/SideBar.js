@@ -319,7 +319,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
               className="pl text-xs cursor-pointer"
               onClick={() => router.push("/releasenotes")}
             >
-              Muse v0.4 beta @NoFilter LLC 2024-2025
+              Muse v0.41 beta @NoFilter LLC 2024-2025
             </div>
           </div>
         )}

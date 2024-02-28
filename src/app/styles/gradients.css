@@ -25,6 +25,13 @@
 .chatwindow{
 	height: 84.5vh;
 }
-html{
+html {
 	background-image: url("/gta.jpeg");
-} 
+}
+
+/* Media query for dark mode */
+@media (prefers-color-scheme: dark) {
+	html {
+		background-image: url("/Stars.jpg");
+	}
+}
