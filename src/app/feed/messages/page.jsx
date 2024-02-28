@@ -4,6 +4,7 @@ import React, { useRef, useEffect, useState } from "react";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import "../../styles/gradients.css";
+import Link from "next/navigation";
 import "../../styles/feed.css";
 import {
   collection,
@@ -462,7 +463,7 @@ const Home = () => {
   };
   useEffect(() => {
     checkprevchat();
-  }, [roomid,chatwindow]);
+  }, [roomid, chatwindow]);
   function convertToChatTime(timestamp) {
     const now = new Date();
     const messageDate = new Date(timestamp);
@@ -473,34 +474,33 @@ const Home = () => {
     yesterday.setDate(today.getDate() - 1);
 
     if (messageDate >= today) {
-        const hour = messageDate.getHours().toString().padStart(2, '0'); // Format the hour to ensure it's always two digits
-        const minute = messageDate.getMinutes().toString().padStart(2, '0'); // Format the minute to ensure it's always two digits
-        return `Today at ${hour}:${minute}`;
+      const hour = messageDate.getHours().toString().padStart(2, "0"); // Format the hour to ensure it's always two digits
+      const minute = messageDate.getMinutes().toString().padStart(2, "0"); // Format the minute to ensure it's always two digits
+      return `Today at ${hour}:${minute}`;
     } else if (messageDate >= yesterday) {
-        const hour = messageDate.getHours().toString().padStart(2, '0'); // Format the hour to ensure it's always two digits
-        const minute = messageDate.getMinutes().toString().padStart(2, '0'); // Format the minute to ensure it's always two digits
-        return `Yesterday at ${hour}:${minute}`;
+      const hour = messageDate.getHours().toString().padStart(2, "0"); // Format the hour to ensure it's always two digits
+      const minute = messageDate.getMinutes().toString().padStart(2, "0"); // Format the minute to ensure it's always two digits
+      return `Yesterday at ${hour}:${minute}`;
     } else {
-        const days = [
-            "Sunday",
-            "Monday",
-            "Tuesday",
-            "Wednesday",
-            "Thursday",
-            "Friday",
-            "Saturday",
-        ];
-        const day = days[messageDate.getDay()];
-        const formattedDate = messageDate.toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-        });
-        const hour = messageDate.getHours().toString().padStart(2, '0'); // Format the hour to ensure it's always two digits
-        const minute = messageDate.getMinutes().toString().padStart(2, '0'); // Format the minute to ensure it's always two digits
-        return `${day}, ${formattedDate} at ${hour}:${minute}`;
+      const days = [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+      ];
+      const day = days[messageDate.getDay()];
+      const formattedDate = messageDate.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      });
+      const hour = messageDate.getHours().toString().padStart(2, "0"); // Format the hour to ensure it's always two digits
+      const minute = messageDate.getMinutes().toString().padStart(2, "0"); // Format the minute to ensure it's always two digits
+      return `${day}, ${formattedDate} at ${hour}:${minute}`;
     }
-}
-
+  }
 
   // Function to handle media upload
 
@@ -539,6 +539,7 @@ const Home = () => {
   const handleclosegrpchatcreation = () => {
     setopengrpchatcreate(false);
   };
+
   return (
     <div className="ml-5 w-full h-full">
       <Toaster />
@@ -733,7 +734,45 @@ const Home = () => {
                                     width={50}
                                   />
                                 </div>
-                                <div className="fg text-xl">{message.text}</div>
+                                <div className="lp">
+                                  {message.text ? (
+                                    <span className="fg text-xl">
+                                      {message.text
+                                        .split(/(@\S+|https?:\/\/\S+)/)
+                                        .map((part, index) => {
+                                          if (part.startsWith("@")) {
+                                            // If it's a mention, create a link
+                                            return (
+                                              <a
+                                                href={`/${part.slice(1)}`}
+                                                key={index}
+                                              >
+                                                <strong>{part}</strong>
+                                              </a>
+                                            );
+                                          } else if (part.startsWith("http")) {
+                                            // If it's a website link, create a link
+                                            return (
+                                              <a href={part} key={index}>
+                                                <strong>{part}</strong>
+                                              </a>
+                                            );
+                                          } else {
+                                            // Otherwise, render it as plain text
+                                            return (
+                                              <React.Fragment key={index}>
+                                                {part}
+                                              </React.Fragment>
+                                            );
+                                          }
+                                        })}
+                                    </span>
+                                  ) : (
+                                    <div className="fg text-xl">
+                                      {message.text}
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                               {isDropdownOpen && selectedMessage == message && (
                                 <div className="dropdown-menu  mt-4">

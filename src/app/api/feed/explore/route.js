@@ -10,22 +10,32 @@ export async function POST(req) {
     const decodedToken = await admin.auth().verifyIdToken(idToken);
     const uid = decodedToken.uid;
     const db = admin.firestore();
-    const reelsCollectionRef = db.collection("reels"); // Specify the collection here
-    const q =await reelsCollectionRef.orderBy("viewcount", "desc").limit(10).get();
 
+    const posts = await db
+      .collection("posts")
+      .orderBy("likecount", "desc")
+      .limit(15)
+      .get();
+    const reels = await db
+      .collection("reels")
+      .orderBy("viewcount", "desc")
+      .limit(5)
+      .get();
     let postarray = [];
-    q.forEach((doc) => {
+    posts.forEach((doc) => {
       postarray.push(doc.data());
     });
+    let reelsarray = [];
+    reels.forEach((doc) => {
+      reelsarray.push(doc.data());
+    });
 
-    if (postarray.length >= 0)
-      return NextResponse.json({
-        status: "true",
-        message: "Hi raa",
-        posts: postarray,
-      });
-    else
-      return NextResponse.json({ status: "false", message: "User not found" });
+    return NextResponse.json({
+      status: "true",
+      message: "Hi raa",
+      posts: postarray,
+      reels: reelsarray,
+    });
   } catch (error) {
     console.error("Error verifying ID token:", error);
     return NextResponse.json({

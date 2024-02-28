@@ -128,3 +128,8 @@
   border-radius: inherit;
 }
   
+.btn:hover{
+  color: #fff;
+  box-shadow: 0 0 40px 40px #ff0f7b inset, 0 0 0 0 #ff0f7b;
+  transition: 0.5s;
+}

@@ -1,7 +1,15 @@
 import { admin } from "../../../lib/firebase/firebaseServer";
 import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
-
+import {
+  getDocs,
+  query,
+  where,
+  collection,
+  orderBy,
+  limit,
+  get,
+} from "firebase/firestore";
 export async function POST(req) {
   try {
     const headersList = headers();
@@ -23,15 +31,13 @@ export async function POST(req) {
       console.log(`${key}: ${value}`);
       i = i + 1;
       if (i > 10) break;
-      const q = query(
-        collection(db, "reels"),
-        where("hashtags", "array-contains", key),
-        where("views", "array-contains", uid).not(),
-        orderBy("views", "desc"),
-        limit(10)
-      );
-      const querySnapshot = await getDocs(q);
-      querySnapshot.forEach((doc) => {
+      const q = await db
+        .collection("reels")
+        .where("hashtags", "array-contains", key)
+        .orderBy("timestamp", "desc")
+        .limit(10)
+        .get();
+      q.forEach((doc) => {
         postarray.push(doc.data());
       });
     }

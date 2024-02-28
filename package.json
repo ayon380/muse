@@ -25,6 +25,7 @@
     "emoji-mart": "^5.5.2",
     "emoji-picker-react": "^4.7.18",
     "extract-colors": "^4.0.2",
+    "fast-average-color": "^9.4.0",
     "firebase": "^10.7.1",
     "firebase-admin": "^12.0.0",
     "firebaseui": "^6.1.0",
