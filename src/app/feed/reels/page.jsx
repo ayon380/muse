@@ -4,7 +4,7 @@ import { getAuth, onAuthStateChanged } from "firebase/auth";
 import app from "@/lib/firebase/firebaseConfig";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 import Video from "@/components/Video";
-import "../../styles/Reels.css";
+import "../../styles/reels.css";
 const Reels = () => {
   const [userdata, setUserData] = useState(null);
   const auth = getAuth(app);
