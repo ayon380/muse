@@ -17,7 +17,7 @@
   ],
   "theme_color": "violet",
   "background_color": "violet",
-  "start_url": "/",
+  "start_url": "/feed",
   "display": "fullscreen",
   "orientation": "portrait"
 }
