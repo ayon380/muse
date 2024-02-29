@@ -1,11 +1,30 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
-    images: {
-        remotePatterns: [{
-            protocol: 'https',
-            hostname: 'firebasestorage.googleapis.com'
-        }]
-    }
-}
+const withPWA = require("@ducanh2912/next-pwa").default({
+  dest: "public",
+  cacheOnFrontEndNav: true,
+  cacheStartUrl: "/",
+});
 
-module.exports = nextConfig
+module.exports = withPWA({
+  // Your Next.js config
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "firebasestorage.googleapis.com",
+      },
+    ],
+  },
+});
+// const nextConfig = {
+//   images: {
+//     remotePatterns: [
+//       {
+//         protocol: "https",
+//         hostname: "firebasestorage.googleapis.com",
+//       },
+//     ],
+//   },
+// };
+
+// module.exports = nextConfig;
