@@ -18,6 +18,6 @@
   "theme_color": "violet",
   "background_color": "violet",
   "start_url": "/",
-  "display": "standalone",
+  "display": "fullscreen",
   "orientation": "portrait"
 }
