@@ -1,20 +1,29 @@
 "use client";
 import app from "@/lib/firebase/firebaseConfig";
 import Link from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import {
   doc,
   getDoc,
   updateDoc,
   increment,
+  deleteDoc,
   getFirestore,
+  onSnapshot,
+  query,
+  getDocs,
   arrayRemove,
   arrayUnion,
+  collection,
+  orderBy,
+  desc,
+  where,
 } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import dynamic from "next/dynamic";
+import toast from "react-hot-toast";
 const CreatePost = dynamic(() => import("@/components/Createpost"), {
   ssr: false,
 });
@@ -29,8 +38,25 @@ const SideBar = ({ usage, data, currentuserdata }) => {
   const router = useRouter();
   const [createreelopen, setcreatereelOpen] = useState(false);
   const [createpostopen, setcreatepostOpen] = useState(false);
+  const [notifications, setnotificationOpen] = useState([]);
   const [follow, setFollow] = React.useState(false);
   const db = getFirestore(app);
+  const [usermetadata, setUsermetadata] = useState({});
+  const getusermetadata = async (uid) => {
+    try {
+      if (usermetadata.uid === undefined) {
+        const userRef = doc(db, "username", uid);
+        const docSnap = await getDoc(userRef);
+        console.log(docSnap.data());
+        if (docSnap.exists()) {
+          setUsermetadata({ ...usermetadata, [uid]: docSnap.data() });
+        }
+      }
+    } catch (error) {
+      console.log("Error getting user metadata:", error);
+      // Handle error
+    }
+  };
   const checkfollow = () => {
     if (userdata && data && userdata.followers.includes(profileData.uid)) {
       console.log("checkfollow running..." + true);
@@ -103,6 +129,21 @@ const SideBar = ({ usage, data, currentuserdata }) => {
       router.push("/login");
     });
   };
+
+  useEffect(() => {
+    if (userdata) {
+      let unsubscribe;
+      const fc = async () => {
+        unsubscribe = await displayNotification();
+      };
+      if (userdata) {
+        fc();
+      }
+      return () => {
+        if (unsubscribe) unsubscribe();
+      };
+    }
+  }, [userdata]);
   const handlefollow = async () => {
     // Update follow state using the functional form
     try {
@@ -140,6 +181,126 @@ const SideBar = ({ usage, data, currentuserdata }) => {
       // Handle error appropriately, e.g., show error message to the user
     }
   };
+  const handlemessagerouting = (notification) => {
+    handledismissnotification(notification);
+    if (notification.chattype == "g") {
+      router.push(
+        `/feed/messages?roomid=${notification.roomid}&chattype=g&chatwindow=${notification.title}`
+      );
+    } else {
+      router.push(
+        `/feed/messages?roomid=${notification.roomid}&chattype=p&chatwindow=${notification.sender}`
+      );
+    }
+  };
+  const displayNotification = () => {
+    if (!userdata) return;
+    const notrf = collection(db, "notifications");
+    const q = onSnapshot(
+      query(notrf, where("receiver", "==", userdata.uid), orderBy("timestamp")),
+      (snapshot) => {
+        snapshot.docChanges().forEach(async (change) => {
+          if (change.type === "added") {
+            const q = change.doc.data();
+            await getusermetadata(q.sender);
+            if (Date.now() - q.timestamp < 20000) {
+              toast.success("New Notification: ");
+            }
+            console.log("New notification: ", change.doc.data());
+            setnotificationOpen((prev) => [...prev, change.doc.data()]);
+          }
+          if (change.type === "modified") {
+            console.log("Modified notification: ", change.doc.data());
+          }
+          if (change.type === "removed") {
+            console.log("Removed notification: ", change.doc.data());
+            setnotificationOpen((prev) =>
+              prev.filter((item) => item.id !== change.doc.data().id)
+            );
+          }
+        });
+      }
+    );
+  };
+  useEffect(() => {
+    console.log("Notifications: ", notifications);
+  }, [notifications]);
+  const handledismissnotification = async (notification) => {
+    try {
+      setnotificationOpen((prev) =>
+        prev.filter((item) => item.id !== notification.id)
+      );
+      const notrf = collection(db, "notifications");
+      const q = query(
+        notrf,
+        where("receiver", "==", userdata.uid),
+        where("sender", "==", notification.sender),
+        where("text", "==", notification.text),
+        where("type", "==", notification.type)
+      );
+      const querySnapshot = await getDocs(q);
+      querySnapshot.forEach(async (doc) => {
+        await deleteDoc(doc.ref);
+      });
+
+      toast.success("Notification dismissed");
+    } catch (error) {
+      console.error("Error removing notification:", error);
+      // Handle error appropriately, e.g., show error message to the user
+    }
+  };
+  const handleclearallnotifications = async () => {
+    try {
+      setnotificationOpen([]);
+      const notrf = collection(db, "notifications");
+      const q = query(notrf, where("receiver", "==", userdata.uid));
+      const querySnapshot = await getDocs(q);
+      querySnapshot.forEach(async (doc) => {
+        await deleteDoc(doc.ref);
+      });
+      toast.success("All Notifications dismissed");
+    } catch (error) {
+      console.error("Error removing notification:", error);
+      // Handle error appropriately, e.g., show error message to the user
+    }
+  };
+  function convertToChatTime(timestamp) {
+    const now = new Date();
+    const messageDate = new Date(timestamp);
+
+    // Check if messageDate is today or yesterday
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+
+    if (messageDate >= today) {
+      const hour = messageDate.getHours().toString().padStart(2, "0"); // Format the hour to ensure it's always two digits
+      const minute = messageDate.getMinutes().toString().padStart(2, "0"); // Format the minute to ensure it's always two digits
+      return `Today at ${hour}:${minute}`;
+    } else if (messageDate >= yesterday) {
+      const hour = messageDate.getHours().toString().padStart(2, "0"); // Format the hour to ensure it's always two digits
+      const minute = messageDate.getMinutes().toString().padStart(2, "0"); // Format the minute to ensure it's always two digits
+      return `Yesterday at ${hour}:${minute}`;
+    } else {
+      const days = [
+        "Sunday",
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+      ];
+      const day = days[messageDate.getDay()];
+      const formattedDate = messageDate.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      });
+      const hour = messageDate.getHours().toString().padStart(2, "0"); // Format the hour to ensure it's always two digits
+      const minute = messageDate.getMinutes().toString().padStart(2, "0"); // Format the minute to ensure it's always two digits
+      return `${day}, ${formattedDate} at ${hour}:${minute}`;
+    }
+  }
   return (
     <div className="lp w-1/3 ">
       <div className="bg-white z-50 pb-5 dark:bg-black h-full rounded-xl bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-40 shadow-2xl border-1 border-black lpo">
@@ -208,55 +369,181 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                 </div>
               )}
             {usage == "feed" && (
-              <div className="options flex flex-col  justify-evenly items-center flex-auto mt-10 md:mb-48">
-                <div className="explore">
-                  <div
-                    className="text-2xl text-left font-bold  cursor-pointer"
-                    onClick={() => router.push("/feed")}
-                  >
-                    Feed
+              <div className="h-full w-full">
+                <div className="options flex mb-5 justify-evenly items-center flex-auto mt-10">
+                  <div className="explore">
+                    <div
+                      className="text-2xl text-left font-bold  cursor-pointer"
+                      onClick={() => router.push("/feed")}
+                    >
+                      Fe
+                    </div>
+                  </div>
+                  <div className="explore">
+                    <div
+                      className="text-2xl font-bold cursor-pointer"
+                      onClick={() => router.push("/feed/explore")}
+                    >
+                      Exp
+                    </div>
+                  </div>
+                  <div className="Reels">
+                    <div
+                      className="text-2xl cursor-pointer font-bold text-center"
+                      onClick={() => router.push("/feed/reels")}
+                    >
+                      Reels
+                    </div>
+                  </div>
+                  <div className="messages">
+                    <div
+                      className="text-2xl font-bold text-center cursor-pointer"
+                      onClick={() => {
+                        router.push("/feed/messages");
+                      }}
+                    >
+                      Mes
+                    </div>
+                  </div>
+                  <div className="settings cursor-pointer">
+                    <div
+                      className="text-2xl font-bold cursor-pointer text-center"
+                      onClick={() => router.push("/feed/settings")}
+                    >
+                      Se
+                    </div>
+                  </div>
+                  <div className="logout">
+                    <div
+                      className="text-2xl font-bold cursor-pointer text-center"
+                      onClick={handleLogout}
+                    >
+                      Lo
+                    </div>
                   </div>
                 </div>
-                <div className="explore">
+                <div className="notif p-4 h-72 scroll-smooth  overflow-y-auto ">
                   <div
-                    className="text-2xl font-bold cursor-pointer"
-                    onClick={() => router.push("/feed/explore")}
+                    className="heading sticky top-0 
+                  "
                   >
-                    Explore
+                    <div className="flex justify-between">
+                      {" "}
+                      Notifications
+                      {notifications.length > 0 && (
+                        <div
+                          className="df cursor-pointer"
+                          onClick={() => handleclearallnotifications()}
+                        >
+                          Clear All
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <div className="Reels">
-                  <div
-                    className="text-2xl cursor-pointer font-bold text-center"
-                    onClick={() => router.push("/feed/reels")}
-                  >
-                    Reels
-                  </div>
-                </div>
-                <div className="messages">
-                  <div
-                    className="text-2xl font-bold text-center cursor-pointer"
-                    onClick={() => {
-                      router.push("/feed/messages");
-                    }}
-                  >
-                    Messages
-                  </div>
-                </div>
-                <div className="settings cursor-pointer">
-                  <div
-                    className="text-2xl font-bold cursor-pointer text-center"
-                    onClick={() => router.push("/feed/settings")}
-                  >
-                    Settings
-                  </div>
-                </div>
-                <div className="logout">
-                  <div
-                    className="text-2xl font-bold cursor-pointer text-center"
-                    onClick={handleLogout}
-                  >
-                    Logout
+                  <div className="flex flex-col ">
+                    {notifications.length == 0 && (
+                      <div className="text-center mt-10">No Notifications</div>
+                    )}
+                    {notifications.map((notification) => (
+                      <div
+                        key={notification.id}
+                        className="flex cursor-pointer justify-between rounded-xl bg-blue-400 p-5 my-2"
+                      >
+                        {notification.type == "message" && (
+                          <div
+                            className="pl"
+                            onClick={() => {
+                              handlemessagerouting(notification);
+                            }}
+                          >
+                            {usermetadata[notification.sender] && (
+                              <>
+                                <div className="flex">
+                                  <Image
+                                    src={usermetadata[notification.sender].pfp}
+                                    width={50}
+                                    height={50}
+                                    alt="profile"
+                                    className="rounded-full h-5 w-5"
+                                  />
+                                  <div className="text-sm ml-2 mr-2 opacity-80">
+                                    {usermetadata[notification.sender].userName}
+                                  </div>
+                                  <div
+                                    className=" time text-xs opacity-60"
+                                    style={{ marginTop: "3px" }}
+                                  >
+                                    {convertToChatTime(notification.timestamp)}
+                                  </div>
+                                </div>
+                              </>
+                            )}
+
+                            <div className="text-sm">{notification.text}</div>
+                            <div className="text-xs"></div>
+                          </div>
+                        )}
+                        {notification.type == "reellike" && (
+                          <div className="q" onClick={()=>router.push(`/feed/reels?reelid=${notification.reelid}`)}>
+                            {usermetadata[notification.sender] && (
+                              <>
+                                <div className="flex">
+                                  <Image
+                                    src={usermetadata[notification.sender].pfp}
+                                    width={50}
+                                    height={50}
+                                    alt="profile"
+                                    className="rounded-full h-5 w-5"
+                                  />
+                                  <div className="text-sm ml-2 mr-2 opacity-80">
+                                    {usermetadata[notification.sender].userName}
+                                  </div>
+                                  <div
+                                    className=" time text-xs opacity-60"
+                                    style={{ marginTop: "3px" }}
+                                  >
+                                    {convertToChatTime(notification.timestamp)}
+                                  </div>
+                                </div>
+
+                                <div className="text-sm">
+                                  {usermetadata[notification.sender].userName}{" "}
+                                  liked your Reel
+                                </div>
+                                <div className="text-xs"></div>
+                              </>
+                            )}
+                          </div>
+                        )}
+                        <div className="flex">
+                          <div className="type mr-3">
+                            {notification.type == "like" && (
+                              <div className="text-xs">Like</div>
+                            )}
+                            {notification.type == "comment" && (
+                              <div className="text-xs">Comment</div>
+                            )}
+                            {notification.type == "follow" && (
+                              <div className="text-xs">Follow</div>
+                            )}
+                            {notification.type == "message" && (
+                              <div className="text-xs">Message</div>
+                            )}
+                            {notification.type == "reellike" && (
+                              <div className="text-xs">Reel Like</div>
+                            )}
+                          </div>
+                          <div
+                            className="sd rounded-full h-5 w-5 cursor-pointer border border-black"
+                            onClick={() =>
+                              handledismissnotification(notification)
+                            }
+                          >
+                            X
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -319,7 +606,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
               className="pl text-xs cursor-pointer"
               onClick={() => router.push("/releasenotes")}
             >
-              Muse v0.46 beta @NoFilter LLC 2024-2025
+              Muse v0.47 beta @NoFilter LLC 2024-2025
             </div>
           </div>
         )}

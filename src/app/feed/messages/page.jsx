@@ -2,7 +2,7 @@
 import app from "@/lib/firebase/firebaseConfig";
 import React, { useRef, useEffect, useState } from "react";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import "../../styles/gradients.css";
 import Link from "next/navigation";
 import "../../styles/feed.css";
@@ -28,8 +28,16 @@ import { getFirestore, getDoc } from "firebase/firestore";
 import dynamic from "next/dynamic";
 const GroupChat = dynamic(() => import("@/components/GroupChat"));
 import toast, { Toaster } from "react-hot-toast";
+import { get } from "http";
 const Home = () => {
+  const searchParams = useSearchParams();
+  const room = searchParams.get("roomid") || "";
+  const chatt = searchParams.get("chattype") || "p";
+  const chatw = searchParams.get("chatwindow") || "none";
+  console.log(room, chatt, chatw);
   const auth = getAuth(app);
+  const pathname = usePathname();
+  // const pathname = window.location.pathname;
   const [user, setUser] = useState(auth.currentUser);
   const [createpostmenu, setcreatepostmenu] = useState(false);
   const router = useRouter();
@@ -42,18 +50,33 @@ const Home = () => {
   const [usernames, setusernames] = useState({});
   const db = getFirestore(app);
   const [searchResults, setSearchResults] = useState([]);
-  const [roomid, setRoomid] = useState("");
+  const [roomid, setRoomid] = useState(room);
   const [messagetext, setMessagetext] = useState("");
-  const [chattype, setChattype] = useState("p");
+  const [chattype, setChattype] = useState(chatt);
   const [messages, setMessages] = useState([{}]);
   const [chats, setChats] = useState([]);
   const [opengrpchatcreate, setopengrpchatcreate] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false); // State to track dropdown visibility
   const [selectedMessage, setSelectedMessage] = useState(null);
-  const [chatwindow, setChatwindow] = useState("none");
+  const [chatwindow, setChatwindow] = useState(chatw);
   const [searchtext, setSearchtext] = useState("");
   const [chprevchat, setchprevchat] = useState(false);
   //function to get data of messagerooms
+  useEffect(() => {
+    const handleRouteChange = () => {
+      setChattype(searchParams.get("chattype") || "p");
+      setRoomid(searchParams.get("roomid") || "");
+      setChatwindow(searchParams.get("chatwindow") || "none");
+      console.log("Changingg route");
+      if (roomid != "") {
+        setcurrentmsglength(51);
+      }
+    };
+    if (userdata) handleRouteChange();
+  }, [pathname, room, userdata]);
+  useEffect(() => {
+    console.log(chattype + " " + roomid + " " + chatwindow);
+  }, [chattype, roomid, chatwindow]);
   const getroomdata = async (id) => {
     const roomref = doc(db, "messagerooms", id);
     const roomsnap = await getDoc(roomref);
@@ -281,26 +304,6 @@ const Home = () => {
     }
     setchprevchat(false);
   };
-  useEffect(() => {
-    let unsubscribe;
-
-    const disc = async () => {
-      unsubscribe = await displaychat();
-    };
-
-    if (roomid !== "") {
-      console.log("Room Id:", roomid);
-      disc();
-    }
-
-    return () => {
-      if (unsubscribe) {
-        unsubscribe();
-        // setcurrentmsglength(50);
-        setMessages([]); // Call unsubscribe when component unmounts
-      }
-    };
-  }, [roomid, currentmsglength]);
 
   const startchat = async () => {
     try {
@@ -317,6 +320,10 @@ const Home = () => {
           };
           const msgroomdoc = await addDoc(msgroomref, msgroomdata);
           const id = msgroomdoc.id;
+          const roomref = doc(db, "messagerooms", id);
+          await updateDoc(roomref, {
+            roomid: id,
+          });
           console.log("Room Id: " + id);
           const chatref = doc(db, "chats", userdata.uid);
           const chatSnapshot = await getDoc(chatref);
@@ -375,11 +382,64 @@ const Home = () => {
     }
   };
   const [loadingold, setloadingold] = useState(false);
-  const displaychat = async () => {
+  const sendNotification = async (id, notificationData) => {
     try {
+      await new Promise((resolve) => {
+        setTimeout(async () => {
+          const msqref = doc(db, "messages", id);
+          const msgdata = await getDoc(msqref);
+
+          if (msgdata.data().readstatus) return;
+
+          if (chattype !== "p") {
+            const chat = chats.filter((chat) => chat.roomid === roomid);
+            chat[0].participants.map(async (participant) => {
+              if (participant !== userdata.uid) {
+                const notificationRef = collection(db, "notifications");
+                const notification = {
+                  ...notificationData,
+                  receiver: participant,
+                  title: chatwindow,
+                };
+                const temp = await addDoc(notificationRef, notification);
+                const notificationRef1 = doc(db, "notifications", temp.id);
+                await updateDoc(notificationRef1, {
+                  id: temp.id,
+                });
+              }
+            });
+            return;
+          }
+
+          const notificationRef = collection(db, "notifications");
+          const notification = {
+            ...notificationData,
+          };
+          const temp = await addDoc(notificationRef, notification);
+          const notificationRef1 = doc(db, "notifications", temp.id);
+          await updateDoc(notificationRef1, {
+            id: temp.id,
+          });
+
+          console.log("Notification sent:", notification);
+
+          resolve(); // Resolve the promise after the timeout
+        }, 5000); // 10 seconds timeout
+      });
+    } catch (error) {
+      console.error("Error sending notification:", error.message);
+      if (toast && toast.error) {
+        toast.error("Error " + error.message);
+      } else {
+        console.error("Toast is not defined or does not have error method.");
+      }
+    }
+  };
+
+  useEffect(() => {
+    let unsubscribe;
+    const disc = async () => {
       if (userdata && roomid) {
-        // if (chattype == "p") {
-        console.log(roomid);
         console.log("Displaying chat...");
         const msgref = collection(db, "messages");
         console.log("Current Message Length:", currentmsglength);
@@ -389,10 +449,9 @@ const Home = () => {
           orderBy("timestamp", "desc"),
           limit(currentmsglength)
         );
-        const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        unsubscribe = onSnapshot(q, (querySnapshot) => {
           let messages = [];
           querySnapshot.forEach(async (doc) => {
-            // console.log(doc.id, " => ", doc.data());
             messages.push(doc.data());
             if (!doc.data().readstatus && doc.data().sender !== userdata.uid) {
               updatereadstatus(doc.id);
@@ -400,15 +459,21 @@ const Home = () => {
           });
           setMessages(messages.reverse());
         });
-        // Scroll to the bottom of the chat window when messages update
-
-        return unsubscribe;
       }
-    } catch (error) {
-      console.error("Error displaying chat:", error.message);
-      toast.error("Error " + error.message);
+    };
+    if (roomid !== "") {
+      console.log("Room Id:", roomid);
+      disc();
     }
-  };
+    return () => {
+      if (unsubscribe) {
+        console.log("Unsubscribing from chat" + roomid);
+        unsubscribe();
+        setMessages([]);
+      }
+    };
+  }, [roomid, currentmsglength]);
+
   useEffect(() => {
     if (userdata && roomid) {
       const getlength = async () => {
@@ -451,6 +516,15 @@ const Home = () => {
           });
           await updateDoc(msgroomref, msgroomdata);
           setMessagetext("");
+          sendNotification(q.id, {
+            type: "message",
+            chattype: chattype,
+            sender: userdata.uid,
+            text: messagetext,
+            roomid: roomid,
+            receiver: chatwindow,
+            timestamp: Date.now(),
+          });
           toast.success("Message sent");
         } else {
           toast.error("No chat selected");
@@ -501,11 +575,6 @@ const Home = () => {
       return `${day}, ${formattedDate} at ${hour}:${minute}`;
     }
   }
-
-  // Function to handle media upload
-
-  // State to track selected message
-
   // Function to handle message copy
   const handleCopy = (text) => {
     navigator.clipboard.writeText(text);
@@ -627,18 +696,20 @@ const Home = () => {
                       className="key cursor-pointer"
                       key={index}
                       onClick={() => {
-                        setRoomid(chat.roomid);
-                        setChattype("p");
-                        setChatwindow(
-                          chat.participants[0] == userdata.uid
-                            ? chat.participants[1]
-                            : chat.participants[0]
+                        router.push(
+                          `/feed/messages?roomid=${
+                            chat.roomid
+                          }&chattype=p&chatwindow=${
+                            chat.participants[0] == userdata.uid
+                              ? chat.participants[1]
+                              : chat.participants[0]
+                          }`
                         );
                       }}
                     >
                       <div className="flex my-4 ">
                         <div className="pfp mr-2">
-                          {pfps[chat.participants[1]] && (
+                          {chat.participants[0] == userdata.uid ? (
                             <Image
                               className="h-10 w-10 rounded-full"
                               src={pfps[chat.participants[1]]}
@@ -646,8 +717,17 @@ const Home = () => {
                               width={50}
                               alt={chat.participants[1]}
                             ></Image>
+                          ) : (
+                            <Image
+                              className="h-10 w-10 rounded-full"
+                              src={pfps[chat.participants[0]]}
+                              height={50}
+                              width={50}
+                              alt={chat.participants[0]}
+                            ></Image>
                           )}
                         </div>
+
                         <div className="username font-bold text-xl">
                           {chat.participants[0] == userdata.uid
                             ? usernames[chat.participants[1]]
@@ -660,9 +740,9 @@ const Home = () => {
                       className="key cursor-pointer"
                       key={index}
                       onClick={() => {
-                        setRoomid(chat.roomid);
-                        setChattype("g");
-                        setChatwindow(chat.title);
+                        router.push(
+                          `/feed/messages?roomid=${chat.roomid}&chattype=g&chatwindow=${chat.title}`
+                        );
                       }}
                     >
                       <div className="title font-bold text-xl">
@@ -693,6 +773,7 @@ const Home = () => {
                           ></Image>
                         )}
                         {usernames[chatwindow]}
+                        {chattype == "g" && chatwindow}
                       </div>
                     </div>
                     <div className="flex justify-center">

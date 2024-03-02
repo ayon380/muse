@@ -3,14 +3,14 @@
   "short_name": "Muse",
   "icons": [
     {
-      "src": "/192.png",
+      "src": "/mus192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
 
     {
-      "src": "/512.png",
+      "src": "/muse_512_e2e.png",
       "sizes": "512x512",
       "type": "image/png"
     }

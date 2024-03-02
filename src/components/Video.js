@@ -96,6 +96,27 @@ const Reel = ({ userdata, reel, isGlobalMuted }) => {
   useEffect(() => {
     checkIfLiked();
   }, [userdata]);
+  const sendNotification = async (reeldata) => {
+    try {
+      const notificationData = {
+        id: "",
+        sender: userdata.uid,
+        reelid: reeldata.id,
+        type: "reellike",
+        receiver: reeldata.uid,
+        timestamp: Date.now(),
+      };
+      console.log(notificationData);
+      const notificationRef = collection(db, "notifications");
+      const notificationDoc = await addDoc(notificationRef, notificationData);
+     await updateDoc(doc(notificationRef, notificationDoc.id), {
+        id: notificationDoc.id,
+      });
+      console.log("Notification sent");
+    } catch (error) {
+      console.error("Error sending notification:", error);
+    }
+  };
   const handleLike = async () => {
     if (userdata) {
       const postRef = doc(db, "reels", reeldata.id);
@@ -110,6 +131,7 @@ const Reel = ({ userdata, reel, isGlobalMuted }) => {
           likes: arrayUnion(userdata.uid),
           likecount: increment(1),
         });
+        sendNotification(reeldata);
         setLiked(true);
       }
       refetchReel();
@@ -223,7 +245,7 @@ const Reel = ({ userdata, reel, isGlobalMuted }) => {
       await updateDoc(doc(commentRef, q.id), {
         id: q.id,
       });
-      const r= formatFirebaseTimestamp(commentData.timestamp);
+      const r = formatFirebaseTimestamp(commentData.timestamp);
       commentData.timestamp = r;
       setCommentList((prevState) => [...prevState, commentData]);
       refetchReel();
@@ -307,9 +329,9 @@ const Reel = ({ userdata, reel, isGlobalMuted }) => {
     }
   };
   return (
-    <div style={{ position: "relative" }}>
+    <div className="text-white" style={{ position: "relative" }}>
       <video
-        className="reel snap-center"
+        className="reel snap-center text-white"
         ref={reelRef}
         src={reeldata.mediaFiles}
         loop
@@ -341,7 +363,7 @@ const Reel = ({ userdata, reel, isGlobalMuted }) => {
             "linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent)",
         }}
       >
-        <div className="ko ">
+        <div className="ko p-4">
           <div className="flex justify-between">
             <div className="lp flex ">
               <div className="btnl text-2xl" onClick={handleLike}>
@@ -440,7 +462,7 @@ const Reel = ({ userdata, reel, isGlobalMuted }) => {
             <div className="comment-section flex sticky bottom-0 p-4">
               <input
                 type="text"
-                class="text-sm text-black w-5/6 rounded-2xl leading-6 px-2 py-1 transition duration-100 border border-gray-300 bg-gray-200 block h-9 hover:border-gray-400 focus:border-purple-600 focus:bg-white"
+                class="text-sm text-white w-5/6 rounded-2xl leading-6 px-2 py-1 transition duration-100 border border-gray-300 bg-gray-200 block h-9 hover:border-gray-400 focus:border-purple-600 focus:bg-white"
                 placeholder="Add a comment emoji 😀"
                 value={comment}
                 onKeyDown={(e) => {
