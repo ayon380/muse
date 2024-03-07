@@ -132,18 +132,18 @@ export const viewport: Viewport = {
 const rethink = localFont({
   src: [
     {
-      path: "/fonts/RethinkSans-Regular.ttf",
+      path: "/fonts/Product Sans Regular.ttf",
     },
     {
-      path: "/fonts/RethinkSans-Italic.ttf",
+      path: "/fonts/Product Sans Italic.ttf",
       style: "italic",
     },
     {
-      path: "/fonts/RethinkSans-Bold.ttf",
+      path: "/fonts/Product Sans Bold.ttf",
       weight: "bold",
     },
     {
-      path: "/fonts/RethinkSans-BoldItalic.ttf",
+      path: "/fonts/Product Sans Bold Italic.ttf",
       weight: "bold",
       style: "italic",
     },

@@ -2,12 +2,10 @@
 import { useEffect, useRef, useState } from "react";
 import { FaRegHeart, FaShare } from "react-icons/fa";
 import { MdOutlineReportGmailerrorred } from "react-icons/md";
-import { FaComments } from "react-icons/fa";
 import { TiHeartFullOutline } from "react-icons/ti";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { collection, getDoc, setDoc } from "firebase/firestore";
-import ReactPlayer from "react-player";
+import { collection, getDoc, query, setDoc } from "firebase/firestore";
 import toast, { Toaster } from "react-hot-toast";
 import {
   getFirestore,
@@ -15,11 +13,14 @@ import {
   arrayUnion,
   arrayRemove,
   addDoc,
+  where,
+  getDocs,
   doc,
   increment,
 } from "firebase/firestore";
 import app from "@/lib/firebase/firebaseConfig";
 import Link from "next/link";
+import { get } from "http";
 
 const Reel = ({ userdata, reel, isGlobalMuted }) => {
   const reelRef = useRef(null);
@@ -34,46 +35,87 @@ const Reel = ({ userdata, reel, isGlobalMuted }) => {
   const [commentsloading, setCommentsloading] = useState(false);
   const [liked, setLiked] = useState(false);
   const [usermetadata, setUsermetadata] = useState({});
+  const [commentlikes, setCommentlikes] = useState({});
+  const [replies, setReplies] = useState({});
+  const [commentreply, setCommentreply] = useState({});
+  const [reply, setReply] = useState("");
+  const [isFullScreen, setIsFullScreen] = useState(false);
   const handleShowComments = () => {
     setShowComments((prevState) => !prevState);
   };
   const getusermetadata = async (uid) => {
+    // console.log(uid, "uid");
     if (usermetadata.uid === undefined) {
       const userRef = doc(db, "username", uid);
       const docSnap = await getDoc(userRef);
       if (docSnap.exists()) {
-        setUsermetadata({ ...usermetadata, [uid]: docSnap.data() });
+        setUsermetadata((prevUsermetadata) => ({
+          ...prevUsermetadata,
+          [uid]: docSnap.data(),
+        }));
       }
     }
+    console.log(usermetadata, "usermetadata");
   };
   const getComments = async () => {
-    // Clear the commentList state before fetching new comments
-    // setCommentList([]);
-
-    // Create a set to store unique comment IDs
-    const uniqueCommentIds = new Set(reeldata.comments);
-    const newCommentList = [];
-
-    // Iterate through unique comment IDs
-    for (const commentId of uniqueCommentIds) {
-      const commentRef = doc(db, "comments", commentId);
-      const docSnap = await getDoc(commentRef);
-      if (docSnap.exists()) {
-        const commentData = docSnap.data();
-        await getusermetadata(commentData.uid);
-        const r = formatFirebaseTimestamp(commentData.timestamp.toDate());
-        commentData.timestamp = r;
-        newCommentList.push(commentData);
-      }
-    }
-    if (commentList.length !== newCommentList.length) {
-      setCommentList(newCommentList);
+    try {
+      setCommentsloading(true);
+      let newcomments = [];
+      reeldata.comments.map(async (comment) => {
+        const commentRef = doc(db, "comments", comment);
+        const docSnap = await getDoc(commentRef);
+        if (docSnap.exists()) {
+          // if(!commentList.includes(docSnap.data()))
+          const q = docSnap.data();
+          getusermetadata(q.uid);
+          setCommentlikes((prevCommentlikes) => ({
+            ...prevCommentlikes,
+            [q.id]: q.likes.includes(userdata.uid),
+          }));
+          const r = formatFirebaseTimestamp(q.timestamp.toDate());
+          q.timestamp = r;
+          newcomments.push(q);
+        }
+      });
+      console.log(newcomments, "newcomments");
+      setCommentList(newcomments);
+      setCommentsloading(false);
+    } catch (error) {
+      console.error("Error fetching comments:", error);
     }
   };
-
+  const getReplies = async (comment) => {
+    try {
+      console.log("Replies loading");
+      let newreplies = [];
+      comment.replies.map(async (reply) => {
+        const replyRef = doc(db, "replies", reply);
+        const docSnap = await getDoc(replyRef);
+        if (docSnap.exists()) {
+          
+          const q = docSnap.data();
+          getusermetadata(q.uid);
+          const r = formatFirebaseTimestamp(q.timestamp.toDate());
+          q.timestamp = r;
+          if(replies[comment.id] && !replies[comment.id].includes(q))
+          newreplies.push(q);
+        }
+      });
+      console.log(newreplies, "newreplies");
+      setReplies((prevReplies) => ({
+        ...prevReplies,
+        [comment.id]: newreplies,
+      }));
+    } catch (error) {
+      console.error("Error fetching comments:", error);
+    }
+  };
+  useEffect(() => {
+    console.log(commentList);
+  }, [commentList]);
   useEffect(() => {
     getComments();
-  }, [showComments, reeldata]);
+  }, [reeldata]);
   const checkIfLiked = async () => {
     if (userdata) {
       const postRef = doc(db, "reels", reeldata.id);
@@ -109,7 +151,7 @@ const Reel = ({ userdata, reel, isGlobalMuted }) => {
       console.log(notificationData);
       const notificationRef = collection(db, "notifications");
       const notificationDoc = await addDoc(notificationRef, notificationData);
-     await updateDoc(doc(notificationRef, notificationDoc.id), {
+      await updateDoc(doc(notificationRef, notificationDoc.id), {
         id: notificationDoc.id,
       });
       console.log("Notification sent");
@@ -256,6 +298,7 @@ const Reel = ({ userdata, reel, isGlobalMuted }) => {
     }
   };
   useEffect(() => {
+    getusermetadata(reeldata.uid);
     const reel = reelRef.current;
     const handleTimeUpdate = () => {
       const duration = reel.duration;
@@ -328,6 +371,71 @@ const Reel = ({ userdata, reel, isGlobalMuted }) => {
       toast.error("Error posting comment: " + error.message);
     }
   };
+  const handleReplySubmit = async (comment) => {
+    try {
+      if (reply.trim() === "") {
+        return;
+      }
+      const commentId = comment.id;
+      const replyRef = collection(db, "replies");
+      const replyData = {
+        content: reply,
+        likecount: 0,
+        uid: userdata.uid,
+        timestamp: new Date(),
+      };
+      const q = await addDoc(replyRef, replyData);
+      const commentRef = doc(db, "comments", commentId);
+      await updateDoc(commentRef, {
+        replies: arrayUnion(q.id), // Pass the DocumentReference directly
+      });
+      await updateDoc(doc(replyRef, q.id), {
+        id: q.id,
+      });
+      const r = formatFirebaseTimestamp(replyData.timestamp);
+      replyData.timestamp = r;
+      setReplies((prevReplies) => {
+        const updatedReplies = {
+          ...prevReplies,
+          [commentId]: Array.isArray(prevReplies[commentId])
+            ? [...prevReplies[commentId], replyData]
+            : [replyData],
+        };
+        return updatedReplies;
+      });
+      setReply("");
+      getReplies(comment);
+      toast.success("Reply posted successfully");
+    } catch (error) {
+      toast.error("Error posting reply: " + error.message);
+    }
+  };
+  const handleCommentLike = async (commentId) => {
+    if (userdata && commentId) {
+      setCommentlikes((prevCommentlikes) => ({
+        ...prevCommentlikes,
+        [commentId]: !prevCommentlikes[commentId],
+      }));
+      const commentRef = doc(db, "comments", commentId);
+      const docSnap = await getDoc(commentRef);
+      if (docSnap.exists()) {
+        const comment = docSnap.data();
+        const isLiked = comment.likes.includes(userdata.uid);
+        const newLikeCount = isLiked
+          ? comment.likecount - 1
+          : comment.likecount + 1;
+        const newLikes = isLiked
+          ? comment.likes.filter((uid) => uid !== userdata.uid)
+          : [...comment.likes, userdata.uid];
+
+        await updateDoc(commentRef, {
+          likes: newLikes,
+          likecount: newLikeCount,
+        });
+      }
+      toast.success("Comment liked successfully");
+    }
+  };
   return (
     <div className="text-white" style={{ position: "relative" }}>
       <video
@@ -364,22 +472,50 @@ const Reel = ({ userdata, reel, isGlobalMuted }) => {
         }}
       >
         <div className="ko p-4">
+          {usermetadata[reeldata.uid] && (
+            <div
+              className="flex mb-2 cursor-pointer font-bold"
+              onClick={() =>
+                router.push(`/${usermetadata[reeldata.uid].userName}`)
+              }
+            >
+              <Image
+                className="h-8 mr-3 w-8 rounded-full object-center"
+                src={usermetadata[reeldata.uid].pfp}
+                alt="Profile Pic"
+                height={50}
+                width={50}
+              />
+              <div className="sa ">{usermetadata[reeldata.uid].userName}</div>
+            </div>
+          )}
           <div className="flex justify-between">
             <div className="lp flex ">
-              <div className="btnl text-2xl" onClick={handleLike}>
+              <div className="btnl text-4xl h-10 w-10 " onClick={handleLike}>
                 {!liked ? (
-                  <FaRegHeart />
+                  <div className="lp text-3xl">
+                    <FaRegHeart />
+                  </div>
                 ) : (
                   <TiHeartFullOutline style={{ color: "red" }} />
                 )}
                 <div />
               </div>
-              <div className="likes text-xl font-bold">
-                {reeldata.likecount} likes
+              <div
+                style={{ marginTop: "1px" }}
+                className=" ml-2likes text-2xl  font-bold flex"
+              >
+                {reeldata.likecount}{" "}
+                <div className="ok  font-normal text-base opacity-75 mt-1 ml-1">
+                  likes
+                </div>
               </div>
             </div>
-            <div className="ki">
-              <button className="share-button" onClick={Shareposttt}>
+            <div className="ki text-2xl">
+              {/* <button>
+                <Image src="/fullscreen.svg" alt="" height={50} width={50} />
+              </button> */}
+              <button className="share-button mr-2" onClick={Shareposttt}>
                 <FaShare />
               </button>
               <button className="report-button" onClick={Reportposttt}>
@@ -388,9 +524,10 @@ const Reel = ({ userdata, reel, isGlobalMuted }) => {
             </div>
           </div>
           <div className="caption opacity-75">{reeldata.caption}</div>
-          {reeldata.commentcount} Comments
+
           <button className="show-comments-button" onClick={handleShowComments}>
-            <FaComments />
+            {" "}
+            {reeldata.commentcount} Comments
           </button>
         </div>
 
@@ -418,12 +555,12 @@ const Reel = ({ userdata, reel, isGlobalMuted }) => {
               {commentList.map((comment) => (
                 <div
                   key={comment.timestamp + Math.random()}
-                  className="comment transition transform-gpu hover:scale-105 rounded-xl bg-gray-600 my-5 p-5 mx-5 bg-opacity-10"
+                  className="comment transition transform-gpu rounded-xl bg-gray-600 my-5 p-5 mx-5 bg-opacity-10"
                 >
                   <div className="flex z-20">
                     {usermetadata[comment.uid] ? (
                       <Link href={`/${usermetadata[comment.uid].userName}`}>
-                        <div className="flex">
+                        <div className="flex ">
                           <Image
                             className="rounded-full h-6 w-6 "
                             src={usermetadata[comment.uid].pfp}
@@ -449,8 +586,121 @@ const Reel = ({ userdata, reel, isGlobalMuted }) => {
                     >
                       {comment.timestamp}
                     </div>
+                    <div
+                      className="btnl text-2xl  ml-10 "
+                      onClick={() => handleCommentLike(comment.id)}
+                    >
+                      {!commentlikes[comment.id] ? (
+                        <div className="lp text-xl">
+                          <FaRegHeart />
+                        </div>
+                      ) : (
+                        <TiHeartFullOutline style={{ color: "red" }} />
+                      )}
+                      <div />
+                    </div>
                   </div>
                   <p>{comment.content}</p>
+                  <div className="flex">
+                    <div className="lieks opacity-75 mr-5 text-xs">
+                      {comment.likecount} likes
+                    </div>
+                    <div
+                      className="reply opacity-75 cursor-pointer text-xs"
+                      onClick={() => {
+                        setCommentreply((prevCommentreply) => ({
+                          ...prevCommentreply,
+                          [comment.id]: !commentreply[comment.id],
+                        }));
+                        getReplies(comment);
+                      }}
+                    >
+                      {commentreply[comment.id] ? "" : "Show Replies"}
+                    </div>
+                    {commentreply[comment.id] && (
+                      <div className="q">
+                        {replies[comment.id] &&
+                          (replies[comment.id].length > 0 ? (
+                            <>
+                              {replies[comment.id].map((reply) => (
+                                <>
+                                  <div className="flex z-20">
+                                    {usermetadata[comment.uid] ? (
+                                      <Link
+                                        href={`/${
+                                          usermetadata[comment.uid].userName
+                                        }`}
+                                      >
+                                        <div className="flex ">
+                                          <Image
+                                            className="rounded-full h-6 w-6 "
+                                            src={usermetadata[comment.uid].pfp}
+                                            height={50}
+                                            width={50}
+                                            alt="Commenter Profile Pic"
+                                          />
+
+                                          <div
+                                            className="hy text-xs w-24 opacity-80 ml-2"
+                                            style={{ marginTop: "2px" }}
+                                          >
+                                            {usermetadata[comment.uid].userName}
+                                          </div>
+                                        </div>
+                                      </Link>
+                                    ) : (
+                                      <>Loading..</>
+                                    )}
+                                    <div
+                                      className="time text-xs opacity-60"
+                                      style={{ marginTop: "2px" }}
+                                    >
+                                      {comment.timestamp}
+                                    </div>
+                                  </div>
+                                  <p>{comment.content}</p>
+                                </>
+                              ))}
+                            </>
+                          ) : (
+                            <div className="flex justify-center w-full mt-20">
+                              No Replies Yet
+                            </div>
+                          ))}
+                        <div className="lp flex">
+                          <input
+                            type="text"
+                            className="text-sm text-black w-5/6 rounded-2xl leading-6 px-2 py-1 transition duration-100 border border-gray-300 bg-gray-200 block h-9 focus:border-purple-600 focus:bg-white"
+                            placeholder="Reply"
+                            value={reply}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                handleReplySubmit(comment.id);
+                              }
+                            }}
+                            onChange={(e) => setReply(e.target.value)}
+                            autoFocus
+                            autoComplete=""
+                            autoCorrect="" // Prevent event propagation
+                          />
+
+                          <button
+                            className="ml-5 btn px-10"
+                            // onClick={handleCommentSubmit}
+                            onClick={() => {
+                              handleReplySubmit(comment);
+                              setCommentreply((prevCommentreply) => ({
+                                ...prevCommentreply,
+                                [comment.id]: !commentreply[comment.id],
+                              }));
+                            }}
+                          >
+                            Post
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               ))}
               {commentList.length === 0 && (
@@ -462,7 +712,7 @@ const Reel = ({ userdata, reel, isGlobalMuted }) => {
             <div className="comment-section flex sticky bottom-0 p-4">
               <input
                 type="text"
-                class="text-sm text-white w-5/6 rounded-2xl leading-6 px-2 py-1 transition duration-100 border border-gray-300 bg-gray-200 block h-9 hover:border-gray-400 focus:border-purple-600 focus:bg-white"
+                class="text-sm text-black w-5/6 rounded-2xl leading-6 px-2 py-1 transition duration-100 border border-gray-300 bg-gray-200 block h-9 hover:border-gray-400 focus:border-purple-600 focus:bg-white"
                 placeholder="Add a comment emoji 😀"
                 value={comment}
                 onKeyDown={(e) => {
