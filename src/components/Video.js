@@ -13,23 +13,13 @@ import {
   arrayUnion,
   arrayRemove,
   addDoc,
-  where,
-  getDocs,
   doc,
   increment,
 } from "firebase/firestore";
 import app from "@/lib/firebase/firebaseConfig";
 import Link from "next/link";
-import { get } from "http";
 
-const Reel = ({
-  userdata,
-  reel,
-  isGlobalMuted,
-  idx,
-  currentreel,
-  setCurrentReel,
-}) => {
+const Reel = ({ userdata, reel, isGlobalMuted, idx, setCurrentReel }) => {
   const reelRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showComments, setShowComments] = useState(false);
@@ -46,7 +36,7 @@ const Reel = ({
   const [replies, setReplies] = useState({});
   const [commentreply, setCommentreply] = useState({});
   const [reply, setReply] = useState("");
-  const [isFullScreen, setIsFullScreen] = useState(false);
+  // const [isFullScreen, setIsFullScreen] = useState(false);
   const handleShowComments = () => {
     setShowComments((prevState) => !prevState);
   };
@@ -217,7 +207,6 @@ const Reel = ({
       });
     };
     reel.addEventListener("click", handlePlayPause);
-
     // Intersection observer to check if the reel is mostly in viewport
     const observer = new IntersectionObserver(
       (entries) => {
@@ -236,9 +225,7 @@ const Reel = ({
       },
       { threshold: 0.5 }
     );
-
     observer.observe(reel);
-
     return () => {
       reel.removeEventListener("click", handlePlayPause);
       observer.unobserve(reel);

@@ -10,35 +10,53 @@ export async function POST(req) {
     const decodedToken = await admin.auth().verifyIdToken(idToken);
     const uid = decodedToken.uid;
     const db = admin.firestore();
-
-    const page = req.body.page || 1; // Get the page number from the request body, default to page 1
+    const body = await req.json();
+    const cursor = body.cursor;
+    // Get the page number from the request body, default to page 1
 
     const limit = 5; // Number of documents to fetch per page
-    const offset = (page - 1) * limit; // Calculate the offset based on the page number
+    if (cursor > 0) {
+      console.log("fetching next page");
+      console.log("cursor", cursor);
+      const query = await db
+        .collection("reels")
+        .orderBy("viewcount", "desc")
+        .startAfter(cursor)
+        .limit(limit)
+        .get();
+      let postarray = [];
+      let lastcount = 0;
+      query.forEach((doc) => {
+        console.log("next page --- " + doc.data().caption);
+        postarray.push(doc.data());
+        lastcount = doc.data().viewcount;
+      });
 
-    const reelsCollectionRef = db.collection("reels");
-    const q = await reelsCollectionRef
+      // console.log("last visible", lastVisible);
+      return NextResponse.json({
+        status: "true",
+        message: "Hi raa",
+        posts: postarray,
+        cursor: lastcount, // Pass the last document as cursor for next page
+      });
+    }
+    const q = await db
+      .collection("reels")
       .orderBy("viewcount", "desc")
-      .offset(offset)
       .limit(limit)
       .get();
-
     let postarray = [];
+    let lastcount = 0;
     q.forEach((doc) => {
+      console.log("next page --- " + doc.data().caption);
       postarray.push(doc.data());
+      lastcount = doc.data().viewcount;
     });
-
-    // Assuming you have a total count of reels to calculate the total number of pages
-    const totalReelsCount = await reelsCollectionRef
-      .get()
-      .then((snap) => snap.size);
-    const totalPages = Math.ceil(totalReelsCount / limit);
-
     return NextResponse.json({
       status: "true",
       message: "Hi raa",
       posts: postarray,
-      totalPages: totalPages,
+      cursor: lastcount, // Pass the last document as cursor for next page
     });
   } catch (error) {
     console.error("Error verifying ID token:", error);

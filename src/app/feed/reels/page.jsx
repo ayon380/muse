@@ -19,6 +19,9 @@ const Reels = () => {
   const SearchParams = useSearchParams();
   const id = SearchParams.get("reelid") || null;
   const [reelid, setReelid] = useState(id);
+  // State to hold the next page cursor
+  const [nextPageCursor, setNextPageCursor] = useState(0);
+
   const [currentreel, setCurrentReel] = useState(0);
   const pathname = usePathname();
   const limit = 5; // Number of documents to fetch per page
@@ -68,33 +71,38 @@ const Reels = () => {
     return null;
   }
   const fetchReels = async () => {
-    if (user && !id) {
-      const response = await fetch("/api/reels/trending", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${await gettoken()}`,
-          email: user.email,
-        },
-        body: JSON.stringify({ page: currentPage }), // Send current page in the request body
-      });
-      const data = await response.json();
-      if (data.status === "true") {
-        setReels((prevReels) => [...prevReels, ...data.posts]); // Append new reels to the existing reels
-        setTotalPages(data.totalPages); // Set total pages received from the server
-      }
+    console.log("fetching reels");
+    const response = await fetch("/api/reels/trending", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${await gettoken()}`,
+        email: user.email,
+         // Pass the cursor in the request header
+      },
+      body: JSON.stringify({ cursor: nextPageCursor }), // Send current page and cursor in the request body
+    });
+    const data = await response.json();
+    if (data.status === "true") {
+      setReels((prevReels) => [...prevReels, ...data.posts]); // Append new reels to the existing reels; // Set total pages received from 
+      setNextPageCursor(data.cursor); // Update the next page cursor for subsequent requests
+      console.log(data.cursor, "cursor");
+      setCurrentPage(currentPage + 1);
     }
   };
+
   useEffect(() => {
-    if (currentreel > limit * currentPage * 0.5) {
+    if (currentreel > reels.length-3 && reels.length > 0) {
       fetchReels();
-      setCurrentPage((prev) => prev + 1);
+      console.log("fetching more reels");
+     
     }
   }, [currentreel]);
 
   useEffect(() => {
+    if (userdata) 
     fetchReels();
-  }, [user, currentPage]); // Include currentPage in the dependency array
+  }, [userdata]); 
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -120,7 +128,7 @@ const Reels = () => {
                 Reels
               </div>
               {currentreel}CurrentReel
-              {totalPages}TotalPages
+              {currentPage}CurrentPage
               {reels.length}Reels
               <button onClick={toggleGlobalMute}>
                 {isGlobalMuted ? "Mute All" : "UnMute All"}
