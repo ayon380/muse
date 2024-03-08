@@ -7,21 +7,25 @@ import Video from "@/components/Video";
 import "../../styles/reels.css";
 import { usePathname, useSearchParams } from "next/navigation";
 const Reels = () => {
+  // console.log("Sidebaropen", Sidebaropen);
   const [userdata, setUserData] = useState(null);
   const auth = getAuth(app);
   const [user, setUser] = useState(auth.currentUser);
   const [reels, setReels] = useState([]);
   const db = getFirestore(app);
+  const [currentPage, setCurrentPage] = useState(0); // Set the current page to 1 by default
+  const [totalPages, setTotalPages] = useState(0); // Initialize the total pages to 0
   const [isGlobalMuted, setIsGlobalMuted] = useState(false);
   const SearchParams = useSearchParams();
   const id = SearchParams.get("reelid") || null;
   const [reelid, setReelid] = useState(id);
+  const [currentreel, setCurrentReel] = useState(0);
   const pathname = usePathname();
+  const limit = 5; // Number of documents to fetch per page
   const toggleGlobalMute = () => {
     setIsGlobalMuted((prevState) => !prevState);
   };
   const [reel, setReel] = useState(null);
-  const [currentreel, setCurrentReel] = useState(0);
   const getuserdata = async (currentUser) => {
     const userRef = doc(db, "users", currentUser.email);
     const docSnap = await getDoc(userRef);
@@ -33,21 +37,21 @@ const Reels = () => {
       // Handle the case where user data doesn't exist
     }
   };
+  const fetchReel = async () => {
+    console.log("fetching url reel");
+    const q = doc(db, "reels", id);
+    const docSnap = await getDoc(q);
+    if (docSnap.exists()) {
+      console.log("Document data:", docSnap.data());
+      setReel(docSnap.data());
+    } else {
+      console.log("No such document!");
+      // Handle the case where user data doesn't exist
+    }
+  };
   useEffect(() => {
     console.log("pathname", pathname);
     if (id) {
-      const fetchReel = async () => {
-        console.log("fetching url reel");
-        const q = doc(db, "reels", id);
-        const docSnap = await getDoc(q);
-        if (docSnap.exists()) {
-          console.log("Document data:", docSnap.data());
-          setReel(docSnap.data());
-        } else {
-          console.log("No such document!");
-          // Handle the case where user data doesn't exist
-        }
-      };
       fetchReel();
     }
   }, [pathname]);
@@ -63,27 +67,34 @@ const Reels = () => {
     }
     return null;
   }
+  const fetchReels = async () => {
+    if (user && !id) {
+      const response = await fetch("/api/reels/trending", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${await gettoken()}`,
+          email: user.email,
+        },
+        body: JSON.stringify({ page: currentPage }), // Send current page in the request body
+      });
+      const data = await response.json();
+      if (data.status === "true") {
+        setReels((prevReels) => [...prevReels, ...data.posts]); // Append new reels to the existing reels
+        setTotalPages(data.totalPages); // Set total pages received from the server
+      }
+    }
+  };
+  useEffect(() => {
+    if (currentreel > limit * currentPage * 0.5) {
+      fetchReels();
+      setCurrentPage((prev) => prev + 1);
+    }
+  }, [currentreel]);
 
   useEffect(() => {
-    const fetchReels = async () => {
-      if (user && !id) {
-        const response = await fetch("/api/reels/trending", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${await gettoken()}`,
-            email: user.email,
-          },
-        });
-        const data = await response.json();
-        if (data.status === "true") {
-          setReels(data.posts);
-          console.log(data.posts);
-        }
-      }
-    };
     fetchReels();
-  }, [user]);
+  }, [user, currentPage]); // Include currentPage in the dependency array
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -108,6 +119,9 @@ const Reels = () => {
               <div className="h1 font-lucy text-5xl w-full text-left">
                 Reels
               </div>
+              {currentreel}CurrentReel
+              {totalPages}TotalPages
+              {reels.length}Reels
               <button onClick={toggleGlobalMute}>
                 {isGlobalMuted ? "Mute All" : "UnMute All"}
               </button>
@@ -121,6 +135,9 @@ const Reels = () => {
                   <div className="pk " play={reel.id} key={reel.id}>
                     <Video
                       reel={reel}
+                      idx={idx}
+                      currentreel={currentreel}
+                      setCurrentReel={setCurrentReel}
                       userdata={userdata}
                       isGlobalMuted={isGlobalMuted}
                     />

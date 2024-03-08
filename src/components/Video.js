@@ -22,7 +22,14 @@ import app from "@/lib/firebase/firebaseConfig";
 import Link from "next/link";
 import { get } from "http";
 
-const Reel = ({ userdata, reel, isGlobalMuted }) => {
+const Reel = ({
+  userdata,
+  reel,
+  isGlobalMuted,
+  idx,
+  currentreel,
+  setCurrentReel,
+}) => {
   const reelRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showComments, setShowComments] = useState(false);
@@ -86,21 +93,28 @@ const Reel = ({ userdata, reel, isGlobalMuted }) => {
   };
   const getReplies = async (comment) => {
     try {
+      console.log(comment.content);
       console.log("Replies loading");
       let newreplies = [];
-      comment.replies.map(async (reply) => {
-        const replyRef = doc(db, "replies", reply);
-        const docSnap = await getDoc(replyRef);
-        if (docSnap.exists()) {
-          
-          const q = docSnap.data();
-          getusermetadata(q.uid);
-          const r = formatFirebaseTimestamp(q.timestamp.toDate());
-          q.timestamp = r;
-          if(replies[comment.id] && !replies[comment.id].includes(q))
-          newreplies.push(q);
-        }
-      });
+      console.log(comment.replies, "comment.replies");
+
+      // Use Promise.all to await all asynchronous operations inside map
+      await Promise.all(
+        comment.replies.map(async (reply) => {
+          const replyRef = doc(db, "replies", reply);
+          const docSnap = await getDoc(replyRef);
+          if (docSnap.exists()) {
+            const q = docSnap.data();
+            await getusermetadata(q.uid); // Assuming getusermetadata is an async function
+            const r = formatFirebaseTimestamp(q.timestamp.toDate());
+            q.timestamp = r;
+            if (!newreplies.includes(q))
+              // Check if the reply is not already in newreplies
+              newreplies.push(q);
+          }
+        })
+      );
+
       console.log(newreplies, "newreplies");
       setReplies((prevReplies) => ({
         ...prevReplies,
@@ -110,6 +124,7 @@ const Reel = ({ userdata, reel, isGlobalMuted }) => {
       console.error("Error fetching comments:", error);
     }
   };
+
   useEffect(() => {
     console.log(commentList);
   }, [commentList]);
@@ -186,6 +201,9 @@ const Reel = ({ userdata, reel, isGlobalMuted }) => {
         reel.play();
         setIsPlaying(true);
         pauseOtherReels(reel);
+        console.log(idx, "idx");
+        // Set current reel index when the video starts playing
+        setCurrentReel(idx);
       } else {
         reel.pause();
         setIsPlaying(false);
@@ -207,6 +225,10 @@ const Reel = ({ userdata, reel, isGlobalMuted }) => {
         if (entry && entry.isIntersecting && entry.intersectionRatio >= 0.5) {
           reel.play();
           setIsPlaying(true);
+          // Set current reel index when the video starts playing
+          console.log(idx, "idx");
+          // Set current reel index when the video starts playing
+          setCurrentReel(idx);
         } else {
           reel.pause();
           setIsPlaying(false);
@@ -404,7 +426,19 @@ const Reel = ({ userdata, reel, isGlobalMuted }) => {
         return updatedReplies;
       });
       setReply("");
-      getReplies(comment);
+      setCommentList((prevCommentList) => {
+        const updatedCommentList = prevCommentList.map((c) => {
+          if (c.id === commentId) {
+            return {
+              ...c,
+              replies: Array.isArray(c.replies) ? [...c.replies, q.id] : [q.id],
+            };
+          }
+          return c;
+        });
+        return updatedCommentList;
+      });
+      // getReplies(comment);
       toast.success("Reply posted successfully");
     } catch (error) {
       toast.error("Error posting reply: " + error.message);
@@ -608,11 +642,11 @@ const Reel = ({ userdata, reel, isGlobalMuted }) => {
                     <div
                       className="reply opacity-75 cursor-pointer text-xs"
                       onClick={() => {
+                        getReplies(comment);
                         setCommentreply((prevCommentreply) => ({
                           ...prevCommentreply,
                           [comment.id]: !commentreply[comment.id],
                         }));
-                        getReplies(comment);
                       }}
                     >
                       {commentreply[comment.id] ? "" : "Show Replies"}
@@ -624,17 +658,20 @@ const Reel = ({ userdata, reel, isGlobalMuted }) => {
                             <>
                               {replies[comment.id].map((reply) => (
                                 <>
-                                  <div className="flex z-20">
+                                  <div
+                                    className="flex z-20 my-3"
+                                    key={reply.id}
+                                  >
                                     {usermetadata[comment.uid] ? (
                                       <Link
                                         href={`/${
-                                          usermetadata[comment.uid].userName
+                                          usermetadata[reply.uid].userName
                                         }`}
                                       >
                                         <div className="flex ">
                                           <Image
                                             className="rounded-full h-6 w-6 "
-                                            src={usermetadata[comment.uid].pfp}
+                                            src={usermetadata[reply.uid].pfp}
                                             height={50}
                                             width={50}
                                             alt="Commenter Profile Pic"
@@ -644,7 +681,7 @@ const Reel = ({ userdata, reel, isGlobalMuted }) => {
                                             className="hy text-xs w-24 opacity-80 ml-2"
                                             style={{ marginTop: "2px" }}
                                           >
-                                            {usermetadata[comment.uid].userName}
+                                            {usermetadata[reply.uid].userName}
                                           </div>
                                         </div>
                                       </Link>
@@ -655,10 +692,10 @@ const Reel = ({ userdata, reel, isGlobalMuted }) => {
                                       className="time text-xs opacity-60"
                                       style={{ marginTop: "2px" }}
                                     >
-                                      {comment.timestamp}
+                                      {reply.timestamp}
                                     </div>
                                   </div>
-                                  <p>{comment.content}</p>
+                                  <p className="-mt-2 mb-2">{reply.content}</p>
                                 </>
                               ))}
                             </>
@@ -675,7 +712,7 @@ const Reel = ({ userdata, reel, isGlobalMuted }) => {
                             value={reply}
                             onKeyDown={(e) => {
                               if (e.key === "Enter") {
-                                handleReplySubmit(comment.id);
+                                handleReplySubmit(comment);
                               }
                             }}
                             onChange={(e) => setReply(e.target.value)}
@@ -689,13 +726,22 @@ const Reel = ({ userdata, reel, isGlobalMuted }) => {
                             // onClick={handleCommentSubmit}
                             onClick={() => {
                               handleReplySubmit(comment);
-                              setCommentreply((prevCommentreply) => ({
-                                ...prevCommentreply,
-                                [comment.id]: !commentreply[comment.id],
-                              }));
                             }}
                           >
-                            Post
+                            Reply
+                          </button>
+                          <button
+                            className="btn ml-5 px-10"
+                            onClick={() =>
+                              setCommentreply((prevCommentreply) => {
+                                return {
+                                  ...prevCommentreply,
+                                  [comment.id]: !commentreply[comment.id],
+                                };
+                              })
+                            }
+                          >
+                            Close
                           </button>
                         </div>
                       </div>
@@ -724,7 +770,7 @@ const Reel = ({ userdata, reel, isGlobalMuted }) => {
               />
 
               <button className="ml-5 btn px-10" onClick={handleCommentSubmit}>
-                Post
+                Comment
               </button>
             </div>
           </div>
