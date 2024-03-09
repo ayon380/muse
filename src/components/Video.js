@@ -19,7 +19,15 @@ import {
 import app from "@/lib/firebase/firebaseConfig";
 import Link from "next/link";
 
-const Reel = ({ userdata, reel, isGlobalMuted, idx, setCurrentReel }) => {
+const Reel = ({
+  userdata,
+  reel,
+  isGlobalMuted,
+  idx,
+  setCurrentReel,
+  usermetadata,
+  enqueueUserMetadata,
+}) => {
   const reelRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showComments, setShowComments] = useState(false);
@@ -31,47 +39,39 @@ const Reel = ({ userdata, reel, isGlobalMuted, idx, setCurrentReel }) => {
   const router = useRouter();
   const [commentsloading, setCommentsloading] = useState(false);
   const [liked, setLiked] = useState(false);
-  const [usermetadata, setUsermetadata] = useState({});
   const [commentlikes, setCommentlikes] = useState({});
   const [replies, setReplies] = useState({});
   const [commentreply, setCommentreply] = useState({});
   const [reply, setReply] = useState("");
+  const [commentcursor, setCommentcursor] = useState(null);
+  const limit = 5;
   // const [isFullScreen, setIsFullScreen] = useState(false);
   const handleShowComments = () => {
     setShowComments((prevState) => !prevState);
   };
-  const getusermetadata = async (uid) => {
-    // console.log(uid, "uid");
-    if (usermetadata.uid === undefined) {
-      const userRef = doc(db, "username", uid);
-      const docSnap = await getDoc(userRef);
-      if (docSnap.exists()) {
-        setUsermetadata((prevUsermetadata) => ({
-          ...prevUsermetadata,
-          [uid]: docSnap.data(),
-        }));
-      }
-    }
-    console.log(usermetadata, "usermetadata");
-  };
+  // Create a promise queue
+
   const getComments = async () => {
     try {
       setCommentsloading(true);
       let newcomments = [];
+      let i = 0;
       reeldata.comments.map(async (comment) => {
-        const commentRef = doc(db, "comments", comment);
-        const docSnap = await getDoc(commentRef);
-        if (docSnap.exists()) {
-          // if(!commentList.includes(docSnap.data()))
-          const q = docSnap.data();
-          getusermetadata(q.uid);
-          setCommentlikes((prevCommentlikes) => ({
-            ...prevCommentlikes,
-            [q.id]: q.likes.includes(userdata.uid),
-          }));
-          const r = formatFirebaseTimestamp(q.timestamp.toDate());
-          q.timestamp = r;
-          newcomments.push(q);
+        if (i <= limit) {
+          const commentRef = doc(db, "comments", comment);
+          const docSnap = await getDoc(commentRef);
+          if (docSnap.exists()) {
+            // if(!commentList.includes(docSnap.data()))
+            const q = docSnap.data();
+            await enqueueUserMetadata(q.uid);
+            setCommentlikes((prevCommentlikes) => ({
+              ...prevCommentlikes,
+              [q.id]: q.likes.includes(userdata.uid),
+            }));
+            const r = formatFirebaseTimestamp(q.timestamp.toDate());
+            q.timestamp = r;
+            newcomments.push(q);
+          }
         }
       });
       console.log(newcomments, "newcomments");
@@ -95,7 +95,7 @@ const Reel = ({ userdata, reel, isGlobalMuted, idx, setCurrentReel }) => {
           const docSnap = await getDoc(replyRef);
           if (docSnap.exists()) {
             const q = docSnap.data();
-            await getusermetadata(q.uid); // Assuming getusermetadata is an async function
+            await enqueueUserMetadata(q.uid); // Assuming getusermetadata is an async function
             const r = formatFirebaseTimestamp(q.timestamp.toDate());
             q.timestamp = r;
             if (!newreplies.includes(q))
@@ -119,8 +119,8 @@ const Reel = ({ userdata, reel, isGlobalMuted, idx, setCurrentReel }) => {
     console.log(commentList);
   }, [commentList]);
   useEffect(() => {
-    getComments();
-  }, [reeldata]);
+    if (showComments) getComments();
+  }, [showComments]);
   const checkIfLiked = async () => {
     if (userdata) {
       const postRef = doc(db, "reels", reeldata.id);
@@ -307,7 +307,12 @@ const Reel = ({ userdata, reel, isGlobalMuted, idx, setCurrentReel }) => {
     }
   };
   useEffect(() => {
-    getusermetadata(reeldata.uid);
+    const func = async () => {
+      if (userdata) {
+        await enqueueUserMetadata(reeldata.uid);
+      }
+    };
+    func();
     const reel = reelRef.current;
     const handleTimeUpdate = () => {
       const duration = reel.duration;
@@ -367,6 +372,10 @@ const Reel = ({ userdata, reel, isGlobalMuted, idx, setCurrentReel }) => {
         await updateDoc(postRef, {
           views: arrayUnion(userdata.uid),
           viewcount: increment(1),
+        });
+        const userref = doc(db, "users", userdata.email);
+        await updateDoc(userref, {
+          viewedreels: arrayUnion(reeldata.id),
         });
         console.log("Updating hashtags");
         const userRef = doc(db, "metadata", userdata.uid);

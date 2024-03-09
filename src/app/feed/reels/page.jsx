@@ -21,12 +21,64 @@ const Reels = () => {
   const [reelid, setReelid] = useState(id);
   // State to hold the next page cursor
   const [nextPageCursor, setNextPageCursor] = useState(0);
-
+  const [usermetadata, setUsermetadata] = useState({});
   const [currentreel, setCurrentReel] = useState(0);
   const pathname = usePathname();
   const limit = 5; // Number of documents to fetch per page
   const toggleGlobalMute = () => {
     setIsGlobalMuted((prevState) => !prevState);
+  };
+  const userMetadataQueue = [];
+  let isUserMetadataQueueProcessing = false;
+
+  const processUserMetadataQueue = async () => {
+    if (!isUserMetadataQueueProcessing && userMetadataQueue.length > 0) {
+      // Set processing flag to true
+      isUserMetadataQueueProcessing = true;
+
+      // Get the first item from the queue
+      const { uid, resolve } = userMetadataQueue.shift();
+      try {
+        // Call getusermetadata function
+        
+        await getusermetadata(uid);
+        // Resolve the promise
+        resolve();
+      } catch (error) {
+        console.error("Error processing user metadata:", error);
+      }
+
+      // Process next item in the queue recursively
+      processUserMetadataQueue();
+    } else {
+      // Set processing flag to false when queue is empty
+      isUserMetadataQueueProcessing = false;
+    }
+  };
+
+  const enqueueUserMetadata = (uid) => {
+    return new Promise((resolve, reject) => {
+      // Add the user metadata task to the queue
+      userMetadataQueue.push({ uid, resolve });
+      // Start processing the queue
+      processUserMetadataQueue();
+    });
+  };
+
+  const getusermetadata = async (uid) => {
+    // console.log(uid, "uid");
+    if (!usermetadata[uid]) {
+      console.log("Fetching user metadata");
+      const userRef = doc(db, "username", uid);
+      const docSnap = await getDoc(userRef);
+      if (docSnap.exists()) {
+        setUsermetadata((prevUsermetadata) => ({
+          ...prevUsermetadata,
+          [uid]: docSnap.data(),
+        }));
+      }
+    }
+    console.log(usermetadata, "usermetadata");
   };
   const [reel, setReel] = useState(null);
   const getuserdata = async (currentUser) => {
@@ -78,31 +130,32 @@ const Reels = () => {
         "Content-Type": "application/json",
         Authorization: `Bearer ${await gettoken()}`,
         email: user.email,
-         // Pass the cursor in the request header
+        // Pass the cursor in the request header
       },
       body: JSON.stringify({ cursor: nextPageCursor }), // Send current page and cursor in the request body
     });
     const data = await response.json();
     if (data.status === "true") {
-      setReels((prevReels) => [...prevReels, ...data.posts]); // Append new reels to the existing reels; // Set total pages received from 
+      setReels((prevReels) => [...prevReels, ...data.posts]); // Append new reels to the existing reels; // Set total pages received from
       setNextPageCursor(data.cursor); // Update the next page cursor for subsequent requests
       console.log(data.cursor, "cursor");
       setCurrentPage(currentPage + 1);
+      if (reels.length > 20) {
+        setReels(reels.slice(reel.length - 20, reels.length));
+      }
     }
   };
 
   useEffect(() => {
-    if (currentreel > reels.length-3 && reels.length > 0) {
+    if (currentreel > reels.length - 3 && reels.length > 0) {
       fetchReels();
       console.log("fetching more reels");
-     
     }
   }, [currentreel]);
 
   useEffect(() => {
-    if (userdata) 
-    fetchReels();
-  }, [userdata]); 
+    if (userdata) fetchReels();
+  }, [userdata]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -144,6 +197,8 @@ const Reels = () => {
                     <Video
                       reel={reel}
                       idx={idx}
+                      usermetadata={usermetadata}
+                      enqueueUserMetadata={enqueueUserMetadata}
                       currentreel={currentreel}
                       setCurrentReel={setCurrentReel}
                       userdata={userdata}

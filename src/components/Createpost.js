@@ -45,11 +45,19 @@ const CreatePost = ({ onClose, userdata }) => {
       onClose(); // Trigger onClose after the closing animation completes
     }, 300); // Adjust the timeout to match the duration of the closing animation
   };
-
   const handleFileChange = (e) => {
     const files = e.target.files;
     const filesArray = Array.from(files).slice(0, 10);
-    setMediaFiles([...mediaFiles, ...filesArray]);
+    const validFiles = filesArray.filter(
+      (file) => file.size <= 20 * 1024 * 1024
+    ); // Limit to 20MB
+
+    // Display an error message if any file exceeds the size limit
+    if (validFiles.length < filesArray.length) {
+      alert("Some files exceed the maximum size limit of 20MB.");
+    }
+
+    setMediaFiles([...mediaFiles, ...validFiles]);
   };
 
   const handleCaptionChange = (e) => {
@@ -112,7 +120,6 @@ const CreatePost = ({ onClose, userdata }) => {
         postcount: userdata.postcount + 1,
       });
       for (let i = 0; i < hashtags.length; i++) {
-       
         const tagRef = doc(db, "postshashtags", hashtags[i]);
         const tagDoc = await getDoc(tagRef);
         if (tagDoc.exists()) {

@@ -4,7 +4,9 @@ import React, { useRef, useEffect, useState } from "react";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import "../../styles/gradients.css";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import Link from "next/navigation";
+import GifPicker from "gif-picker-react";
 import "../../styles/feed.css";
 import {
   collection,
@@ -22,19 +24,24 @@ import {
   setDoc,
   addDoc,
 } from "firebase/firestore";
-
 import Image from "next/image";
 import { getFirestore, getDoc } from "firebase/firestore";
 import dynamic from "next/dynamic";
+import imageCompression from "browser-image-compression";
 const GroupChat = dynamic(() => import("@/components/GroupChat"));
 import toast, { Toaster } from "react-hot-toast";
-import { get } from "http";
+const options = {
+  maxSizeMB: 1,
+  maxWidthOrHeight: 1920,
+  useWebWorker: true,
+};
 const Home = () => {
   const searchParams = useSearchParams();
   const room = searchParams.get("roomid") || "";
   const chatt = searchParams.get("chattype") || "p";
   const chatw = searchParams.get("chatwindow") || "none";
   console.log(room, chatt, chatw);
+  const storage = getStorage(app);
   const auth = getAuth(app);
   const pathname = usePathname();
   // const pathname = window.location.pathname;
@@ -52,6 +59,7 @@ const Home = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [roomid, setRoomid] = useState(room);
   const [messagetext, setMessagetext] = useState("");
+  const [gif, setgif] = useState(null);
   const [chattype, setChattype] = useState(chatt);
   const [messages, setMessages] = useState([{}]);
   const [chats, setChats] = useState([]);
@@ -61,7 +69,30 @@ const Home = () => {
   const [chatwindow, setChatwindow] = useState(chatw);
   const [searchtext, setSearchtext] = useState("");
   const [chprevchat, setchprevchat] = useState(false);
+  const [gifopen, setgifopen] = useState(false);
+  const [showaddfiles, setshowaddfiles] = useState(false);
+  const [mediaFiles, setMediaFiles] = useState([]);
   //function to get data of messagerooms
+  const handleFileChange = (e) => {
+    const files = e.target.files;
+    const filesArray = Array.from(files).slice(0, 10);
+    const validFiles = filesArray.filter(
+      (file) => file.size <= 20 * 1024 * 1024
+    ); // Limit to 20MB
+
+    // Display an error message if any file exceeds the size limit
+    if (validFiles.length < filesArray.length) {
+      toast.error("Some files exceed the maximum size limit of 20MB.");
+      setMediaFiles([]);
+    }
+
+    setMediaFiles([...mediaFiles, ...validFiles]);
+  };
+
+  const handleRemoveMedia = (indexToRemove) => {
+    setMediaFiles(mediaFiles.filter((_, index) => index !== indexToRemove));
+  };
+
   useEffect(() => {
     const handleRouteChange = () => {
       setChattype(searchParams.get("chattype") || "p");
@@ -501,6 +532,7 @@ const Home = () => {
           const msgdata = {
             sender: userdata.uid,
             text: messagetext,
+            type: "text",
             timestamp: Date.now(),
             readstatus: false,
             roomid: roomid,
@@ -521,6 +553,7 @@ const Home = () => {
             chattype: chattype,
             sender: userdata.uid,
             text: messagetext,
+            messagetype: "text",
             roomid: roomid,
             receiver: chatwindow,
             timestamp: Date.now(),
@@ -592,6 +625,13 @@ const Home = () => {
       };
       await updateDoc(msgrromref, msgrromdata);
       const messageRef = doc(db, "messages", selectedMessage.id);
+      const data = await getDoc(messageRef);
+      if (data.type == "media") {
+        data.text.map(async (url) => {
+          const fileRef = ref(storage, url);
+          await deleteObject(fileRef);
+        });
+      }
       await deleteDoc(messageRef); // Delete the message document
       toast.success("Message deleted"); // Show success message
       setIsDropdownOpen(false); // Close the dropdown
@@ -608,7 +648,115 @@ const Home = () => {
   const handleclosegrpchatcreation = () => {
     setopengrpchatcreate(false);
   };
-
+  const handlesendGif = async (gif) => {
+    setgif(gif);
+    try {
+      if (userdata) {
+        if (roomid !== "") {
+          const msgref = collection(db, "messages");
+          const msgdata = {
+            sender: userdata.uid,
+            text: gif.url,
+            type: "gif",
+            timestamp: Date.now(),
+            readstatus: false,
+            roomid: roomid,
+          };
+          const q = await addDoc(msgref, msgdata);
+          const msgroomref = doc(db, "messagerooms", roomid);
+          const qwref = doc(db, "messages", q.id);
+          const msgroomdata = {
+            messages: arrayUnion(q.id),
+          };
+          await updateDoc(qwref, {
+            id: q.id,
+          });
+          await updateDoc(msgroomref, msgroomdata);
+          setMessagetext("");
+          sendNotification(q.id, {
+            type: "message",
+            chattype: chattype,
+            sender: userdata.uid,
+            text: gif.url,
+            messagetype: "gif",
+            roomid: roomid,
+            receiver: chatwindow,
+            timestamp: Date.now(),
+          });
+          toast.success("Gif sent");
+        } else {
+          toast.error("No chat selected");
+        }
+      }
+    } catch (error) {
+      console.error("Error sending Gif:", error.message); // Log any errors that occur
+      toast.error("Error " + error.message);
+    }
+    setgifopen(false);
+  };
+  const handlesubmitfiles = async () => {
+    try {
+      if (userdata) {
+        if (roomid !== "") {
+          const storageRef = ref(storage, `images/chats/${roomid}`);
+          const mediaURLs = [];
+          for (const file of mediaFiles) {
+            if (file.type.startsWith("video/")) {
+              const fileRef = ref(storageRef, file.name);
+              await uploadBytes(fileRef, file);
+              const downloadURL = await getDownloadURL(fileRef);
+              mediaURLs.push(downloadURL);
+              continue;
+            }
+            const compressedFile = await imageCompression(file, options);
+            const fileRef = ref(storageRef, compressedFile.name);
+            await uploadBytes(fileRef, compressedFile);
+            const downloadURL = await getDownloadURL(fileRef);
+            mediaURLs.push(downloadURL);
+          }
+          const msgref = collection(db, "messages");
+          const msgdata = {
+            sender: userdata.uid,
+            text: mediaURLs,
+            type: "media",
+            timestamp: Date.now(),
+            readstatus: false,
+            roomid: roomid,
+          };
+          const q = await addDoc(msgref, msgdata);
+          const msgroomref = doc(db, "messagerooms", roomid);
+          const qwref = doc(db, "messages", q.id);
+          const msgroomdata = {
+            messages: arrayUnion(q.id),
+          };
+          await updateDoc(qwref, {
+            id: q.id,
+          });
+          await updateDoc(msgroomref, msgroomdata);
+          setMessagetext("");
+          sendNotification(q.id, {
+            type: "message",
+            chattype: chattype,
+            sender: userdata.uid,
+            text: mediaURLs,
+            messagetype: "media",
+            roomid: roomid,
+            receiver: chatwindow,
+            timestamp: Date.now(),
+          });
+          console.log("Media sent:", mediaURLs);
+          setMediaFiles([]);
+          setshowaddfiles(false);
+          toast.success("Media sent");
+        } else {
+          toast.error("No chat selected");
+        }
+      }
+    } catch (error) {
+      console.error("Error sending files:", error.message);
+      toast.error("Error " + error.message);
+    }
+  };
   return (
     <div className="ml-5 w-full h-full">
       <Toaster />
@@ -666,6 +814,86 @@ const Home = () => {
                   )}
                 </div>
                 {/* <div className="kp "></div> */}
+                {gifopen && (
+                  <div className="absolute right-0 bottom-4 z-40 mb-20 mr-10">
+                    <GifPicker
+                      tenorApiKey="AIzaSyCzQwhhvhBYKNd6CWA5HeA2jWIg0AO5hF0"
+                      theme="auto"
+                      autoFocusSearch
+                      onGifClick={(gif) => handlesendGif(gif)}
+                    />
+                  </div>
+                )}
+                {showaddfiles && (
+                  <div className="absolute right-0 bottom-4 z-40 mb-20 mr-10 bg-opacity-85 bg-white rounded-xl p-4">
+                    <div className="mb-4">
+                      <label className="block text font-bold mb-2">
+                        Upload Photos or Videos (up to 10)
+                      </label>
+                      <input
+                        className="file:mr-4 file:py-2 file:px-4
+            file:rounded-full file:border-0
+            file:text-sm file:font-semibold
+            file:bg-violet-50 file:text-violet-700
+            hover:file:bg-violet-100"
+                        type="file"
+                        accept="image/*, video/*"
+                        onChange={handleFileChange}
+                      />
+                    </div>
+                    <div className="lp h-32 max-w-96">
+                      <div className="mb-4">
+                        <h2 className="text-lg font-semibold mb-2">
+                          Media Preview
+                        </h2>
+                        <div className="flex flex-nowrap overflow-x-auto">
+                          {mediaFiles.map((file, index) => (
+                            <div key={index} className="relative flex-none p-2">
+                              {file.type.startsWith("image/") ? (
+                                <Image
+                                  src={URL.createObjectURL(file)}
+                                  alt={`Media ${index + 1}`}
+                                  width={50}
+                                  height={50}
+                                  className="w-32 h-16 object-cover rounded"
+                                />
+                              ) : (
+                                <video
+                                  src={URL.createObjectURL(file)}
+                                  alt={`Media ${index + 1}`}
+                                  className="w-32 h-16 rounded"
+                                  controls
+                                />
+                              )}
+                              <button
+                                className="absolute ml-1 z-10 -mt-7 text-red-500 hover:text-red-700 bg-red-300 rounded-full w-6 h-6 flex items-center justify-center focus:outline-none"
+                                onClick={() => handleRemoveMedia(index)}
+                              >
+                                &#10005;
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-4">
+                      <button
+                        className="btn ml-3 py-3 px-4 disabled:text-gray-400 disabled:cursor-not-allowed "
+                        disabled={mediaFiles.length == 0}
+                        onClick={handlesubmitfiles}
+                      >
+                        Send
+                      </button>
+                      <input
+                        type="file"
+                        id="fileInput"
+                        accept="image/*, video/*"
+                        className="hidden"
+                        onChange={handleFileChange}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
               <button
                 className="createchat cursor-pointer h-auto mt-5 p-3 rounded-2xl bg-purple-600 mr-10 backdrop-filter backdrop-blur-lg bg-opacity-90 shadow-2xl hover:bg-purple-700"
@@ -788,6 +1016,7 @@ const Home = () => {
                         </button>
                       )}
                     </div>
+
                     {messages.map((message) => (
                       <div
                         className="px-6"
@@ -816,43 +1045,101 @@ const Home = () => {
                                   />
                                 </div>
                                 <div className="lp">
-                                  {message.text ? (
-                                    <span className="fg text-xl">
-                                      {message.text
-                                        .split(/(@\S+|https?:\/\/\S+)/)
-                                        .map((part, index) => {
-                                          if (part.startsWith("@")) {
-                                            // If it's a mention, create a link
-                                            return (
-                                              <a
-                                                href={`/${part.slice(1)}`}
-                                                key={index}
-                                              >
-                                                <strong>{part}</strong>
-                                              </a>
-                                            );
-                                          } else if (part.startsWith("http")) {
-                                            // If it's a website link, create a link
-                                            return (
-                                              <a href={part} key={index}>
-                                                <strong>{part}</strong>
-                                              </a>
-                                            );
-                                          } else {
-                                            // Otherwise, render it as plain text
-                                            return (
-                                              <React.Fragment key={index}>
-                                                {part}
-                                              </React.Fragment>
-                                            );
-                                          }
-                                        })}
-                                    </span>
-                                  ) : (
-                                    <div className="fg text-xl">
-                                      {message.text}
+                                  {message.type == "gif" && (
+                                    <>
+                                      {" "}
+                                      <Image
+                                        className=" rounded-xl text-center"
+                                        src={message.text}
+                                        alt=""
+                                        height={100}
+                                        width={100}
+                                      />
+                                    </>
+                                  )}
+                                  {message.type == "media" && (
+                                    <div className="flex">
+                                      {message.text.map((media, index) => (
+                                        <div key={index}>
+                                          {media.startsWith(
+                                            "https://firebasestorage"
+                                          ) &&
+                                            (media.includes("mp4") ||
+                                              media.includes("mov") ||
+                                              media.includes("mkv") ||
+                                              media.includes("hevc")) && (
+                                              <video
+                                                loop
+                                                src={media}
+                                                alt=""
+                                                controls
+                                                className="rounded-xl h-36 w-36 m-2 object-cover"
+                                                onClick={() => {
+                                                  window.open(media);
+                                                }}
+                                              />
+                                            )}
+                                          {media.startsWith(
+                                            "https://firebasestorage"
+                                          ) &&
+                                            (media.includes("jpg") ||
+                                              media.includes("heif") ||
+                                              media.includes("jpeg")) && (
+                                              <Image
+                                                src={media}
+                                                alt=""
+                                                height={100}
+                                                width={100}
+                                                className="rounded-xl h-36 w-36 m-2 object-cover"
+                                                onClick={() => {
+                                                  window.open(media);
+                                                }}
+                                              />
+                                            )}
+                                        </div>
+                                      ))}
                                     </div>
                                   )}
+                                {(message.type=="text") &&
+                                    (message.text ? (
+                                      <span className="fg text-xl">
+                                        {message.text
+                                          .split(/(@\S+|https?:\/\/\S+)/)
+                                          .map((part, index) => {
+                                            if (part.startsWith("@")) {
+                                              // If it's a mention, create a link
+                                              return (
+                                                <a
+                                                  href={`/${part.slice(1)}`}
+                                                  key={index}
+                                                >
+                                                  <strong>{part}</strong>
+                                                </a>
+                                              );
+                                            } else if (
+                                              part.startsWith("http")
+                                            ) {
+                                              // If it's a website link, create a link
+                                              return (
+                                                <a href={part} key={index}>
+                                                  <strong>{part}</strong>
+                                                </a>
+                                              );
+                                            } else {
+                                              // Otherwise, render it as plain text
+                                              return (
+                                                <React.Fragment key={index}>
+                                                  {part}
+                                                </React.Fragment>
+                                              );
+                                            }
+                                          })}
+                                      </span>
+                                    ) : (
+                                      <div className="fg text-xl">
+                                        {message.text}
+                                      </div>
+                                    ))}
                                 </div>
                               </div>
                               {isDropdownOpen && selectedMessage == message && (
@@ -863,8 +1150,12 @@ const Home = () => {
                                     <>delivered</>
                                   )}
                                   <button
-                                    className=" ml-2 dropdown-item mr-2"
+                                    className=" ml-2 dropdown-item mr-2 disabled:hidden"
                                     onClick={() => handleCopy(message.text)}
+                                    disabled={
+                                      message.type == "media" ||
+                                      message.type == "gif"
+                                    }
                                   >
                                     Copy
                                   </button>
@@ -901,13 +1192,106 @@ const Home = () => {
                                     {convertToChatTime(message.timestamp)}
                                   </div>
                                 </div>
-                                <div className="fg text-xl">{message.text}</div>
+                                {message.type == "gif" && (
+                                  <>
+                                    {" "}
+                                    <Image
+                                      className=" rounded-xl text-center"
+                                      src={message.text}
+                                      alt=""
+                                      height={100}
+                                      width={100}
+                                    />
+                                  </>
+                                )}
+                                {message.type == "media" && (
+                                  <div className="flex">
+                                    {message.text.map((media, index) => (
+                                      <div key={index}>
+                                        {media.startsWith(
+                                          "https://firebasestorage"
+                                        ) &&
+                                          (media.includes("mp4") ||
+                                            media.includes("mov") ||
+                                            media.includes("mkv") ||
+                                            media.includes("hevc")) && (
+                                            <video
+                                              loop
+                                              src={media}
+                                              alt=""
+                                              controls
+                                              className="rounded-xl h-36 w-36 m-2 object-cover"
+                                              onClick={() => {
+                                                window.open(media);
+                                              }}
+                                            />
+                                          )}
+                                        {media.startsWith(
+                                          "https://firebasestorage"
+                                        ) &&
+                                          (media.includes("jpg") ||
+                                            media.includes("heif") ||
+                                            media.includes("jpeg")) && (
+                                            <Image
+                                              src={media}
+                                              alt=""
+                                              height={100}
+                                              width={100}
+                                              className="rounded-xl h-36 w-36 m-2 object-cover"
+                                              onClick={() => {
+                                                window.open(media);
+                                              }}
+                                            />
+                                          )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                                {message.type=="text" &&
+                                  (message.text ? (
+                                    <span className="fg text-xl">
+                                      {message.text
+                                        .split(/(@\S+|https?:\/\/\S+)/)
+                                        .map((part, index) => {
+                                          if (part.startsWith("@")) {
+                                            // If it's a mention, create a link
+                                            return (
+                                              <a
+                                                href={`/${part.slice(1)}`}
+                                                key={index}
+                                              >
+                                                <strong>{part}</strong>
+                                              </a>
+                                            );
+                                          } else if (part.startsWith("http")) {
+                                            // If it's a website link, create a link
+                                            return (
+                                              <a href={part} key={index}>
+                                                <strong>{part}</strong>
+                                              </a>
+                                            );
+                                          } else {
+                                            // Otherwise, render it as plain text
+                                            return (
+                                              <React.Fragment key={index}>
+                                                {part}
+                                              </React.Fragment>
+                                            );
+                                          }
+                                        })}
+                                    </span>
+                                  ) : (
+                                    <div className="fg text-xl">
+                                      {message.text}
+                                    </div>
+                                  ))}
                               </div>
                             </div>
                           </>
                         )}
                       </div>
                     ))}
+
                     <div ref={messagesEndRef} />
                     <div className="textbox absolute flex bottom-0 w-full m-2">
                       <input
@@ -922,11 +1306,22 @@ const Home = () => {
                           }
                         }}
                       ></input>
-
+                      <button
+                        className="btn px-4 mx-2"
+                        onClick={() => setgifopen(!gifopen)}
+                      >
+                        GIF
+                      </button>
+                      <button
+                        className="btn px-4 mr-2 text-4xl"
+                        onClick={() => setshowaddfiles(!showaddfiles)}
+                      >
+                        +
+                      </button>
                       <button
                         onClick={sendMesage}
                         disabled={messagetext.length === 0}
-                        className="send bg-blue-500  fd px-6 ml-2 mr-4 disabled:bg-blue-300"
+                        className="btn disabled:cursor-not-allowed disabled:text-gray-300 px-4 mr-4"
                       >
                         Send
                       </button>

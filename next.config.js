@@ -13,7 +13,12 @@ module.exports = withPWA({
         protocol: "https",
         hostname: "firebasestorage.googleapis.com",
       },
-    ],
+      {
+        protocol: "https",
+        hostname: "media.tenor.com",
+      },
+      
+    ]
   },
 });
 // const nextConfig = {
