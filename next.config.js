@@ -17,7 +17,10 @@ module.exports = withPWA({
         protocol: "https",
         hostname: "media.tenor.com",
       },
-      
+      {
+        protocol: "https",
+        hostname: "images.unsplash.com",
+      }
     ]
   },
 });

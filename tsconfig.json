@@ -22,6 +22,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/app/page.jsx", "tailwind.config.js", "src/app/signup/page.jsx", "src/app/api/reels/trending/route.js"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/app/page.jsx", "tailwind.config.js", "src/app/signup/page.jsx", "src/app/api/reels/trending/route.js", "src/components/layoutgrid.jsx"],
   "exclude": ["node_modules"]
 }

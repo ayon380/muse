@@ -2,10 +2,8 @@
 import React from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { useRouter } from "next/navigation";
-import InputEmoji from "react-input-emoji";
 import { FaQuestion } from "react-icons/fa6";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import EmojiPicker from "emoji-picker-react";
 import { useEffect } from "react";
 import { FileUploader } from "react-drag-drop-files";
 import imageCompression from "browser-image-compression";

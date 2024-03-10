@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
+
 import type { Viewport } from "next";
 import { Analytics } from "@vercel/analytics/react";
 import Head from "next/head";
 import StoreProvider from "@/store/StoreProvider";
 import { StrictMode } from "react";
-import { SpeedInsights } from "@vercel/speed-insights/next"
+// import { SpeedInsights } from '@vercel/speed-insights/next';
 
 const APP_NAME = "Muse";
 const APP_DEFAULT_TITLE = "Muse";
@@ -167,7 +168,7 @@ export default function RootLayout({
           <body className={inter.className}>
             {children}
             <Analytics />
-            <SpeedInsights />
+            {/* <SpeedInsights /> */}
           </body>
         </StrictMode>
       </html>

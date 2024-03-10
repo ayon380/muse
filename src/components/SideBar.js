@@ -327,7 +327,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
               <div className="flex justify-center">
                 <div className="pfp my-4">
                   <Image
-                    onClick={() => router.push(`/feed/profile`)}
+                    onClick={() => router.push(`/feed/profile/${userdata.userName}`)}
                     className="rounded-full h-24 object-cover w-24 cursor-pointer hover:opacity-80"
                     src={userdata.pfp}
                     width={100}
@@ -383,9 +383,10 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                         onClick={() => router.push("/feed")}
                       >
                         <Image
+                        className="h-8 w-8"
                           src="/icons/category.png"
-                          width={30}
-                          height={30}
+                          width={100}
+                          height={100}
                           alt=""
                         />
                       </div>
@@ -396,9 +397,10 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                         onClick={() => router.push("/feed/explore")}
                       >
                         <Image
+                         className="h-8 w-8"
                           src="/icons/direction.png"
-                          width={30}
-                          height={30}
+                          width={100}
+                          height={100}
                           alt=""
                         />
                       </div>
@@ -409,9 +411,10 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                         onClick={() => router.push("/feed/reels")}
                       >
                         <Image
+                         className="h-8 w-8"
                           src="/icons/video.png"
-                          width={30}
-                          height={30}
+                          width={100}
+                          height={100}
                           alt=""
                         />
                       </div>
@@ -424,9 +427,10 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                         }}
                       >
                         <Image
+                         className="h-8 w-8"
                           src="/icons/conversation.png"
-                          width={30}
-                          height={30}
+                          width={100}
+                          height={100}
                           alt=""
                         />
                       </div>
@@ -437,9 +441,10 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                         onClick={() => router.push("/feed/settings")}
                       >
                         <Image
+                         className="h-8 w-8"
                           src="/icons/setting.png"
-                          width={30}
-                          height={30}
+                          width={100}
+                          height={100}
                           alt=""
                         />
                       </div>
@@ -630,7 +635,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                 className="pl text-xs cursor-pointer"
                 onClick={() => router.push("/releasenotes")}
               >
-                Muse v0.52 beta @NoFilter LLC 2024-2025
+                Muse v0.53  beta @NoFilter LLC 2024-2025
               </div>
             </div>
           )}
