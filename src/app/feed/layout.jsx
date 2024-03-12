@@ -1,26 +1,15 @@
 // Layout.js
-
-// Layout.js
 import React from "react";
 import "../styles/gradients.css";
 import "../styles/feed.css";
 import SideBar from "../../components/SideBar";
-
+import Bottomnav from "../../components/Bottomnav";
 const Layout = ({ children }) => {
-  // Initialize Sidebaropen state at the parent level
-  // const [Sidebaropen, setSidebaropen] = useState(false);
-
-  // useEffect(() => {
-  //   // Your other logic here...
-  //   // Determine whether Sidebaropen should be true or false based on screen size
-  //   const isMobile = window.matchMedia("(max-width: 767px)").matches;
-  //   setSidebaropen(!isMobile);
-  // }, []);
-
+  // Initialize Sidebaropen state at the parent leve
   return (
     <div className="h-screen w-screen flex items-center font-rethink relative text-black">
-      <div className="main tndmain w-screen bg-transparent dark:bg-transparent dark:text-white rounded-2xl mx-4 align-middle max-w-none">
-        <div className="flex h-full">
+      <div className="main tndmain w-screen bg-transparent dark:bg-transparent dark:text-white rounded-2xl lg:mx-4 align-middle max-w-none">
+        <div className="flex h-full ">
           {/* Pass Sidebaropen to the SideBar component */}
           <SideBar usage={"feed"} />
           {/* Pass Sidebaropen to children components
@@ -30,6 +19,7 @@ const Layout = ({ children }) => {
             }
             return child;
           })} */}
+          <Bottomnav />
           {children}
         </div>
       </div>

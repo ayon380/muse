@@ -43,7 +43,6 @@ const Reel = ({
   const [replies, setReplies] = useState({});
   const [commentreply, setCommentreply] = useState({});
   const [reply, setReply] = useState("");
-  const [commentcursor, setCommentcursor] = useState(null);
   const limit = 5;
   // const [isFullScreen, setIsFullScreen] = useState(false);
   const handleShowComments = () => {
@@ -168,18 +167,20 @@ const Reel = ({
     if (userdata) {
       const postRef = doc(db, "reels", reeldata.id);
       if (liked) {
+        setLiked(false);
         await updateDoc(postRef, {
           likes: arrayRemove(userdata.uid),
           likecount: increment(-1),
         });
-        setLiked(false);
+       
       } else {
+        setLiked(true);
         await updateDoc(postRef, {
           likes: arrayUnion(userdata.uid),
           likecount: increment(1),
         });
         sendNotification(reeldata);
-        setLiked(true);
+       
       }
       refetchReel();
     }

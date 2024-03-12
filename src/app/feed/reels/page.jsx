@@ -5,6 +5,7 @@ import app from "@/lib/firebase/firebaseConfig";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 import Video from "@/components/Video";
 import "../../styles/reels.css";
+import { useSidebarStore } from "../../store/zustand";
 import { usePathname, useSearchParams } from "next/navigation";
 const Reels = () => {
   // console.log("Sidebaropen", Sidebaropen);
@@ -24,6 +25,7 @@ const Reels = () => {
   const [usermetadata, setUsermetadata] = useState({});
   const [currentreel, setCurrentReel] = useState(0);
   const pathname = usePathname();
+  const { isOpen, toggle } = useSidebarStore();
   const limit = 5; // Number of documents to fetch per page
   const toggleGlobalMute = () => {
     setIsGlobalMuted((prevState) => !prevState);
@@ -40,7 +42,7 @@ const Reels = () => {
       const { uid, resolve } = userMetadataQueue.shift();
       try {
         // Call getusermetadata function
-        
+
         await getusermetadata(uid);
         // Resolve the promise
         resolve();
@@ -172,24 +174,28 @@ const Reels = () => {
   }, [auth]);
 
   return (
-    <div className="ml-5 w-full h-full">
+    <div className="lg:ml-5 w-full h-full">
       {userdata && !id && (
         <div>
-          <div className="main2 grid rounded-2xl bg-white bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-20 shadow-2xl border-1 p-8 App  border-black w-full h-full">
+          <div className="main2 grid rounded-2xl bg-white bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-20 shadow-2xl border-1 p-1 lg:p-8 App  border-black w-full h-full">
             <div className="flex">
-              <div className="h1 font-lucy text-5xl w-full text-left">
+              <div className="h1 font-lucy text-3xl pt-2 lg:text-5xl w-full text-left">
                 Reels
               </div>
-              {currentreel}CurrentReel
+              <div className="dss">
+                {/* <p>Sidebar is {isOpen ? "open" : "closed"}</p> */}
+                <button onClick={toggle}>Sidebar</button>
+              </div>
+              {/* {currentreel}CurrentReel
               {currentPage}CurrentPage
-              {reels.length}Reels
+              {reels.length}Reels */}
               <button onClick={toggleGlobalMute}>
                 {isGlobalMuted ? "Mute All" : "UnMute All"}
               </button>
             </div>
             <div className="fl flex justify-center">
               <div
-                className=" video-container rounded-xl bg-black w-auto relative "
+                className=" video-container rounded-xl bg-black w-auto  relative "
                 id="video-container "
               >
                 {reels.map((reel, idx) => (

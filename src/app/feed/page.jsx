@@ -1,6 +1,6 @@
 "use client";
 import app from "@/lib/firebase/firebaseConfig";
-import React, { use, useEffect, useState } from "react";
+import React, { use, useContext, useEffect, useState } from "react";
 import {
   deleteUser,
   getAuth,
@@ -11,7 +11,6 @@ import { firebase } from "@/lib/firebase/firebaseConfig";
 import { useRouter } from "next/navigation";
 import "../styles/gradients.css";
 import "../styles/feed.css";
-import Post from "../../components/Post";
 import {
   collection,
   getDocs,
@@ -20,17 +19,13 @@ import {
   where,
   orderBy,
 } from "firebase/firestore";
-import { deleteDoc } from "firebase/firestore";
 import { getStorage, deleteObject } from "firebase/storage";
-import { useHorizontalScroll } from "../../externalfn/horizontalscroll";
 import Image from "next/image";
-import { ref } from "firebase/storage";
 import { getFirestore, getDoc, doc } from "firebase/firestore";
-import dynamic from "next/dynamic";
-import toast, { Toaster } from "react-hot-toast";
+import { useSidebarStore } from "../store/zustand";
 import Link from "next/link";
 
-const CreatePost = dynamic(() => import("../../components/Createpost"));
+import FeedPost from "@/components/FeedPost";
 const Home = () => {
   const auth = getAuth(app);
   const [user, setUser] = useState(auth.currentUser);
@@ -43,6 +38,60 @@ const Home = () => {
   const [postloading, setPostLoading] = useState(true);
   const [searchResults, setSearchResults] = useState([]);
   const [searchtext, setSearchtext] = useState("");
+  const [usermetadata, setUsermetadata] = useState({});
+  const userMetadataQueue = [];
+  const { isOpen, toggle } = useSidebarStore();
+  let isUserMetadataQueueProcessing = false;
+
+  const processUserMetadataQueue = async () => {
+    if (!isUserMetadataQueueProcessing && userMetadataQueue.length > 0) {
+      // Set processing flag to true
+      isUserMetadataQueueProcessing = true;
+
+      // Get the first item from the queue
+      const { uid, resolve } = userMetadataQueue.shift();
+      try {
+        // Call getusermetadata function
+
+        await getusermetadata(uid);
+        // Resolve the promise
+        resolve();
+      } catch (error) {
+        console.error("Error processing user metadata:", error);
+      }
+
+      // Process next item in the queue recursively
+      processUserMetadataQueue();
+    } else {
+      // Set processing flag to false when queue is empty
+      isUserMetadataQueueProcessing = false;
+    }
+  };
+
+  const enqueueUserMetadata = (uid) => {
+    return new Promise((resolve, reject) => {
+      // Add the user metadata task to the queue
+      userMetadataQueue.push({ uid, resolve });
+      // Start processing the queue
+      processUserMetadataQueue();
+    });
+  };
+
+  const getusermetadata = async (uid) => {
+    // console.log(uid, "uid");
+    if (!usermetadata[uid]) {
+      console.log("Fetching user metadata");
+      const userRef = doc(db, "username", uid);
+      const docSnap = await getDoc(userRef);
+      if (docSnap.exists()) {
+        setUsermetadata((prevUsermetadata) => ({
+          ...prevUsermetadata,
+          [uid]: docSnap.data(),
+        }));
+      }
+    }
+    console.log(usermetadata, "usermetadata");
+  };
   async function gettoken() {
     if (user) {
       try {
@@ -71,6 +120,10 @@ const Home = () => {
         const userData = await response.json();
         setPosts(userData.posts);
         console.log(userData);
+        userData.posts.map((post) => {
+          enqueueUserMetadata(post.uid);
+          console.log(post.timestamp, "timestamp");
+        });
         setPostLoading(false);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -156,12 +209,14 @@ const Home = () => {
       setSearchResults([]);
     }
   }, [searchtext]);
-
+  const [liked, setLiked] = useState(false);
   return (
-    <div className=" ml-5 w-full h-full">
+    <div className=" lg:ml-5 w-full h-full">
       {userdata && (
         <div>
-          <div className="main2 rounded-2xl bg-white bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-20 shadow-2xl border-1 border-black h-full">
+          <div className="main2 rounded-2xl bg-white bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-20 shadow-2xl border-1 border-black h-full overflow-y-auto">
+            <p>Sidebar is {isOpen ? "open" : "closed"}</p>
+            <button onClick={toggle}>Toggle Sidebar</button>
             <div className="flex ">
               <div className="search ml-5 mt-5">
                 <input
@@ -354,18 +409,18 @@ const Home = () => {
                 Loading Feed..............
               </div>
             )}
-            <div className="pol h-full">
-              <div className="feed w-full h-full  overflow-y-auto">
+            <div className="pol font-rethink ">
+              <div className="feed w-full h-full bg-transparent overflow-y-auto">
                 {posts && posts.length > 0 ? (
                   posts.map((post) => (
-                    <div className=" m-10" key={post.id}>
-                      <Image
-                        width={1000}
-                        height={1000}
-                        alt=""
-                        src={post.mediaFiles[0]}
-                      />
-                    </div>
+                    <FeedPost
+                      key={post.id}
+                      post={post}
+                      userdata={userdata}
+                      enqueueUserMetadata={enqueueUserMetadata}
+                      usermetadata={usermetadata}
+                      db={db}
+                    />
                   ))
                 ) : (
                   <div className="flex justify-center items-center h-96 w-full text-3xl font-bold">

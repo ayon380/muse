@@ -6,7 +6,6 @@ import "./globals.css";
 import type { Viewport } from "next";
 import { Analytics } from "@vercel/analytics/react";
 import Head from "next/head";
-import StoreProvider from "@/store/StoreProvider";
 import { StrictMode } from "react";
 // import { SpeedInsights } from '@vercel/speed-insights/next';
 
@@ -161,17 +160,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <StoreProvider>
 
-      <html lang="en" className={`${lucy.variable} ${rethink.variable}`}>
-        <StrictMode>
-          <body className={inter.className}>
-            {children}
-            <Analytics />
-            {/* <SpeedInsights /> */}
-          </body>
-        </StrictMode>
-      </html>
-    </StoreProvider>
+    <html lang="en" className={`${lucy.variable} ${rethink.variable}`}>
+      <StrictMode>
+        <body className={inter.className}>
+          {children}
+          <Analytics />
+          {/* <SpeedInsights /> */}
+        </body>
+      </StrictMode>
+    </html>
+
   );
 }

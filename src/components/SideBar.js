@@ -24,6 +24,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import toast from "react-hot-toast";
+import { useSidebarStore } from "@/app/store/zustand";
 const CreatePost = dynamic(() => import("@/components/Createpost"), {
   ssr: false,
 });
@@ -32,6 +33,7 @@ const CreateReel = dynamic(() => import("@/components/CreateReel"), {
 });
 const SideBar = ({ usage, data, currentuserdata }) => {
   // console.log("Sidebaropen", open);
+
   const [profileData, setProfileData] = useState(null);
   const auth = getAuth(app);
   console.log("Current UserData", currentuserdata);
@@ -43,6 +45,22 @@ const SideBar = ({ usage, data, currentuserdata }) => {
   const [follow, setFollow] = React.useState(false);
   const db = getFirestore(app);
   const [usermetadata, setUsermetadata] = useState({});
+  const { isOpen, toggle } = useSidebarStore();
+  const [ismobile, setismobile] = useState(false);
+  useEffect(() => {
+    if (window.innerWidth <= 768) {
+      useSidebarStore.getState().isOpen = false;
+      setismobile(true);
+    }
+  }, []);
+  const playSound = () => {
+    notysound.play(); // Play the audio
+  };
+  const [notysound, setAudio] = useState(null);
+  useEffect(() => {
+    setAudio(new Audio("/sounds/inbox.mp3"));
+    // only run once on the first render on the client
+  }, []);
   const getusermetadata = async (uid) => {
     try {
       if (usermetadata.uid === undefined) {
@@ -198,7 +216,11 @@ const SideBar = ({ usage, data, currentuserdata }) => {
     if (!userdata) return;
     const notrf = collection(db, "notifications");
     const q = onSnapshot(
-      query(notrf, where("receiver", "==", userdata.uid), orderBy("timestamp")),
+      query(
+        notrf,
+        where("receiver", "==", userdata.uid),
+        orderBy("timestamp", "desc")
+      ),
       (snapshot) => {
         snapshot.docChanges().forEach(async (change) => {
           if (change.type === "added") {
@@ -206,9 +228,15 @@ const SideBar = ({ usage, data, currentuserdata }) => {
             await getusermetadata(q.sender);
             if (Date.now() - q.timestamp < 20000) {
               toast.success("New Notification: ");
+              playSound();
             }
             console.log("New notification: ", change.doc.data());
-            setnotificationOpen((prev) => [...prev, change.doc.data()]);
+            const r = notifications;
+            r.push(change.doc.data());
+            const sortedNotifications = [...r].sort(
+              (a, b) => b.timestamp - a.timestamp
+            );
+            setnotificationOpen(sortedNotifications);
           }
           if (change.type === "modified") {
             console.log("Modified notification: ", change.doc.data());
@@ -225,6 +253,9 @@ const SideBar = ({ usage, data, currentuserdata }) => {
   };
   useEffect(() => {
     console.log("Notifications: ", notifications);
+    const sortedNotifications = [...notifications].sort(
+      (a, b) => b.timestamp - a.timestamp
+    );
   }, [notifications]);
   const handledismissnotification = async (notification) => {
     try {
@@ -302,11 +333,40 @@ const SideBar = ({ usage, data, currentuserdata }) => {
       return `${day}, ${formattedDate} at ${hour}:${minute}`;
     }
   }
+  // const [animationClass, setAnimationClass] = useState("");
+
+  // useEffect(() => {
+  //   setAnimationClass(isOpen ? "slide-in-right" : "slide-out-right");
+  // }, [isOpen]);
+  // Listen for animation end event to set isAnimationComplete to true
+  const [isAnimationComplete, setIsAnimationComplete] = useState(false);
+  const handleAnimationEnd = () => {
+    setIsAnimationComplete(true);
+    console.log("Animation complete");
+  };
+
+  // When the animation is complete and the sidebar is closed, set isAnimationComplete back to false
+  useEffect(() => {
+    if (!isOpen && isAnimationComplete) {
+      setTimeout(() => {
+        setIsAnimationComplete(false);
+      }, 300);
+    }
+    console.log(isAnimationComplete + " " + isOpen);
+  }, [isOpen, isAnimationComplete]);
   return (
     <>
       {/* {open && ( */}
-      <div className="lp w-1/3">
+      <div
+        className={`lp w-screen  h-screen lg:h-full overflow-hidden lg:w-1/3 z-50 ${
+          ismobile && "absolute"
+        } ${isOpen ? "slide-in-right " : "slide-out-right "} ${
+          !isAnimationComplete && !isOpen && "hidden"
+        }`}
+        onAnimationEnd={handleAnimationEnd}
+      >
         <div className="bg-white z-50 pb-5 dark:bg-black h-full rounded-xl bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-40 shadow-2xl border-1 border-black lpo">
+          <button onClick={toggle}>{isOpen ? "Open" : "Close"}</button>
           {createpostopen && (
             <CreatePost
               onClose={() => setcreatepostOpen(!createpostopen)}
@@ -321,27 +381,60 @@ const SideBar = ({ usage, data, currentuserdata }) => {
           )}
           {userdata && (
             <div className="main1 h-full  flex flex-col justify-between items-center">
-              <div className="text-6xl font-lucy text-center mt-6 mb-8">
+              <div className=" text-4xl my-2 lg:text-6xl font-lucy text-center lg:mt-6 lg:mb-8">
                 Muse
               </div>
-              <div className="flex justify-center">
-                <div className="pfp my-4">
-                  <Image
-                    onClick={() => router.push(`/feed/profile/${userdata.userName}`)}
-                    className="rounded-full h-24 object-cover w-24 cursor-pointer hover:opacity-80"
-                    src={userdata.pfp}
-                    width={100}
-                    height={100}
-                    alt=""
-                  />
-                </div>
-              </div>
-              <div className="usernamw text-center font-bold text-2xl">
-                {userdata.userName}
-              </div>
-              <div className="bio text-center opacity-80 my-5">
-                {userdata.bio}
-              </div>
+              {!ismobile ? (
+                <>
+                  <div className="flex justify-center">
+                    <div className="pfp my-4">
+                      <Image
+                        onClick={() =>
+                          router.push(`/feed/profile/${userdata.userName}`)
+                        }
+                        className="rounded-full h-24 object-cover w-24 cursor-pointer hover:opacity-80"
+                        src={userdata.pfp}
+                        width={100}
+                        height={100}
+                        alt=""
+                      />
+                    </div>
+                  </div>
+                  <div className="usernamw text-center font-bold text-2xl">
+                    {userdata.userName}
+                  </div>
+
+                  <div className="bio text-center opacity-80 my-5">
+                    {userdata.bio}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex justify-center">
+                    <div className="pfp my-4">
+                      <Image
+                        onClick={() =>
+                          router.push(`/feed/profile/${userdata.userName}`)
+                        }
+                        className="rounded-full h-24 object-cover w-24 mr-5 cursor-pointer hover:opacity-80"
+                        src={userdata.pfp}
+                        width={100}
+                        height={100}
+                        alt=""
+                      />
+                    </div>
+                    <div className="dsd">
+                      <div className="usernamw mt-5 font-bold text-2xl">
+                        {userdata.userName}
+                      </div>
+
+                      <div className="bio  opacity-80 my-2">
+                        {userdata.bio}
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
               <div className="flex justify-between ml-2">
                 <div className="followers text-center w-16">
                   <div className="text-2xl  font-bold">
@@ -383,7 +476,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                         onClick={() => router.push("/feed")}
                       >
                         <Image
-                        className="h-8 w-8"
+                          className="h-8 w-8"
                           src="/icons/category.png"
                           width={100}
                           height={100}
@@ -397,7 +490,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                         onClick={() => router.push("/feed/explore")}
                       >
                         <Image
-                         className="h-8 w-8"
+                          className="h-8 w-8"
                           src="/icons/direction.png"
                           width={100}
                           height={100}
@@ -411,7 +504,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                         onClick={() => router.push("/feed/reels")}
                       >
                         <Image
-                         className="h-8 w-8"
+                          className="h-8 w-8"
                           src="/icons/video.png"
                           width={100}
                           height={100}
@@ -427,7 +520,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                         }}
                       >
                         <Image
-                         className="h-8 w-8"
+                          className="h-8 w-8"
                           src="/icons/conversation.png"
                           width={100}
                           height={100}
@@ -441,7 +534,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                         onClick={() => router.push("/feed/settings")}
                       >
                         <Image
-                         className="h-8 w-8"
+                          className="h-8 w-8"
                           src="/icons/setting.png"
                           width={100}
                           height={100}
@@ -449,9 +542,8 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                         />
                       </div>
                     </div>
-                    
                   </div>
-                  <div className="notif p-4 h-72 scroll-smooth  overflow-y-auto ">
+                  <div className="notif p-4  scroll-smooth  overflow-y-auto ">
                     <div
                       className="heading sticky top-0 
                   "
@@ -480,8 +572,8 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                           key={notification.id}
                           className="cursor-pointer justify-between rounded-xl bg-blue-400 p-5 my-2"
                         >
-                          <div className="d flex justify-between">
-                            {usermetadata[notification.sender] && (
+                          {usermetadata[notification.sender] && (
+                            <div className="d flex justify-between">
                               <>
                                 <div className="flex">
                                   <Image
@@ -502,88 +594,123 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                                   </div>
                                 </div>
                               </>
-                            )}
-                            <div className="flex">
-                              <div className="type mr-3">
-                                {notification.type == "like" && (
-                                  <div className="text-xs">Like</div>
-                                )}
-                                {notification.type == "comment" && (
-                                  <div className="text-xs">Comment</div>
-                                )}
-                                {notification.type == "follow" && (
-                                  <div className="text-xs">Follow</div>
-                                )}
-                                {notification.type == "message" && (
-                                  <div className="text-xs">Message</div>
-                                )}
-                                {notification.type == "reellike" && (
-                                  <div className="text-xs">Reel Like</div>
-                                )}
-                              </div>
-                              <div
-                                className="sd -mt-1 cursor-pointer"
-                                onClick={() =>
-                                  handledismissnotification(notification)
-                                }
-                              >
-                                X
-                              </div>
-                            </div>
-                          </div>
-                          {notification.type == "message" &&
-                            notification.messagetype == "media" && (
-                              <div
-                                className=" flex pt-2"
-                                onClick={() => {
-                                  handlemessagerouting(notification);
-                                }}
-                              >
-                                <Image
-                                  className="rounded-xl h-10 w-10"
-                                  src={notification.text[0]}
-                                  alt="Media File"
-                                  height={100}
-                                  width={100}
-                                />
-                                <div className="text pt-2 ml-4">
-                                  {usermetadata[notification.sender].userName}{" "}
-                                  sent you a media file
+
+                              <div className="flex">
+                                <div className="type mr-3">
+                                  {notification.type == "like" && (
+                                    <div className="text-xs">Like</div>
+                                  )}
+                                  {notification.type == "comment" && (
+                                    <div className="text-xs">Comment</div>
+                                  )}
+                                  {notification.type == "follow" && (
+                                    <div className="text-xs">Follow</div>
+                                  )}
+                                  {notification.type == "message" && (
+                                    <div className="text-xs">Message</div>
+                                  )}
+                                  {notification.type == "reellike" && (
+                                    <div className="text-xs">Reel Like</div>
+                                  )}
+                                </div>
+                                <div
+                                  className="sd -mt-1 cursor-pointer"
+                                  onClick={() =>
+                                    handledismissnotification(notification)
+                                  }
+                                >
+                                  X
                                 </div>
                               </div>
-                            )}
-                          {notification.type == "message" && (
-                            <div
-                              className="pl"
-                              onClick={() => {
-                                handlemessagerouting(notification);
-                              }}
-                            >
-                              {notification.messagetype == "text" && (
-                                <div className="text-sm">
-                                  {notification.text}
-                                </div>
-                              )}
-                              <div className="text-xs"></div>
                             </div>
                           )}
-                          {notification.type == "reellike" && (
-                            <div
-                              className="q"
-                              onClick={() =>
-                                router.push(
-                                  `/feed/reels?reelid=${notification.reelid}`
-                                )
-                              }
-                            >
-                              {usermetadata[notification.sender] && (
-                                <>
-                                  <div className="text-sm">
-                                    {usermetadata[notification.sender].userName}{" "}
-                                    liked your Reel
+                          {usermetadata[notification.sender] && (
+                            <div>
+                              {notification.type == "message" &&
+                                notification.messagetype == "media" && (
+                                  <div
+                                    className=" flex pt-2"
+                                    onClick={() => {
+                                      handlemessagerouting(notification);
+                                    }}
+                                  >
+                                    <Image
+                                      className="rounded-xl h-10 w-10"
+                                      src={notification.text[0]}
+                                      alt="Media File"
+                                      height={100}
+                                      width={100}
+                                    />
+                                    <div className="text pt-2 ml-4">
+                                      {
+                                        usermetadata[notification.sender]
+                                          .userName
+                                      }{" "}
+                                      sent you a media file
+                                    </div>
                                   </div>
+                                )}
+                              {notification.type == "message" &&
+                                notification.messagetype == "gif" && (
+                                  <div
+                                    className=" flex pt-2"
+                                    onClick={() => {
+                                      handlemessagerouting(notification);
+                                    }}
+                                  >
+                                    <Image
+                                      className="rounded-xl h-10 w-10"
+                                      src={notification.text}
+                                      alt="Media File"
+                                      height={100}
+                                      width={100}
+                                    />
+                                    <div className="text pt-2 ml-4">
+                                      {
+                                        usermetadata[notification.sender]
+                                          .userName
+                                      }{" "}
+                                      sent you a media file
+                                    </div>
+                                  </div>
+                                )}
+                              {notification.type == "message" && (
+                                <div
+                                  className="pl"
+                                  onClick={() => {
+                                    handlemessagerouting(notification);
+                                  }}
+                                >
+                                  {notification.messagetype == "text" && (
+                                    <div className="text-sm">
+                                      {notification.text}
+                                    </div>
+                                  )}
                                   <div className="text-xs"></div>
-                                </>
+                                </div>
+                              )}
+                              {notification.type == "reellike" && (
+                                <div
+                                  className="q"
+                                  onClick={() =>
+                                    router.push(
+                                      `/feed/reels?reelid=${notification.reelid}`
+                                    )
+                                  }
+                                >
+                                  {usermetadata[notification.sender] && (
+                                    <>
+                                      <div className="text-sm">
+                                        {
+                                          usermetadata[notification.sender]
+                                            .userName
+                                        }{" "}
+                                        liked your Reel
+                                      </div>
+                                      <div className="text-xs"></div>
+                                    </>
+                                  )}
+                                </div>
                               )}
                             </div>
                           )}
@@ -594,7 +721,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                 </div>
               )}
               {(currentuserdata || usage == "feed") && (
-                <div className="flex w-full justify-evenly -mt-6">
+                <div className="flex w-full justify-evenly ">
                   {usage == "feed" && (
                     <button
                       className="create btn px-6 py-2 font-rethink mb-4 "
@@ -632,10 +759,10 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                 </div>
               </div>
               <div
-                className="pl text-xs cursor-pointer"
+                className="pl text-xs cursor-pointer mb-4"
                 onClick={() => router.push("/releasenotes")}
               >
-                Muse v0.53  beta @NoFilter LLC 2024-2025
+                Muse v0.54 beta @NoFilter LLC 2024-2025
               </div>
             </div>
           )}

@@ -23,7 +23,7 @@ const Page = ({ params }) => {
   const { slug } = params;
   const router = useRouter();
   const searchParams = useSearchParams();
-  const postno = searchParams.get("postno") || -1;
+  const postid = searchParams.get("postid") || -1;
   console.log(slug);
   const [searchtext, setSearchtext] = React.useState("");
   const [userdata, setUserData] = React.useState(null);
@@ -100,8 +100,8 @@ const Page = ({ params }) => {
   const db = getFirestore(app);
   const [showPost, setShowPost] = React.useState(false);
   useEffect(() => {
-    if (postno > -1) setShowPost(true);
-  }, [postno]);
+    if (postid != -1) setShowPost(true);
+  }, [postid]);
   const [posts, setPosts] = React.useState([]);
   const getposts = async () => {
     if (!userdata) return;
@@ -248,11 +248,12 @@ const Page = ({ params }) => {
         </div>
       ) : (
         <>
-          {postno > -1 && showPost && (
+          {postid != -1 && showPost && (
             <FeedPost
+              db={db}
               userdata={userdata}
-              post={posts[postno]}
-              onClose={onclose}
+              post={posts[postid]}
+      
               currentuserdata={currentuserdata}
             />
           )}

@@ -5,3 +5,13 @@
 .main2{
     height: 97vh;
 }
+
+/* Media query for mobile devices */
+@media only screen and (max-width: 768px) {
+    .tndmain {
+        height: 100%; /* Adjusted height for mobile */
+    }
+    .main2 {
+        height: 100vh; /* Adjusted height for mobile */
+    }
+}

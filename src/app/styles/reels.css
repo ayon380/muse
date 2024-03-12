@@ -16,6 +16,12 @@ html {
 }
 
 /* for chrome and opera */
+@media only screen and (max-width: 768px) {
+  .video-container{
+    height: 93vh;
+  }
+}
+
 .video-container::-webkit-scrollbar {
   display: none;
 }
