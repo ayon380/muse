@@ -16,9 +16,7 @@ import {
 } from "firebase/auth";
 import { getFirestore, doc, setDoc, getDoc } from "firebase/firestore";
 import app from "@/lib/firebase/firebaseConfig";
-import { useDispatch } from "react-redux";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { setUser } from "../../store/features/UserSlice";
 import { useRouter } from "next/navigation";
 import toast, { Toaster } from "react-hot-toast";
 import Image from "next/image";
@@ -29,7 +27,6 @@ const options = {
   useWebWorker: true,
 };
 const Signup = () => {
-  const dispatch = useDispatch();
   var state_arr = new Array(
     "Andaman & Nicobar",
     "Andhra Pradesh",
@@ -169,8 +166,7 @@ const Signup = () => {
           uid: user.uid,
           // Add other user data as needed
         };
-        dispatch(setUser(userData));
-        router.push("/feed");
+                router.push("/feed");
       }
     } else {
       user = await signInWithPopup(auth, provider);
@@ -330,30 +326,6 @@ const Signup = () => {
   const handleSignup = async () => {
     try {
       setsignuppocess(true);
-      if (user)
-        dispatch(
-          setUser({
-            displayName: user.displayName,
-            email: user.email,
-            photoURL: user.photoURL,
-            uid: user.uid,
-            userName: userName,
-            fullname: name,
-            state: state,
-            city: city,
-            gender: gender,
-            dob: dob,
-            bio: bio,
-            pubpriv: pubpriv,
-            following: [],
-            postcount: 0,
-            followingcount: 0,
-            followerscount: 0,
-            followers: [],
-            profession: profession,
-            org: org,
-          })
-        );
 
       // Save additional user data to Firestore
       const userRef = doc(db, "users", user.email);
