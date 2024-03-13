@@ -631,7 +631,7 @@ const FeedPost = ({
             </div>
           )}
           <div className="gf  rounded-xl  pt-6 z-20 w-full  ">
-            <Carousel showThumbs={false} autoFocus autoPlay infiniteLoop>
+            <Carousel showThumbs={false} >
               {postdata?.mediaFiles.map((media) => (
                 <>
                   {isVideoFile(media) ? (

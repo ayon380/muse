@@ -2,17 +2,23 @@
 import React, { useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useSidebarStore } from "@/app/store/zustand";
 const Bottomnav = () => {
   const [isMobile, setIsMobile] = React.useState(false);
+  const {chatopen,setchatopen} = useSidebarStore();
   useEffect(() => {
-    if (window.innerWidth < 768) {
+    console.log(chatopen, "chatopen bottomnav");
+    if (window.innerWidth < 768 && !chatopen) {
       setIsMobile(true);
     }
-  }, []);
+    else{
+      setIsMobile(false);
+    }
+  }, [chatopen]);
   const router = useRouter();
   return (
     <div className="b">
-      <div className={`flex ${isMobile ? "absolute" : "hidden"}  bottomnav rounded-t-lg bottom-0 bg-opacity-90 bg-black z-40 w-full`}>
+      <div className={`flex ${isMobile ? "absolute" : "hidden"}  bottomnav rounded-t-lg bottom-0 bg-opacity-90 bg-white dark:bg-black z-40 w-full`}>
         <div className="options flex my-5  justify-evenly items-center flex-auto">
           <div className="explore">
             <div

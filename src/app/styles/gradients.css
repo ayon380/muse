@@ -22,16 +22,22 @@
 /* .pol{
 	width: 100%;
 }*/
-.chatwindow{
-	height: 84.5vh;
+.chatwindow {
+  height: 84.5vh;
+}
+
+@media only screen and (max-width: 768px) {
+  .chatwindow {
+    height: 100vh;
+  }
 }
 html {
-	background-image: url("/gta.jpeg");
+  background-image: url("/gta.jpeg");
 }
 
 /* Media query for dark mode */
 @media (prefers-color-scheme: dark) {
-	html {
-		background-image: url("/Stars.jpg");
-	}
+  html {
+    background-image: url("/Stars.jpg");
+  }
 }

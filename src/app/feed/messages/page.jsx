@@ -27,6 +27,7 @@ import {
 import Image from "next/image";
 import { getFirestore, getDoc } from "firebase/firestore";
 import dynamic from "next/dynamic";
+import { useSidebarStore } from "@/app/store/zustand";
 import imageCompression from "browser-image-compression";
 const GroupChat = dynamic(() => import("@/components/GroupChat"));
 import toast, { Toaster } from "react-hot-toast";
@@ -72,7 +73,23 @@ const Home = () => {
   const [gifopen, setgifopen] = useState(false);
   const [showaddfiles, setshowaddfiles] = useState(false);
   const [mediaFiles, setMediaFiles] = useState([]);
+  const [ismobile, setismobile] = useState(false);
+  const { chatopen, setchatopen, isOpen, toggle } = useSidebarStore();
   //function to get data of messagerooms
+  useEffect(() => {
+    if (window.innerWidth < 768) {
+      setismobile(true);
+    } else {
+      setismobile(false);
+    }
+    window.addEventListener("resize", () => {
+      if (window.innerWidth < 768) {
+        setismobile(true);
+      } else {
+        setismobile(false);
+      }
+    });
+  }, []);
   const handleFileChange = (e) => {
     const files = e.target.files;
     const filesArray = Array.from(files).slice(0, 10);
@@ -82,7 +99,7 @@ const Home = () => {
 
     // Display an error message if any file exceeds the size limit
     if (validFiles.length < filesArray.length) {
-      toast.error("Some files exceed the maximum size limit of 20MB.");
+      toast.error("Some files exceed the maximum size limit of1 20MB.");
       setMediaFiles([]);
     }
 
@@ -95,16 +112,24 @@ const Home = () => {
 
   useEffect(() => {
     const handleRouteChange = () => {
-      setChattype(searchParams.get("chattype") || "p");
-      setRoomid(searchParams.get("roomid") || "");
-      setChatwindow(searchParams.get("chatwindow") || "none");
-      console.log("Changingg route");
-      if (roomid != "") {
+      const ct = searchParams.get("chattype") || "p";
+      const rid = searchParams.get("roomid") || "";
+      const cw = searchParams.get("chatwindow") || "none";
+      if (rid != "" && !chatopen) {
+        console.log("Opening chat");
         setcurrentmsglength(51);
+        setchatopen(true);
       }
+      setChattype(ct);
+      setRoomid(rid);
+      setChatwindow(cw);
     };
     if (userdata) handleRouteChange();
   }, [pathname, room, userdata]);
+  // useEffect(() => {
+  //   console.log(roomid + "usestate" + chatopen);
+
+  // }, [roomid]);
   useEffect(() => {
     console.log(chattype + " " + roomid + " " + chatwindow);
   }, [chattype, roomid, chatwindow]);
@@ -758,293 +783,510 @@ const Home = () => {
     }
   };
   return (
-    <div className="ml-5 w-full h-full">
+    <div className="lg:ml-5 w-full h-full overflow-hidden">
       <Toaster />
       {userdata && (
         <div className="main2 w-full rounded-2xl   bg-white bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-20 shadow-2xl border-1 border-black h-full">
-          <div className="flex w-full ">
-            <div className="messages  text-5xl ml-6 mt-6 mr-6 font-lucy w-1/4 ">
-              Messages
-            </div>
-            <div className="flex justify-between w-3/4">
-              <div className="search ml-5 mt-5 ">
-                <div className="ser">
-                  <input
-                    className=" h-12 text-2xl p-2 rounded-2xl focus:rounded-t-2xl focus:rounded-b-none placeholder-italic placeholder:text-white   bg-gray-300 text-white border-black transition-all duration-300 outline-none shadow-2xl hover:shadow-3xl focus:shadow-3xl  hover:bg-gray-400 focus:bg-gray-400"
-                    type="text"
-                    value={searchtext}
-                    onChange={(e) => setSearchtext(e.target.value)}
-                    placeholder="Search"
-                    // Add hover and focus styles
-                    style={{
-                      background: "rgba(192,192,192,0.5)",
-                      ":hover": {
-                        transform: "scale(1.2)", // Scale up on hover
-                        background: "rgba(192,192,192,0.7)", // Lighter background on hover
-                      },
-                      // Focus styles
-                      ":focus": {
-                        background: "rgba(192,192,192,0.8)", // Deeper background color when selected
-                        outline: "none", // Remove outline when selected
-                      },
-                    }}
-                  />
-
-                  {/* Render search results only if there are results and search text is not empty */}
-                  {searchResults.length > 0 && searchtext.length > 0 && (
-                    <div className="search-results cursor-pointer absolute text-black bg-white w-1/4 rounded-b-2xl z-10 ">
-                      <ul>
-                        {searchResults.length > 0 ? (
-                          searchResults.map(
-                            (user) =>
-                              user.uid !== userdata.uid && (
-                                <div
-                                  onClick={() => setChatwindow(user.uid)}
-                                  key={user.uid}
-                                >
-                                  <li>{user.userName}</li>
-                                </div>
-                              )
-                          )
-                        ) : (
-                          <>No Users Found</>
-                        )}
-                      </ul>
-                    </div>
-                  )}
+          {!chatopen && (
+            <>
+              <div className="flex w-full ">
+                <button onClick={toggle}>open</button>
+                <div className="messages text-3xl lg:text-5xl ml-6 mt-6 mr-6 font-lucy w-1/4 ">
+                  Messages
                 </div>
-                {/* <div className="kp "></div> */}
-                {gifopen && (
-                  <div className="absolute right-0 bottom-4 z-40 mb-20 mr-10">
-                    <GifPicker
-                      tenorApiKey="AIzaSyCzQwhhvhBYKNd6CWA5HeA2jWIg0AO5hF0"
-                      theme="auto"
-                      autoFocusSearch
-                      onGifClick={(gif) => handlesendGif(gif)}
-                    />
-                  </div>
+                <div className="flex justify-between w-3/4">
+                  <button
+                    className="createchat cursor-pointer h-auto mt-5 p-3 rounded-2xl bg-purple-600 mr-10 backdrop-filter backdrop-blur-lg bg-opacity-90 shadow-2xl hover:bg-purple-700"
+                    onClick={() => setopengrpchatcreate(true)}
+                  >
+                    Create a Group
+                  </button>
+                </div>
+              </div>
+              <div className="flex justify-between mt-2 my-5 mx-6 ">
+                {opengrpchatcreate && (
+                  <GroupChat
+                    userdata={userdata}
+                    onClose={handleclosegrpchatcreation}
+                  />
                 )}
-                {showaddfiles && (
-                  <div className="absolute right-0 bottom-4 z-40 mb-20 mr-10 bg-opacity-85 bg-white rounded-xl p-4">
-                    <div className="mb-4">
-                      <label className="block text font-bold mb-2">
-                        Upload Photos or Videos (up to 10)
-                      </label>
-                      <input
-                        className="file:mr-4 file:py-2 file:px-4
+              </div>
+            </>
+          )}
+          {!ismobile && (
+            <>
+              <div className="flex w-full ">
+                <button onClick={toggle}>open</button>
+                <div className="messages text-3xl lg:text-5xl ml-6 mt-6 mr-6 font-lucy w-1/4 ">
+                  Messages
+                </div>
+                <div className="flex justify-between w-3/4">
+                  <button
+                    className="createchat cursor-pointer h-auto mt-5 p-3 rounded-2xl bg-purple-600 mr-10 backdrop-filter backdrop-blur-lg bg-opacity-90 shadow-2xl hover:bg-purple-700"
+                    onClick={() => setopengrpchatcreate(true)}
+                  >
+                    Create a Group
+                  </button>
+                </div>
+              </div>
+              <div className="flex justify-between mt-2 my-5 mx-6 ">
+                {opengrpchatcreate && (
+                  <GroupChat
+                    userdata={userdata}
+                    onClose={handleclosegrpchatcreation}
+                  />
+                )}
+              </div>
+            </>
+          )}
+          <div className="flex justify-between w-full ">
+            {gifopen && (
+              <div className="absolute right-0 bottom-4 z-40 mb-12 lg:mb-20 mr-1 lg:mr-10">
+                <GifPicker
+                  tenorApiKey="AIzaSyCzQwhhvhBYKNd6CWA5HeA2jWIg0AO5hF0"
+                  theme="auto"
+                  autoFocusSearch
+                  onGifClick={(gif) => handlesendGif(gif)}
+                />
+              </div>
+            )}
+            {showaddfiles && (
+              <div className="absolute right-0 w-full bottom-4 z-40 mb-12 lg:mb-20 lg:mr-10 bg-opacity-85 bg-white rounded-xl p-4">
+                <div className="mb-4">
+                  <label className="block text font-bold mb-2">
+                    Upload Photos or Videos (up to 10)
+                  </label>
+                  <input
+                    className="file:mr-4 file:py-2 file:px-4
             file:rounded-full file:border-0
             file:text-sm file:font-semibold
             file:bg-violet-50 file:text-violet-700
             hover:file:bg-violet-100"
-                        type="file"
-                        accept="image/*, video/*"
-                        onChange={handleFileChange}
-                      />
-                    </div>
-                    <div className="lp h-32 max-w-96">
-                      <div className="mb-4">
-                        <h2 className="text-lg font-semibold mb-2">
-                          Media Preview
-                        </h2>
-                        <div className="flex flex-nowrap overflow-x-auto">
-                          {mediaFiles.map((file, index) => (
-                            <div key={index} className="relative flex-none p-2">
-                              {file.type.startsWith("image/") ? (
-                                <Image
-                                  src={URL.createObjectURL(file)}
-                                  alt={`Media ${index + 1}`}
-                                  width={50}
-                                  height={50}
-                                  className="w-32 h-16 object-cover rounded"
-                                />
-                              ) : (
-                                <video
-                                  src={URL.createObjectURL(file)}
-                                  alt={`Media ${index + 1}`}
-                                  className="w-32 h-16 rounded"
-                                  controls
-                                />
-                              )}
-                              <button
-                                className="absolute ml-1 z-10 -mt-7 text-red-500 hover:text-red-700 bg-red-300 rounded-full w-6 h-6 flex items-center justify-center focus:outline-none"
-                                onClick={() => handleRemoveMedia(index)}
-                              >
-                                &#10005;
-                              </button>
-                            </div>
-                          ))}
+                    type="file"
+                    accept="image/*, video/*"
+                    onChange={handleFileChange}
+                  />
+                </div>
+                <div className="lp h-32 max-w-96">
+                  <div className="mb-4">
+                    <h2 className="text-lg font-semibold mb-2">
+                      Media Preview
+                    </h2>
+                    <div className="flex flex-nowrap overflow-x-auto">
+                      {mediaFiles.map((file, index) => (
+                        <div key={index} className="relative flex-none p-2">
+                          {file.type.startsWith("image/") ? (
+                            <Image
+                              src={URL.createObjectURL(file)}
+                              alt={`Media ${index + 1}`}
+                              width={50}
+                              height={50}
+                              className="w-32 h-16 object-cover rounded"
+                            />
+                          ) : (
+                            <video
+                              src={URL.createObjectURL(file)}
+                              alt={`Media ${index + 1}`}
+                              className="w-32 h-16 rounded"
+                              controls
+                            />
+                          )}
+                          <button
+                            className="absolute ml-1 z-10 -mt-7 text-red-500 hover:text-red-700 bg-red-300 rounded-full w-6 h-6 flex items-center justify-center focus:outline-none"
+                            onClick={() => handleRemoveMedia(index)}
+                          >
+                            &#10005;
+                          </button>
                         </div>
-                      </div>
-                    </div>
-                    <div className="mt-4">
-                      <button
-                        className="btn ml-3 py-3 px-4 disabled:text-gray-400 disabled:cursor-not-allowed "
-                        disabled={mediaFiles.length == 0}
-                        onClick={handlesubmitfiles}
-                      >
-                        Send
-                      </button>
-                      <input
-                        type="file"
-                        id="fileInput"
-                        accept="image/*, video/*"
-                        className="hidden"
-                        onChange={handleFileChange}
-                      />
+                      ))}
                     </div>
                   </div>
-                )}
+                </div>
+                <div className="mt-4">
+                  <button
+                    className="btn ml-3 py-3 px-4 disabled:text-gray-400 disabled:cursor-not-allowed "
+                    disabled={mediaFiles.length == 0}
+                    onClick={handlesubmitfiles}
+                  >
+                    Send
+                  </button>
+                  <input
+                    type="file"
+                    id="fileInput"
+                    accept="image/*, video/*"
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
+                </div>
               </div>
-              <button
-                className="createchat cursor-pointer h-auto mt-5 p-3 rounded-2xl bg-purple-600 mr-10 backdrop-filter backdrop-blur-lg bg-opacity-90 shadow-2xl hover:bg-purple-700"
-                onClick={() => setopengrpchatcreate(true)}
-              >
-                Create a Group
-              </button>
-            </div>
-          </div>
-          <div className="flex justify-between mt-2 my-5 mx-6 ">
-            {opengrpchatcreate && (
-              <GroupChat
-                userdata={userdata}
-                onClose={handleclosegrpchatcreation}
-              />
             )}
-          </div>
+            {!chatopen && (
+              <div
+                className="followingusers lg:w-1/4 m-6 overflow-y-auto"
+                key={roomid}
+              >
+                {chats &&
+                  chats.map((chat, index) =>
+                    chat.type == "p" ? (
+                      <div
+                        className="key cursor-pointer"
+                        key={index}
+                        onClick={() => {
+                          router.push(
+                            `/feed/messages?roomid=${
+                              chat.roomid
+                            }&chattype=p&chatwindow=${
+                              chat.participants[0] == userdata.uid
+                                ? chat.participants[1]
+                                : chat.participants[0]
+                            }`
+                          );
+                        }}
+                      >
+                        <div className="flex my-4 ">
+                          <div className="pfp mr-2">
+                            {chat.participants[0] == userdata.uid ? (
+                              <Image
+                                className="h-10 w-10 rounded-full"
+                                src={pfps[chat.participants[1]]}
+                                height={50}
+                                width={50}
+                                alt={chat.participants[1]}
+                              ></Image>
+                            ) : (
+                              <Image
+                                className="h-10 w-10 rounded-full"
+                                src={pfps[chat.participants[0]]}
+                                height={50}
+                                width={50}
+                                alt={chat.participants[0]}
+                              ></Image>
+                            )}
+                          </div>
 
-          <div className="flex justify-between w-full ">
-            <div
-              className="followingusers w-1/4 m-6 overflow-y-auto"
-              key={roomid}
-            >
-              {chats &&
-                chats.map((chat, index) =>
-                  chat.type == "p" ? (
-                    <div
-                      className="key cursor-pointer"
-                      key={index}
-                      onClick={() => {
-                        router.push(
-                          `/feed/messages?roomid=${
-                            chat.roomid
-                          }&chattype=p&chatwindow=${
-                            chat.participants[0] == userdata.uid
-                              ? chat.participants[1]
-                              : chat.participants[0]
-                          }`
-                        );
-                      }}
-                    >
-                      <div className="flex my-4 ">
-                        <div className="pfp mr-2">
-                          {chat.participants[0] == userdata.uid ? (
+                          <div className="username font-bold text-xl">
+                            {chat.participants[0] == userdata.uid
+                              ? usernames[chat.participants[1]]
+                              : usernames[chat.participants[0]]}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div
+                        className="key cursor-pointer"
+                        key={index}
+                        onClick={() => {
+                          router.push(
+                            `/feed/messages?roomid=${chat.roomid}&chattype=g&chatwindow=${chat.title}`
+                          );
+                        }}
+                      >
+                        <div className="title font-bold text-xl">
+                          {chat.title}
+                        </div>
+                        {chat.participants.map(
+                          (participant) => usernames[participant] + " "
+                        )}{" "}
+                      </div>
+                    )
+                  )}
+              </div>
+            )}
+            {!ismobile && (
+              <div
+                className="followingusers lg:w-1/4 m-6 overflow-y-auto"
+                key={roomid}
+              >
+                {chats &&
+                  chats.map((chat, index) =>
+                    chat.type == "p" ? (
+                      <div
+                        className="key cursor-pointer"
+                        key={index}
+                        onClick={() => {
+                          router.push(
+                            `/feed/messages?roomid=${
+                              chat.roomid
+                            }&chattype=p&chatwindow=${
+                              chat.participants[0] == userdata.uid
+                                ? chat.participants[1]
+                                : chat.participants[0]
+                            }`
+                          );
+                        }}
+                      >
+                        <div className="flex my-4 ">
+                          <div className="pfp mr-2">
+                            {chat.participants[0] == userdata.uid ? (
+                              <Image
+                                className="h-10 w-10 rounded-full"
+                                src={pfps[chat.participants[1]]}
+                                height={50}
+                                width={50}
+                                alt={chat.participants[1]}
+                              ></Image>
+                            ) : (
+                              <Image
+                                className="h-10 w-10 rounded-full"
+                                src={pfps[chat.participants[0]]}
+                                height={50}
+                                width={50}
+                                alt={chat.participants[0]}
+                              ></Image>
+                            )}
+                          </div>
+
+                          <div className="username font-bold text-xl">
+                            {chat.participants[0] == userdata.uid
+                              ? usernames[chat.participants[1]]
+                              : usernames[chat.participants[0]]}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div
+                        className="key cursor-pointer"
+                        key={index}
+                        onClick={() => {
+                          router.push(
+                            `/feed/messages?roomid=${chat.roomid}&chattype=g&chatwindow=${chat.title}`
+                          );
+                        }}
+                      >
+                        <div className="title font-bold text-xl">
+                          {chat.title}
+                        </div>
+                        {chat.participants.map(
+                          (participant) => usernames[participant] + " "
+                        )}{" "}
+                      </div>
+                    )
+                  )}
+              </div>
+            )}
+            {chatopen && (
+              <div
+                className="chatwindow w-full lg
+              :w-3/4 border-2 lg:mx-6 bg-gray-700  bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-10 shadow-2xl border-none rounded-2xl h-full relative"
+              >
+                {roomid != "" && (
+                  <>
+                    <div className="overflow-y-auto h-full pb-16 pt-10 w-full">
+                      <div className="g fixed top-0 rounded-2xl h-10 pt-2 w-full text-center bg-purple-500 bg-clip-padding backdrop-filter backdrop-blur-lg bg-opacity-100 shadow-2xl  border-none">
+                        <div className="flex justify-center">
+                          <button
+                            onClick={() => {
+                              router.push("/feed/messages");
+                              setchatopen(false);
+                              setRoomid("");
+                            }}
+                          >
+                            Back
+                          </button>
+                          {chattype == "p" && (
                             <Image
-                              className="h-10 w-10 rounded-full"
-                              src={pfps[chat.participants[1]]}
+                              className="h-7 w-7 rounded-full mr-2"
+                              src={pfps[chatwindow]}
                               height={50}
                               width={50}
-                              alt={chat.participants[1]}
-                            ></Image>
-                          ) : (
-                            <Image
-                              className="h-10 w-10 rounded-full"
-                              src={pfps[chat.participants[0]]}
-                              height={50}
-                              width={50}
-                              alt={chat.participants[0]}
+                              alt={chatwindow}
                             ></Image>
                           )}
-                        </div>
-
-                        <div className="username font-bold text-xl">
-                          {chat.participants[0] == userdata.uid
-                            ? usernames[chat.participants[1]]
-                            : usernames[chat.participants[0]]}
+                          {usernames[chatwindow]}
+                          {chattype == "g" && chatwindow}
                         </div>
                       </div>
-                    </div>
-                  ) : (
-                    <div
-                      className="key cursor-pointer"
-                      key={index}
-                      onClick={() => {
-                        router.push(
-                          `/feed/messages?roomid=${chat.roomid}&chattype=g&chatwindow=${chat.title}`
-                        );
-                      }}
-                    >
-                      <div className="title font-bold text-xl">
-                        {chat.title}
-                      </div>
-                      {chat.participants.map(
-                        (participant) => usernames[participant] + " "
-                      )}{" "}
-                    </div>
-                  )
-                )}
-            </div>
-            <div className="chatwindow w-3/4 border-2 mx-6 bg-gray-700  bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-10 shadow-2xl border-none rounded-2xl h-full relative">
-              {roomid == "" ? (
-                <></>
-              ) : (
-                <>
-                  <div className="overflow-y-auto h-full pb-16 pt-10 w-full">
-                    <div className="g fixed top-0 rounded-2xl h-10 pt-2 w-full text-center bg-purple-500 bg-clip-padding backdrop-filter backdrop-blur-lg bg-opacity-100 shadow-2xl  border-none">
                       <div className="flex justify-center">
-                        {chattype == "p" && (
-                          <Image
-                            className="h-7 w-7 rounded-full mr-2"
-                            src={pfps[chatwindow]}
-                            height={50}
-                            width={50}
-                            alt={chatwindow}
-                          ></Image>
+                        {currentmsglength < maxlength && (
+                          <button
+                            onClick={() => {
+                              setcurrentmsglength(currentmsglength + 50);
+                              setloadingold(true);
+                            }}
+                          >
+                            Load older Messages{maxlength - currentmsglength}
+                          </button>
                         )}
-                        {usernames[chatwindow]}
-                        {chattype == "g" && chatwindow}
                       </div>
-                    </div>
-                    <div className="flex justify-center">
-                      {currentmsglength < maxlength && (
-                        <button
-                          onClick={() => {
-                            setcurrentmsglength(currentmsglength + 50);
-                            setloadingold(true);
-                          }}
-                        >
-                          Load older Messages{maxlength - currentmsglength}
-                        </button>
-                      )}
-                    </div>
 
-                    {messages.map((message) => (
-                      <div
-                        className="px-6"
-                        key={message.timestamp + message.sender + message.text}
-                      >
-                        {message.sender == userdata.uid ? (
-                          <div className="ko flex justify-end my-5 ">
-                            <div className="e  text-right bg-purple-400 p-3 rounded-xl">
-                              <div
-                                className="lp"
-                                onClick={() => handledropdown(message)}
-                              >
-                                <div className="flex justify-end">
-                                  <div className="time text-xs mr-2 mt-1">
-                                    {convertToChatTime(message.timestamp)}
+                      {messages.map((message) => (
+                        <div
+                          className="px-6"
+                          key={
+                            message.timestamp + message.sender + message.text
+                          }
+                        >
+                          {message.sender == userdata.uid ? (
+                            <div className="ko flex justify-end my-5 ">
+                              <div className="e  text-right bg-purple-400 p-3 rounded-xl">
+                                <div
+                                  className="lp"
+                                  onClick={() => handledropdown(message)}
+                                >
+                                  <div className="flex justify-end">
+                                    <div className="time text-xs mr-2 mt-1">
+                                      {convertToChatTime(message.timestamp)}
+                                    </div>
+                                    <div className="td text-sm font-bold">
+                                      {usernames[message.sender]}
+                                    </div>
+                                    <Image
+                                      className="rounded-full h-5 w-5 ml-1"
+                                      src={userdata.pfp}
+                                      alt="Profile Pic"
+                                      height={50}
+                                      width={50}
+                                    />
                                   </div>
-                                  <div className="td text-sm font-bold">
-                                    {usernames[message.sender]}
+                                  <div className="lp">
+                                    {message.type == "gif" && (
+                                      <>
+                                        {" "}
+                                        <Image
+                                          className=" rounded-xl text-center"
+                                          src={message.text}
+                                          alt=""
+                                          height={100}
+                                          width={100}
+                                        />
+                                      </>
+                                    )}
+                                    {message.type == "media" && (
+                                      <div className="flex">
+                                        {message.text.map((media, index) => (
+                                          <div key={index}>
+                                            {media.startsWith(
+                                              "https://firebasestorage"
+                                            ) &&
+                                              (media.includes("mp4") ||
+                                                media.includes("mov") ||
+                                                media.includes("mkv") ||
+                                                media.includes("hevc")) && (
+                                                <video
+                                                  loop
+                                                  src={media}
+                                                  alt=""
+                                                  controls
+                                                  className="rounded-xl h-36 w-36 m-2 object-cover"
+                                                  onClick={() => {
+                                                    window.open(media);
+                                                  }}
+                                                />
+                                              )}
+                                            {media.startsWith(
+                                              "https://firebasestorage"
+                                            ) &&
+                                              (media.includes("jpg") ||
+                                                media.includes("heif") ||
+                                                media.includes("jpeg")) && (
+                                                <Image
+                                                  src={media}
+                                                  alt=""
+                                                  height={100}
+                                                  width={100}
+                                                  className="rounded-xl h-36 w-36 m-2 object-cover"
+                                                  onClick={() => {
+                                                    window.open(media);
+                                                  }}
+                                                />
+                                              )}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                    {message.type == "text" &&
+                                      (message.text ? (
+                                        <span className="fg text-xl">
+                                          {message.text
+                                            .split(/(@\S+|https?:\/\/\S+)/)
+                                            .map((part, index) => {
+                                              if (part.startsWith("@")) {
+                                                // If it's a mention, create a link
+                                                return (
+                                                  <a
+                                                    href={`/${part.slice(1)}`}
+                                                    key={index}
+                                                  >
+                                                    <strong>{part}</strong>
+                                                  </a>
+                                                );
+                                              } else if (
+                                                part.startsWith("http")
+                                              ) {
+                                                // If it's a website link, create a link
+                                                return (
+                                                  <a href={part} key={index}>
+                                                    <strong>{part}</strong>
+                                                  </a>
+                                                );
+                                              } else {
+                                                // Otherwise, render it as plain text
+                                                return (
+                                                  <React.Fragment key={index}>
+                                                    {part}
+                                                  </React.Fragment>
+                                                );
+                                              }
+                                            })}
+                                        </span>
+                                      ) : (
+                                        <div className="fg text-xl">
+                                          {message.text}
+                                        </div>
+                                      ))}
                                   </div>
-                                  <Image
-                                    className="rounded-full h-5 w-5 ml-1"
-                                    src={userdata.pfp}
-                                    alt="Profile Pic"
-                                    height={50}
-                                    width={50}
-                                  />
                                 </div>
-                                <div className="lp">
+                                {isDropdownOpen &&
+                                  selectedMessage == message && (
+                                    <div className="dropdown-menu  mt-4">
+                                      {message.readstatus ? (
+                                        <>seen</>
+                                      ) : (
+                                        <>delivered</>
+                                      )}
+                                      <button
+                                        className=" ml-2 dropdown-item mr-2 disabled:hidden"
+                                        onClick={() => handleCopy(message.text)}
+                                        disabled={
+                                          message.type == "media" ||
+                                          message.type == "gif"
+                                        }
+                                      >
+                                        Copy
+                                      </button>
+                                      <button
+                                        className="dropdown-item"
+                                        onClick={handleDelete}
+                                      >
+                                        Delete
+                                      </button>
+                                      {/* Delete button */}
+                                    </div>
+                                  )}
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="ko  flex right-0 my-5">
+                                <div className="e bg-purple-400 p-3 rounded-xl">
+                                  <div className="flex">
+                                    {/* {console.log(pfps[message.sender])} */}
+                                    {pfps[message.sender] && (
+                                      <Image
+                                        src={pfps[message.sender]}
+                                        className="rounded-full h-5 w-5 mr-1"
+                                        alt="Profile Pic"
+                                        height={50}
+                                        width={50}
+                                      />
+                                    )}
+                                    <div className="td text-sm font-bolda">
+                                      {usernames[message.sender]}
+                                    </div>
+                                    <div className="time text-xs ml-2 mt-1">
+                                      {convertToChatTime(message.timestamp)}
+                                    </div>
+                                  </div>
                                   {message.type == "gif" && (
                                     <>
                                       {" "}
@@ -1100,7 +1342,7 @@ const Home = () => {
                                       ))}
                                     </div>
                                   )}
-                                {(message.type=="text") &&
+                                  {message.type == "text" &&
                                     (message.text ? (
                                       <span className="fg text-xl">
                                         {message.text
@@ -1142,229 +1384,91 @@ const Home = () => {
                                     ))}
                                 </div>
                               </div>
-                              {isDropdownOpen && selectedMessage == message && (
-                                <div className="dropdown-menu  mt-4">
-                                  {message.readstatus ? (
-                                    <>seen</>
-                                  ) : (
-                                    <>delivered</>
-                                  )}
-                                  <button
-                                    className=" ml-2 dropdown-item mr-2 disabled:hidden"
-                                    onClick={() => handleCopy(message.text)}
-                                    disabled={
-                                      message.type == "media" ||
-                                      message.type == "gif"
-                                    }
-                                  >
-                                    Copy
-                                  </button>
-                                  <button
-                                    className="dropdown-item"
-                                    onClick={handleDelete}
-                                  >
-                                    Delete
-                                  </button>
-                                  {/* Delete button */}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        ) : (
-                          <>
-                            <div className="ko  flex right-0 my-5">
-                              <div className="e bg-purple-400 p-3 rounded-xl">
-                                <div className="flex">
-                                  {/* {console.log(pfps[message.sender])} */}
-                                  {pfps[message.sender] && (
-                                    <Image
-                                      src={pfps[message.sender]}
-                                      className="rounded-full h-5 w-5 mr-1"
-                                      alt="Profile Pic"
-                                      height={50}
-                                      width={50}
-                                    />
-                                  )}
-                                  <div className="td text-sm font-bolda">
-                                    {usernames[message.sender]}
-                                  </div>
-                                  <div className="time text-xs ml-2 mt-1">
-                                    {convertToChatTime(message.timestamp)}
-                                  </div>
-                                </div>
-                                {message.type == "gif" && (
-                                  <>
-                                    {" "}
-                                    <Image
-                                      className=" rounded-xl text-center"
-                                      src={message.text}
-                                      alt=""
-                                      height={100}
-                                      width={100}
-                                    />
-                                  </>
-                                )}
-                                {message.type == "media" && (
-                                  <div className="flex">
-                                    {message.text.map((media, index) => (
-                                      <div key={index}>
-                                        {media.startsWith(
-                                          "https://firebasestorage"
-                                        ) &&
-                                          (media.includes("mp4") ||
-                                            media.includes("mov") ||
-                                            media.includes("mkv") ||
-                                            media.includes("hevc")) && (
-                                            <video
-                                              loop
-                                              src={media}
-                                              alt=""
-                                              controls
-                                              className="rounded-xl h-36 w-36 m-2 object-cover"
-                                              onClick={() => {
-                                                window.open(media);
-                                              }}
-                                            />
-                                          )}
-                                        {media.startsWith(
-                                          "https://firebasestorage"
-                                        ) &&
-                                          (media.includes("jpg") ||
-                                            media.includes("heif") ||
-                                            media.includes("jpeg")) && (
-                                            <Image
-                                              src={media}
-                                              alt=""
-                                              height={100}
-                                              width={100}
-                                              className="rounded-xl h-36 w-36 m-2 object-cover"
-                                              onClick={() => {
-                                                window.open(media);
-                                              }}
-                                            />
-                                          )}
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-                                {message.type=="text" &&
-                                  (message.text ? (
-                                    <span className="fg text-xl">
-                                      {message.text
-                                        .split(/(@\S+|https?:\/\/\S+)/)
-                                        .map((part, index) => {
-                                          if (part.startsWith("@")) {
-                                            // If it's a mention, create a link
-                                            return (
-                                              <a
-                                                href={`/${part.slice(1)}`}
-                                                key={index}
-                                              >
-                                                <strong>{part}</strong>
-                                              </a>
-                                            );
-                                          } else if (part.startsWith("http")) {
-                                            // If it's a website link, create a link
-                                            return (
-                                              <a href={part} key={index}>
-                                                <strong>{part}</strong>
-                                              </a>
-                                            );
-                                          } else {
-                                            // Otherwise, render it as plain text
-                                            return (
-                                              <React.Fragment key={index}>
-                                                {part}
-                                              </React.Fragment>
-                                            );
-                                          }
-                                        })}
-                                    </span>
-                                  ) : (
-                                    <div className="fg text-xl">
-                                      {message.text}
-                                    </div>
-                                  ))}
-                              </div>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    ))}
+                            </>
+                          )}
+                        </div>
+                      ))}
 
-                    <div ref={messagesEndRef} />
-                    <div className="textbox absolute flex bottom-0 w-full m-2">
-                      <input
-                        type="text"
-                        placeholder="Type a message..."
-                        className="placeholder-italic w-full h-12 text-2xl p-2  rounded-xl text-black border-black transition-all duration-300 outline-none shadow-2xl hover:shadow-3xl focus:shadow-3xl  "
-                        value={messagetext}
-                        onChange={(e) => setMessagetext(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            sendMesage();
-                          }
-                        }}
-                      ></input>
-                      <button
-                        className="btn px-4 mx-2"
-                        onClick={() => setgifopen(!gifopen)}
-                      >
-                        GIF
-                      </button>
-                      <button
-                        className="btn px-4 mr-2 text-4xl"
-                        onClick={() => setshowaddfiles(!showaddfiles)}
-                      >
-                        +
-                      </button>
-                      <button
-                        onClick={sendMesage}
-                        disabled={messagetext.length === 0}
-                        className="btn disabled:cursor-not-allowed disabled:text-gray-300 px-4 mr-4"
-                      >
-                        Send
-                      </button>
+                      <div ref={messagesEndRef} />
+                      <div className="textbox absolute flex bottom-0 pb-2 w-full m-2">
+                        <input
+                          type="text"
+                          placeholder="Type a message..."
+                          className="placeholder-italic w-full h-12 text-2xl p-2  rounded-xl text-black border-black transition-all duration-300 outline-none shadow-2xl hover:shadow-3xl focus:shadow-3xl  "
+                          value={messagetext}
+                          onChange={(e) => setMessagetext(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              sendMesage();
+                            }
+                          }}
+                        ></input>
+                        <button
+                          className="btn px-4 mx-2"
+                          onClick={() => {
+                            setgifopen(!gifopen);
+                            setshowaddfiles(false);
+                          }}
+                        >
+                          GIF
+                        </button>
+                        <button
+                          className="btn px-4 mr-2 text-4xl"
+                          onClick={() => {
+                            setgifopen(false);
+                            setshowaddfiles(!showaddfiles);
+                          }}
+                        >
+                          +
+                        </button>
+                        <button
+                          onClick={sendMesage}
+                          disabled={messagetext.length === 0}
+                          className="btn disabled:cursor-not-allowed disabled:text-gray-300 px-4 mr-4"
+                        >
+                          Send
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                </>
-              )}
-              {/* {chatloading && (
+                  </>
+                )}
+                {/* {chatloading && (
                 <>
                   <div className="w-full text-center align-middle">
                     Loading......
                   </div>
                 </>
               )} */}
-              {roomid == "" && chatwindow != "none" && (
-                <div className="df">
-                  <div className="pfp ml-2 cursor-pointer">
-                    <Image
-                      className="h-10 w-10 rounded-full"
-                      src={pfps[chatwindow]}
-                      height={50}
-                      width={50}
-                      alt={chatwindow}
-                    ></Image>
+                {roomid == "" && chatwindow != "none" && (
+                  <div className="df">
+                    <div className="pfp ml-2 cursor-pointer">
+                      <Image
+                        className="h-10 w-10 rounded-full"
+                        src={pfps[chatwindow]}
+                        height={50}
+                        width={50}
+                        alt={chatwindow}
+                      ></Image>
+                    </div>
+                    <div className="username text-2xl mt-2 ml-2">
+                      {usernames[chatwindow]}
+                    </div>
+                    {!chprevchat ? (
+                      <button onClick={startchat}>
+                        Start Chat with {usernames[chatwindow]}
+                      </button>
+                    ) : (
+                      <></>
+                    )}
                   </div>
-                  <div className="username text-2xl mt-2 ml-2">
-                    {usernames[chatwindow]}
+                )}
+                {!roomid && (
+                  <div className="text-3xl text-center align-middle mt-56 my-10">
+                    Select a chat to start messaging
                   </div>
-                  {!chprevchat ? (
-                    <button onClick={startchat}>
-                      Start Chat with {usernames[chatwindow]}
-                    </button>
-                  ) : (
-                    <></>
-                  )}
-                </div>
-              )}
-              {!roomid && (
-                <div className="text-3xl text-center align-middle mt-56 my-10">
-                  Select a chat to start messaging
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}
