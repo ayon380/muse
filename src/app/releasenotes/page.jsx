@@ -4,6 +4,7 @@ import React from "react";
 
 const ReleaseNotes = () => {
   const releaseNotes = [
+    {version: "v0.58", description: "->Redesigned Comments Posts for Mobile"},
     { version: "v0.57", description: "Redesinged Messaging UI Bug Fixes Added Release Notes" },
     { version: "v0.56", description: "Added Messaging Phone Support" },
     { version: "v0.55", description: "Added initial Mobile View" },

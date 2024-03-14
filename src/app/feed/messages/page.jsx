@@ -911,7 +911,7 @@ const Home = () => {
                     >
                       <Image
                         src="/icons/add-group.png"
-                        className="h-6 w-6"
+                        className="h-6 w-6 dark:invert"
                         height={50}
                         width={50}
                         alt="Create Group Chat"
@@ -919,7 +919,7 @@ const Home = () => {
                     </button>
                     <button onClick={toggle}>
                       <Image
-                        className="h-7 w-7 mr-2"
+                        className="h-7 w-7 mr-2 dark:invert"
                         src="/icons/sidebar.png"
                         width={50}
                         alt="Sidebar"
@@ -928,7 +928,7 @@ const Home = () => {
                     </button>
                     <button onClick={() => setsearchopen(true)}>
                       <Image
-                        className="h-6 w-6"
+                        className="h-6 w-6 dark:invert"
                         src="/icons/search.png"
                         width={50}
                         height={50}
@@ -1349,7 +1349,8 @@ const Home = () => {
                       <div className="textbox absolute flex bottom-0 rounded-t-xl p-2 backdrop-filter backdrop-blur-xl w-full ">
                         <input
                           type="text"
-                          autoFocus
+                        
+
                           placeholder="Type a message..."
                           className="placeholder-italic w-full h-10 text-lg px-1  rounded-xl text-black border-black transition-all duration-300 outline-none shadow-2xl hover:shadow-3xl focus:shadow-3xl  "
                           value={messagetext}
@@ -1368,7 +1369,7 @@ const Home = () => {
                           }}
                         >
                           <Image
-                          className="h-8 w-10"
+                          className="h-8 w-10 dark:invert"
                             src="/icons/gif.png"
                             height={50}
                             width={50}
@@ -1383,7 +1384,7 @@ const Home = () => {
                           }}
                         >
                           <Image
-                          className=" h-6 w-7 mr-1"
+                          className=" h-6 w-7 mr-1 dark:invert"
                             src="/icons/attach.png"
                             height={50}
                             width={50}
@@ -1396,7 +1397,7 @@ const Home = () => {
                           className=" disabled:cursor-not-allowed disabled:text-gray-300"
                         >
                           <Image
-                          className="h-6 w-8 m-1"
+                          className="h-6 w-8 m-1 dark:invert"
                             src="/icons/send.png"
                             height={50}
                             width={50}

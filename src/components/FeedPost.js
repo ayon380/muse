@@ -71,7 +71,9 @@ function formatTimestamp(firebaseTimestamp) {
   }
 
   // Convert Firestore timestamp to JavaScript Date object
-  const timestampDate = new Date(firebaseTimestamp.seconds * 1000 + firebaseTimestamp.nanoseconds / 1000000);
+  const timestampDate = new Date(
+    firebaseTimestamp.seconds * 1000 + firebaseTimestamp.nanoseconds / 1000000
+  );
 
   const now = new Date();
   const timeDifference = now - timestampDate;
@@ -120,7 +122,7 @@ const FeedPost = ({
   const [commentreply, setCommentreply] = useState({});
   const [reply, setReply] = useState("");
   const router = useRouter();
-  const limit=50;
+  const limit = 50;
   const handleShowComments = () => {
     setShowComments((prevState) => !prevState);
   };
@@ -231,7 +233,7 @@ const FeedPost = ({
         };
         return updatedReplies;
       });
-      
+
       setCommentList((prevCommentList) => {
         const updatedCommentList = prevCommentList.map((c) => {
           if (c.id === commentId) {
@@ -285,7 +287,7 @@ const FeedPost = ({
   };
   useEffect(() => {
     if (showComments) getComments();
-  }, [showComments,postdata]);
+  }, [showComments, postdata]);
   const checkIfLiked = async () => {
     if (userdata) {
       const postRef = doc(db, "posts", postdata.id);
@@ -397,24 +399,30 @@ const FeedPost = ({
   return (
     <>
       <div
-        className=" z-10 justify-center relative  w-full py-4  lg:px-96 object-fill"
+        className=" z-10 justify-center relative  w-full py-4  lg:px-96 dark:bg-black"
         key={postdata.id}
       >
-        <Toaster/>
+        <Toaster />
         {showComments && (
-          <div className="absolute inset-0 h-full w-full  flex justify-center items-center lg:px-96 py-4 z-50">
-            <div className=" bg-white bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-80 shadow-2xl border-1 border-black rounded-xl p-8 h-full w-full">
-            <button
-                className="absolute text-center  text-xl"
+          <div className="absolute inset-0 h-full w-full bg-black  flex justify-center items-center lg:px-96 py-4 z-50">
+            <div className=" md:bg-white md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-80 shadow-2xl border-1 border-black rounded-xl md:p-8 h-full w-full">
+              <button
+                className="absolute flex justify-center rounded-t-xl backdrop-filter backdrop-blur-3xl qw w-full text-xl"
                 onClick={() => setShowComments(false)}
               >
-                Close
+                <Image
+                  src="/icons/slidedown.png"
+                  className="dark:invert top-2 w-7 h-7"
+                  width={100}
+                  height={100}
+                  alt=""
+                />
               </button>
-              <div className="comments h-full  overflow-y-auto">
+              <div className="comments rounded-xl pt-5 w-full h-full  overflow-y-auto">
                 {commentList.map((comment) => (
                   <div
                     key={comment.timestamp + Math.random()}
-                    className="comment transition transform-gpu rounded-xl bg-gray-600 my-5 p-5 mx-5 bg-opacity-10"
+                    className="comment transition transform-gpu bg-gray-900 rounded-xl md:bg-gray-600 my-3 md:my-5 p-3 md:p-5 mx-2 md:mx-5 md:bg-opacity-10"
                   >
                     <div className="flex z-20">
                       {usermetadata[comment.uid] ? (
@@ -527,7 +535,7 @@ const FeedPost = ({
                                 ))}
                               </>
                             ) : (
-                              <div className="flex justify-center w-full mt-20">
+                              <div className="flex justify-center w-full my-10">
                                 No Replies Yet
                               </div>
                             ))}
@@ -543,7 +551,6 @@ const FeedPost = ({
                                 }
                               }}
                               onChange={(e) => setReply(e.target.value)}
-                              autoFocus
                               autoComplete=""
                               autoCorrect="" // Prevent event propagation
                             />
@@ -583,11 +590,11 @@ const FeedPost = ({
                 )}
               </div>
               <div className="gf rounded-xl pt-6 w-full"></div>
-              
-              <div className="comment-section flex fixed bottom-4 -ml-8 w-full p-4">
+
+              <div className="comment-section absolute flex bottom-4 md:-ml-8 w-full p-4">
                 <input
                   type="text"
-                  class="text-sm text-black w-5/6 rounded-2xl leading-6 px-2 py-1 transition duration-100 border border-gray-300 bg-gray-200 block h-9 hover:border-gray-400 focus:border-purple-600 focus:bg-white"
+                  class="text-sm text-black w-5/6 rounded-2xl leading-6 backdrop-filter backdrop-blur-3xl px-2 py-1 transition duration-100 border border-gray-300 bg-gray-200 block h-9 hover:border-gray-400 focus:border-purple-600 focus:bg-white"
                   placeholder="Add a comment emoji 😀"
                   value={comment}
                   onKeyDown={(e) => {
@@ -599,7 +606,7 @@ const FeedPost = ({
                 />
 
                 <button
-                  className="ml-5 btn px-10"
+                  className=" ml-2 md:ml-5 btn px-4 md:px-10"
                   onClick={handleCommentSubmit}
                 >
                   Comment
@@ -608,30 +615,30 @@ const FeedPost = ({
             </div>
           </div>
         )}
-        <div className="df bg-white bg-opacity-40 rounded-2xl px-2 py-2 ">
+        <div className="df bg-white dark:bg-black bg-opacity-40 rounded-2xl px-2 py-2 ">
           {usermetadata && usermetadata[postdata.uid] && (
             <div className="header flex justify-between">
               <div className="flex items-center">
                 <div className="profile-pic">
                   <Image
-                    className="rounded-full h-16 w-16 object-cover"
+                    className="rounded-full h-8 w-8 md:h-16 md:w-16 object-cover"
                     src={usermetadata[postdata.uid].pfp}
                     width={100}
                     height={100}
                     alt="Profile Picture"
                   />
                 </div>
-                <div className="username ml-2  text-3xl">
+                <div className="username ml-2 text-xl md:text-3xl">
                   {usermetadata[postdata.uid].userName}
                 </div>
               </div>
-              <div className="time mt-4">
+              <div className="time mt-2 opacity-50 md:mt-4">
                 {formatFirebaseTimestamp(postdata.timestamp)}
               </div>
             </div>
           )}
           <div className="gf  rounded-xl  pt-6 z-20 w-full  ">
-            <Carousel showThumbs={false} >
+            <Carousel showThumbs={false}>
               {postdata?.mediaFiles.map((media) => (
                 <>
                   {isVideoFile(media) ? (
@@ -659,10 +666,10 @@ const FeedPost = ({
                 </>
               ))}
             </Carousel>
-            <div className="footer ">
+            <div className="footer mt-3 ">
               <div className="flex justify-between">
                 <div className="like flex">
-                  <div className="btnl text-2xl" onClick={handleLike}>
+                  <div className="btnl mt-0.5 text-2xl" onClick={handleLike}>
                     {!liked ? (
                       <FaRegHeart />
                     ) : (
@@ -670,40 +677,61 @@ const FeedPost = ({
                     )}
                     <div />
                   </div>
-                  <div className="likes text-xl font-bold">
-                    {postdata.likecount} likes
+                  <div className="flex">
+                    <div className="count text-xl font-bold mr-1">
+                      {postdata.likecount}
+                    </div>
+                    <div className="likes text-xl opacity-85">likes</div>
                   </div>
                 </div>
-                <div className="l12 mt-2 flex text-3xl">
+                <div className="l12 flex text-3xl">
                   <div
                     className="share cursor-pointer mr-3"
                     onClick={() => Shareposttt()}
                   >
-                    <FaShare />
+                    <Image
+                      src="/icons/send.png"
+                      alt="Share"
+                      className="dark:invert w-7 h-7 "
+                      width={100}
+                      height={100}
+                    />
                   </div>
                   <div
                     className="report cursor-pointer mr-3"
                     onClick={() => Reportposttt()}
                   >
-                    <MdOutlineReportGmailerrorred />
+                    <Image
+                      src="/icons/warning.png"
+                      alt="Report"
+                      className="dark:invert h-7 w-7"
+                      width={100}
+                      height={100}
+                    />
                   </div>
                 </div>
               </div>
 
               {post ? (
-                <div className="caption text-xl font-bold m-1 w-36">
-                  {postdata.caption}
-                </div>
+                <div className="caption m-1 w-full">{postdata.caption}</div>
               ) : null}
 
               <div
-                className="comments flex font-bold"
+                className="comments flex m-1"
                 onClick={() => setShowComments(!showComments)}
               >
                 <button>
-                  <FaComments />
+                  <Image
+                    src="/icons/comment.png"
+                    className="dark:invert h-7 w-7"
+                    width={100}
+                    height={100}
+                    alt="Comment"
+                  />
                 </button>
-                {postdata ? postdata.commentcount : 0} comments
+                <div className="k mt-0.5">
+                  {postdata ? postdata.commentcount : 0} comments
+                </div>
               </div>
             </div>
           </div>

@@ -5,6 +5,7 @@ import app from "@/lib/firebase/firebaseConfig";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 import Video from "@/components/Video";
 import "../../styles/reels.css";
+import Image from "next/image";
 import { useSidebarStore } from "../../store/zustand";
 import { usePathname, useSearchParams } from "next/navigation";
 const Reels = () => {
@@ -177,21 +178,44 @@ const Reels = () => {
     <div className="lg:ml-5 w-full h-full">
       {userdata && !id && (
         <div>
-          <div className="main2 grid rounded-2xl bg-white bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-20 shadow-2xl border-1 p-1 lg:p-8 App  border-black w-full h-full">
+          <div className="main2 grid md:rounded-2xl bg-white dark:bg-black md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 p-1 lg:p-8 App  border-black w-full h-full">
             <div className="flex">
-              <div className="h1 font-lucy text-3xl pt-2 lg:text-5xl w-full text-left">
+              <div className="h1 text-3xl pt-2 lg:text-5xl w-full text-left">
                 Reels
               </div>
-              <div className="dss">
-                {/* <p>Sidebar is {isOpen ? "open" : "closed"}</p> */}
-                <button onClick={toggle}>Sidebar</button>
+              <div className="flex">
+                <div className="">
+                  {/* <p>Sidebar is {isOpen ? "open" : "closed"}</p> */}
+                  <button onClick={toggle}>
+                    <Image
+                      src="/icons/sidebar.png"
+                      width={50}
+                      height={50}
+                      className="dark:invert mt-2 mr-2 h-7 w-7"
+                      alt="SidebAr"
+                    />
+                  </button>
+                </div>
+                <button onClick={toggleGlobalMute}>
+                  {isGlobalMuted ? (
+                    <Image
+                      src="/icons/soundon.png"
+                      className="dark:invert h-7 w-7"
+                      height={50}
+                      width={50}
+                      alt="sound on"
+                    />
+                  ) : (
+                    <Image
+                      className="dark:invert h-7 w-7"
+                      src="/icons/mute.png"
+                      height={50}
+                      width={50}
+                      alt="sound off"
+                    />
+                  )}
+                </button>
               </div>
-              {/* {currentreel}CurrentReel
-              {currentPage}CurrentPage
-              {reels.length}Reels */}
-              <button onClick={toggleGlobalMute}>
-                {isGlobalMuted ? "Mute All" : "UnMute All"}
-              </button>
             </div>
             <div className="fl flex justify-center">
               <div
@@ -219,7 +243,7 @@ const Reels = () => {
       )}
       {reel && id && (
         <div>
-          <div className="main2 grid rounded-2xl bg-white bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-20 shadow-2xl border-1 p-8 App  border-black w-full h-full">
+          <div className="main2 grid rounded-2xl bg-white md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 p-8 App  border-black w-full h-full">
             <div className="flex">
               <div className="h1 font-lucy text-5xl w-full text-left">
                 Reels

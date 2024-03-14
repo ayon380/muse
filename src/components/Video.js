@@ -172,7 +172,6 @@ const Reel = ({
           likes: arrayRemove(userdata.uid),
           likecount: increment(-1),
         });
-       
       } else {
         setLiked(true);
         await updateDoc(postRef, {
@@ -180,7 +179,6 @@ const Reel = ({
           likecount: increment(1),
         });
         sendNotification(reeldata);
-       
       }
       refetchReel();
     }

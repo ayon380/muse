@@ -214,10 +214,21 @@ const Home = () => {
     <div className=" lg:ml-5 w-full h-full">
       {userdata && (
         <div>
-          <div className="main2 rounded-2xl bg-white bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-20 shadow-2xl border-1 border-black h-full overflow-y-auto">
-            <p>Sidebar is {isOpen ? "open" : "closed"}</p>
-            <button onClick={toggle}>Toggle Sidebar</button>
-            <div className="flex ">
+          <div className="main2 rounded-2xl bg-white dark:bg-black md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 border-black h-full overflow-y-auto">
+            <div className="flex justify-between mt-5 mx-2">
+              <div className="fg font-lucy text-4xl">Muse</div>
+
+              <button onClick={toggle}>
+                <Image
+                  src="/icons/sidebar.png"
+                  height={50}
+                  width={50}
+                  className="dark:invert w-7 h-7"
+                  alt="Sidebar"
+                />
+              </button>
+            </div>
+            {/* <div className="flex ">
               <div className="search ml-5 mt-5">
                 <input
                   className="w-96 h-12 text-2xl p-2  placeholder-italic  rounded-2xl bg-gray-300 border-black transition-all duration-300 outline-none shadow-2xl hover:shadow-3xl focus:shadow-3xl  hover:bg-gray-400 focus:bg-gray-400"
@@ -403,14 +414,14 @@ const Home = () => {
                   </div>
                 </div>
               </div>
-            </div>
+            </div> */}
             {postloading && (
               <div className="flex justify-center ">
                 Loading Feed..............
               </div>
             )}
             <div className="pol font-rethink ">
-              <div className="feed w-full h-full bg-transparent overflow-y-auto">
+              <div className="feed w-full h-full overflow-y-auto">
                 {posts && posts.length > 0 ? (
                   posts.map((post) => (
                     <FeedPost

@@ -358,15 +358,29 @@ const SideBar = ({ usage, data, currentuserdata }) => {
     <>
       {/* {open && ( */}
       <div
-        className={`lp w-screen  h-screen lg:h-full   lg:w-1/3 z-50 ${
+        className={`lp w-screen  h-dvh lg:h-full   lg:w-1/3 z-50 ${
           ismobile && "absolute"
         } ${isOpen ? "slide-in-right " : "slide-out-right "} ${
           !isAnimationComplete && !isOpen && "hidden"
         }`}
         onAnimationEnd={handleAnimationEnd}
       >
-        <div className="bg-white z-50 pb-5 dark:bg-black h-full rounded-xl bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-40 shadow-2xl border-1 border-black lpo">
-          <button onClick={toggle}>{isOpen ? "Open" : "Close"}</button>
+        <div className="bg-white z-50 pb-24 oveflow-hidden dark:bg-black h-full rounded-xl md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-40 shadow-2xl border-1 border-black lpo">
+          <div className="md:hidden">
+            <div className="flex justify-between mt-5 mx-2">
+              <div className="fg font-lucy text-4xl">Muse</div>
+
+              <button onClick={toggle}>
+                <Image
+                  src="/icons/sidebar.png"
+                  height={50}
+                  width={50}
+                  className="dark:invert w-7 h-7"
+                  alt="Sidebar"
+                />
+              </button>
+            </div>
+          </div>
           {createpostopen && (
             <CreatePost
               onClose={() => setcreatepostOpen(!createpostopen)}
@@ -381,7 +395,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
           )}
           {userdata && (
             <div className="main1 h-full  flex flex-col justify-between items-center">
-              <div className=" text-4xl my-2 lg:text-6xl font-lucy text-center lg:mt-6 lg:mb-8">
+              <div className="hidden md:flex text-4xl my-2 lg:text-6xl font-lucy text-center lg:mt-6 lg:mb-8">
                 Muse
               </div>
               {!ismobile ? (
@@ -428,9 +442,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                         {userdata.userName}
                       </div>
 
-                      <div className="bio  opacity-80 my-2">
-                        {userdata.bio}
-                      </div>
+                      <div className="bio  opacity-80 my-2">{userdata.bio}</div>
                     </div>
                   </div>
                 </>
@@ -469,7 +481,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                 )}
               {usage == "feed" && (
                 <div className="h-full w-full">
-                  <div className="options flex mb-5 justify-evenly items-center flex-auto mt-10">
+                  <div className="options hidden md:flex mb-5 justify-evenly items-center flex-auto mt-10">
                     <div className="explore">
                       <div
                         className="text-2xl text-left dark:invert font-bold transform-gpu hover:scale-110 cursor-pointer"
@@ -561,7 +573,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                         )}
                       </div>
                     </div>
-                    <div className="flex flex-col h-96 lg:h-72 overflow-y-auto">
+                    <div className="flex flex-col h-80  lg:h-96 overflow-y-auto">
                       {notifications.length == 0 && (
                         <div className="text-center mt-10">
                           No Notifications
@@ -720,49 +732,51 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                   </div>
                 </div>
               )}
-              {(currentuserdata || usage == "feed") && (
-                <div className="flex w-full justify-evenly ">
-                  {usage == "feed" && (
-                    <button
-                      className="create btn px-6 py-2 font-rethink mb-4 "
-                      onClick={() => setcreatereelOpen(true)}
-                      disabled={createreelopen}
-                    >
-                      Create a Reel
-                    </button>
-                  )}
-                  {usage == "feed" && (
-                    <button
-                      className="create btn px-6 py-2 font-rethink mb-4 "
-                      onClick={() => setcreatepostOpen(true)}
-                      disabled={createpostopen}
-                    >
-                      Create a Post
-                    </button>
-                  )}
-                </div>
-              )}
-              <div className="okedoesd flex w-full justify-evenly  text-sm">
-                <div
-                  className=" font-bold text-center cursor-pointer"
-                  onClick={() => router.push("/contactus")}
-                >
-                  Contact Us
-                </div>
-                <div className="about">
+              <div className="s fixed bottom-0">
+                {(currentuserdata || usage == "feed") && (
+                  <div className="flex w-full justify-evenly ">
+                    {usage == "feed" && (
+                      <button
+                        className="create btn px-6 py-2 font-rethink mb-4 "
+                        onClick={() => setcreatereelOpen(true)}
+                        disabled={createreelopen}
+                      >
+                        Create a Reel
+                      </button>
+                    )}
+                    {usage == "feed" && (
+                      <button
+                        className="create btn px-6 py-2 font-rethink mb-4 "
+                        onClick={() => setcreatepostOpen(true)}
+                        disabled={createpostopen}
+                      >
+                        Create a Post
+                      </button>
+                    )}
+                  </div>
+                )}
+                <div className="okedoesd flex w-full justify-evenly  text-sm">
                   <div
                     className=" font-bold text-center cursor-pointer"
-                    onClick={() => router.push("/about")}
+                    onClick={() => router.push("/contactus")}
                   >
-                    About
+                    Contact Us
+                  </div>
+                  <div className="about">
+                    <div
+                      className=" font-bold text-center cursor-pointer"
+                      onClick={() => router.push("/about")}
+                    >
+                      About
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div
-                className="pl text-xs cursor-pointer mb-4"
-                onClick={() => router.push("/releasenotes")}
-              >
-                Muse v0.57 beta @NoFilter LLC 2024-2025
+                <div
+                  className="pl text-xs cursor-pointer mb-4"
+                  onClick={() => router.push("/releasenotes")}
+                >
+                  Muse v0.58 beta @NoFilter LLC 2024-2025
+                </div>
               </div>
             </div>
           )}

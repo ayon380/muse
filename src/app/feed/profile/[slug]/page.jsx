@@ -237,13 +237,13 @@ const Page = ({ params }) => {
     }
   };
   return (
-    <div className="ml-5 w-full h-full">
+    <div className="md:ml-5 w-full h-full">
       <Toaster />
       {userdata &&
       currentuserdata &&
       !restrictchecking &&
       userdata.blocked.includes(currentuserdata.uid) ? (
-        <div className="main2 grid rounded-2xl bg-white z-50  bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-20 shadow-2xl border-1 p-2 App  border-black w-full h-full">
+        <div className="main2 grid md:rounded-2xl bg-white z-50  md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 p-2 App  border-black w-full h-full">
           RESTRICTED
         </div>
       ) : (
@@ -257,7 +257,7 @@ const Page = ({ params }) => {
               currentuserdata={currentuserdata}
             />
           )}
-          <div className="main2 grid rounded-2xl bg-white bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-20 shadow-2xl border-1 p-2 App  border-black w-full h-full">
+          <div className="main2 grid rounded-2xl bg-white dark:bg-black md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 p-2 App  border-black w-full h-full">
             {userdataloading && (
               <div className="text-2xl m-4 flex justify-center w-full h-full align-middle text-middle">
                 Loading...

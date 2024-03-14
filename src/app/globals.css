@@ -162,3 +162,6 @@
 .slide-out-right {
   animation: slideOutRight 0.5s forwards;
 }
+.qw{
+  z-index:  100;
+}
