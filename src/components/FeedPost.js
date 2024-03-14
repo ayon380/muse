@@ -106,9 +106,11 @@ function formatTimestamp(firebaseTimestamp) {
 import { useRouter } from "next/navigation";
 const FeedPost = ({
   db,
+  type,
   post,
   userdata,
   usermetadata,
+  currentuserdata,
   enqueueUserMetadata,
 }) => {
   const [liked, setLiked] = React.useState(false);
@@ -117,15 +119,17 @@ const FeedPost = ({
   const [postdata, setPostdata] = useState(post);
   const [commentList, setCommentList] = useState([]);
   const [commentsloading, setCommentsloading] = useState(false);
+  const [uid, setUid] = useState("");
   const [commentlikes, setCommentlikes] = useState({});
   const [replies, setReplies] = useState({});
   const [commentreply, setCommentreply] = useState({});
   const [reply, setReply] = useState("");
   const router = useRouter();
   const limit = 50;
-  const handleShowComments = () => {
-    setShowComments((prevState) => !prevState);
-  };
+  useEffect(() => {
+    if (type == "profile") setUid(currentuserdata.uid);
+    else setUid(userdata.uid);
+  }, []);
   const getComments = async () => {
     try {
       setCommentsloading(true);
@@ -141,7 +145,7 @@ const FeedPost = ({
             await enqueueUserMetadata(q.uid);
             setCommentlikes((prevCommentlikes) => ({
               ...prevCommentlikes,
-              [q.id]: q.likes.includes(userdata.uid),
+              [q.id]: q.likes.includes(uid),
             }));
             console.log(q.timestamp);
             const r = formatTimestamp(q.timestamp);
@@ -167,13 +171,13 @@ const FeedPost = ({
       const docSnap = await getDoc(commentRef);
       if (docSnap.exists()) {
         const comment = docSnap.data();
-        const isLiked = comment.likes.includes(userdata.uid);
+        const isLiked = comment.likes.includes(uid);
         const newLikeCount = isLiked
           ? comment.likecount - 1
           : comment.likecount + 1;
         const newLikes = isLiked
-          ? comment.likes.filter((uid) => uid !== userdata.uid)
-          : [...comment.likes, userdata.uid];
+          ? comment.likes.filter((uid) => uid !== uid)
+          : [...comment.likes, uid];
 
         await updateDoc(commentRef, {
           likes: newLikes,
@@ -211,7 +215,7 @@ const FeedPost = ({
       const replyData = {
         content: reply,
         likecount: 0,
-        uid: userdata.uid,
+        uid: uid,
         timestamp: new Date(),
       };
       const q = await addDoc(replyRef, replyData);
@@ -293,7 +297,7 @@ const FeedPost = ({
       const postRef = doc(db, "posts", postdata.id);
       const docSnap = await getDoc(postRef);
       if (docSnap.exists()) {
-        if (docSnap.data().likes.includes(userdata.uid)) {
+        if (docSnap.data().likes.includes(uid)) {
           setLiked(true);
         }
       }
@@ -313,7 +317,7 @@ const FeedPost = ({
     try {
       const notificationData = {
         id: "",
-        sender: userdata.uid,
+        sender: uid,
         postid: postdata.id,
         type: "postlike",
         receiver: postdata.uid,
@@ -337,14 +341,14 @@ const FeedPost = ({
         setLiked(false);
         setPostdata({ ...postdata, likecount: postdata.likecount - 1 });
         await updateDoc(postRef, {
-          likes: arrayRemove(userdata.uid),
+          likes: arrayRemove(uid),
           likecount: increment(-1),
         });
       } else {
         setLiked(true);
         setPostdata({ ...postdata, likecount: postdata.likecount + 1 });
         await updateDoc(postRef, {
-          likes: arrayUnion(userdata.uid),
+          likes: arrayUnion(uid),
           likecount: increment(1),
         });
         sendNotification(postdata);
@@ -372,7 +376,7 @@ const FeedPost = ({
       const commentData = {
         content: comment,
         likecount: 0,
-        uid: userdata.uid,
+        uid: uid,
         likes: [],
         replies: [],
         timestamp: new Date(),
@@ -426,7 +430,11 @@ const FeedPost = ({
                   >
                     <div className="flex z-20">
                       {usermetadata[comment.uid] ? (
-                        <Link href={`/${usermetadata[comment.uid].userName}`}>
+                        <Link
+                          href={`/feed/profile/${
+                            usermetadata[comment.uid].userName
+                          }`}
+                        >
                           <div className="flex ">
                             <Image
                               className="rounded-full h-6 w-6 "
@@ -497,7 +505,7 @@ const FeedPost = ({
                                     >
                                       {usermetadata[comment.uid] ? (
                                         <Link
-                                          href={`/${
+                                          href={`/feed/profile/${
                                             usermetadata[reply.uid].userName
                                           }`}
                                         >
@@ -618,20 +626,24 @@ const FeedPost = ({
         <div className="df bg-white dark:bg-black bg-opacity-40 rounded-2xl px-2 py-2 ">
           {usermetadata && usermetadata[postdata.uid] && (
             <div className="header flex justify-between">
-              <div className="flex items-center">
-                <div className="profile-pic">
-                  <Image
-                    className="rounded-full h-8 w-8 md:h-16 md:w-16 object-cover"
-                    src={usermetadata[postdata.uid].pfp}
-                    width={100}
-                    height={100}
-                    alt="Profile Picture"
-                  />
+              <Link
+                href={`/feed/profile/${usermetadata[postdata.uid].userName}`}
+              >
+                <div className="flex items-center">
+                  <div className="profile-pic">
+                    <Image
+                      className="rounded-full h-8 w-8 md:h-16 md:w-16 object-cover"
+                      src={usermetadata[postdata.uid].pfp}
+                      width={100}
+                      height={100}
+                      alt="Profile Picture"
+                    />
+                  </div>
+                  <div className="username ml-2 text-xl md:text-3xl">
+                    {usermetadata[postdata.uid].userName}
+                  </div>
                 </div>
-                <div className="username ml-2 text-xl md:text-3xl">
-                  {usermetadata[postdata.uid].userName}
-                </div>
-              </div>
+              </Link>
               <div className="time mt-2 opacity-50 md:mt-4">
                 {formatFirebaseTimestamp(postdata.timestamp)}
               </div>
@@ -679,7 +691,7 @@ const FeedPost = ({
                   </div>
                   <div className="flex">
                     <div className="count text-xl font-bold mr-1">
-                      {postdata.likecount}
+                      {postdata.likecount ? postdata.likecount : 0}
                     </div>
                     <div className="likes text-xl opacity-85">likes</div>
                   </div>

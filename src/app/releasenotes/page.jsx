@@ -4,6 +4,7 @@ import React from "react";
 
 const ReleaseNotes = () => {
   const releaseNotes = [
+    {version: "v0.59", description: "-> Optimized Profile Pages and Bug Fixes"},
     {version: "v0.58", description: "->Redesigned Comments Posts for Mobile"},
     { version: "v0.57", description: "Redesinged Messaging UI Bug Fixes Added Release Notes" },
     { version: "v0.56", description: "Added Messaging Phone Support" },
@@ -69,7 +70,7 @@ const ReleaseNotes = () => {
   ];
 
   return (
-    <div className="container mx-auto px-4 py-8 bg-white w-screen">
+    <div className="container mx-auto px-4 py-8 bg-white dark:bg-black dark:text-white w-screen">
       <div className="muse font-lucy text-center  text-8xl">Muse</div>
       <h1 className="text-3xl font-bold mb-4">Release Notes</h1>
       <ul className="divide-y divide-gray-200">

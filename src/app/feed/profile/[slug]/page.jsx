@@ -15,9 +15,6 @@ import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import dynamic from "next/dynamic";
-import Link from "next/link";
-import Layout from "../../layout";
-import { LayoutGrid } from "../../../../components/layoutgrid";
 const FeedPost = dynamic(() => import("@/components/FeedPost"), { ssr: false });
 const Page = ({ params }) => {
   const { slug } = params;
@@ -34,7 +31,57 @@ const Page = ({ params }) => {
   const [userdataloading, setUserDataLoading] = React.useState(true);
   const [pagestate, setPageState] = React.useState(0);
   const [restrictchecking, setRestrictChecking] = React.useState(true);
+  const [usermetadata, setUsermetadata] = React.useState({});
   const [globalrestrict, setGlobalRestrict] = React.useState(false);
+  const userMetadataQueue = [];
+  let isUserMetadataQueueProcessing = false;
+
+  const processUserMetadataQueue = async () => {
+    if (!isUserMetadataQueueProcessing && userMetadataQueue.length > 0) {
+      // Set processing flag to true
+      isUserMetadataQueueProcessing = true;
+
+      // Get the first item from the queue
+      const { uid, resolve } = userMetadataQueue.shift();
+      try {
+        // Call getusermetadata function
+
+        await getusermetadata(uid);
+        // Resolve the promise
+        resolve();
+      } catch (error) {
+        console.error("Error processing user metadata:", error);
+      }
+
+      // Process next item in the queue recursively
+      processUserMetadataQueue();
+    } else {
+      // Set processing flag to false when queue is empty
+      isUserMetadataQueueProcessing = false;
+    }
+  };
+
+  const enqueueUserMetadata = (uid) => {
+    return new Promise((resolve, reject) => {
+      userMetadataQueue.push({ uid, resolve });
+      processUserMetadataQueue();
+    });
+  };
+
+  const getusermetadata = async (uid) => {
+    if (!usermetadata[uid]) {
+      console.log("Fetching user metadata");
+      const userRef = doc(db, "username", uid);
+      const docSnap = await getDoc(userRef);
+      if (docSnap.exists()) {
+        setUsermetadata((prevUsermetadata) => ({
+          ...prevUsermetadata,
+          [uid]: docSnap.data(),
+        }));
+      }
+    }
+    console.log(usermetadata, "usermetadata");
+  };
   const checkfollow = () => {
     console.log(userdata.followers);
     console.log(currentuserdata.uid);
@@ -236,6 +283,23 @@ const Page = ({ params }) => {
       return;
     }
   };
+  function isVideoFile(url) {
+    // List of common video file extensions
+    const videoExtensions = ["mp4", "mov", "avi", "mkv", "wmv", "flv", "webm"];
+
+    // Check if the URL contains any of the video file extensions
+    const hasVideoExtension = videoExtensions.some((extension) =>
+      url.includes(`.${extension}`)
+    );
+
+    // Check if the URL contains a query parameter indicating a video file
+    const hasVideoQueryParameter = url.match(
+      /\.(mp4|mov|avi|mkv|wmv|flv|webm)\?[\w=&-]+/
+    );
+
+    // Return true if either condition is met
+    return hasVideoExtension || hasVideoQueryParameter;
+  }
   return (
     <div className="md:ml-5 w-full h-full">
       <Toaster />
@@ -248,15 +312,28 @@ const Page = ({ params }) => {
         </div>
       ) : (
         <>
-          {postid != -1 && showPost && (
-            <FeedPost
-              db={db}
-              userdata={userdata}
-              post={posts[postid]}
-      
-              currentuserdata={currentuserdata}
-            />
+          {postid !== -1 && showPost && posts[0] && (
+            <div
+              className="lop h-screen w-screen fixed top-0 left-0 flex justify-center items-center z-10 backdrop-filter backdrop-blur-3xl"
+              onClick={(e) => {
+                if (e.target.classList.contains("lop")) {
+                  onclose();
+                }
+              }}
+            >
+              <FeedPost
+                db={db}
+                userdata={userdata}
+                post={posts.find((post) => post.id === postid)}
+                onclose={onclose}
+                type="profile"
+                usermetadata={usermetadata}
+                enqueueUserMetadata={enqueueUserMetadata}
+                currentuserdata={currentuserdata}
+              />
+            </div>
           )}
+
           <div className="main2 grid rounded-2xl bg-white dark:bg-black md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 p-2 App  border-black w-full h-full">
             {userdataloading && (
               <div className="text-2xl m-4 flex justify-center w-full h-full align-middle text-middle">
@@ -275,19 +352,19 @@ const Page = ({ params }) => {
                     <div className="lsad backdrop-blur-lg bg-opacity-50  rounded-xl bg-black z-30 drop-shadow-xl h-full w-full">
                       {/* <div className="s h-16"></div> */}
                       <div className="asd py-12">
-                        <div className="flex justify-center w-full ">
+                        <div className=" hidden md:flex justify-center w-full ">
                           <Image
                             src={userdata.pfp}
                             width={200}
                             height={200}
-                            className="rounded-full h-36 w-36 object-cover"
+                            className="rounded-full h-14 w-14  md:h-36 md:w-36 object-cover"
                             alt="Profile Picture"
                           />
                           <div className="ok mx-16 mt-1">
-                            <div className="text-3xl opacity-80 ">
+                            <div className=" text-xl md:text-3xl opacity-80 ">
                               {userdata.fullname}
                             </div>
-                            <div className="text-3xl  font-bold">
+                            <div className="text-2xl md:text-3xl  font-bold">
                               @{userdata.userName}
                             </div>
 
@@ -320,27 +397,100 @@ const Page = ({ params }) => {
                             </div>
                           </div>
                         </div>
-                        <div className="flex justify-between mt-3  mx-96">
-                          <div className="followers text-center w-16">
-                            <div className="text-4xl  font-bold">
-                              {userdata.followers.length}
+                        <div className="flex md:hidden justify-between w-full ">
+                          <div className="flex ml-3">
+                            <Image
+                              src={userdata.pfp}
+                              width={200}
+                              height={200}
+                              className="rounded-full h-16 w-16  md:h-36 md:w-36 object-cover"
+                              alt="Profile Picture"
+                            />
+                            <div className="s ml-2 -mt-2 mb-5">
+                              <div className=" text md:text-3xl opacity-80 ">
+                                {userdata.fullname}
+                              </div>
+                              <div className="text-xl md:text-3xl  font-bold">
+                                @{userdata.userName}
+                              </div>
+                              <div className="qw opacity-90">
+                                {userdata.bio}
+                              </div>
+                              {currentuserdata &&
+                                userdata &&
+                                currentuserdata.userName !=
+                                  userdata.userName && (
+                                  <div className="flex">
+                                    <button
+                                      className="btn py-1 px-4 my-1"
+                                      onClick={() => handlefollow()}
+                                    >
+                                      {follow ? "Following" : "Follow"}
+                                    </button>
+                                    <button
+                                      className="btn ml-3 py-1 px-4 my-1"
+                                      onClick={handleRestrict}
+                                    >
+                                      {restrict ? "Unrestrict" : "Restrict"}
+                                    </button>
+                                  </div>
+                                )}
                             </div>
-                            <div className="text-sm mr-6 opacity-80">
-                              Followers
+                          </div>
+
+                          {currentuserdata &&
+                            userdata &&
+                            currentuserdata.userName != userdata.userName && (
+                              <div className="hidden md:flex">
+                                <button
+                                  className="btn py-1 px-4 my-1"
+                                  onClick={() => handlefollow()}
+                                >
+                                  {follow ? "Following" : "Follow"}
+                                </button>
+                                <button
+                                  className="btn ml-3 py-1 px-4 my-1"
+                                  onClick={handleRestrict}
+                                >
+                                  {restrict ? "Unrestrict" : "Restrict"}
+                                </button>
+                              </div>
+                            )}
+                          <div className="pk mt-3 mr-3">
+                            <div className="ojesd  ">{userdata.profession}</div>
+                            <div className="sad font-bold">{userdata.org}</div>
+                          </div>
+                        </div>
+                        <div className="flex justify-between mt-3 mx-10  md:mx-96">
+                          <div className="followers text-center w-16">
+                            <div className="lp flex ">
+                              <div className="text-4xl  font-bold">
+                                {userdata.followers.length}
+                              </div>
+                              <div className="text-sm mt-4 mr-6 opacity-80">
+                                Followers
+                              </div>
                             </div>
                           </div>
                           <div className="following text-center w-16">
-                            <div className="text-4xl font-bold">
-                              {userdata.following.length}
+                            <div className="flex">
+                              <div className="text-4xl font-bold">
+                                {userdata.following.length}
+                              </div>
+                              <div className="text-sm opacity-80 mt-4">
+                                Following
+                              </div>
                             </div>
-                            <div className="text-sm opacity-80">Following</div>
                           </div>
-                          <div className="ml-6 posts">
-                            <div className="text-4xl font-bold w-16">
-                              {userdata.posts.length}
-                            </div>
-                            <div className="text-sm -ml-2 opacity-80">
-                              Posts
+
+                          <div className=" posts">
+                            <div className="flex">
+                              <div className="text-4xl font-bold ">
+                                {userdata.posts.length}
+                              </div>
+                              <div className="text-sm  mt-4 opacity-80">
+                                Posts
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -369,27 +519,76 @@ const Page = ({ params }) => {
                       Tagged
                     </button>
                   </div>
-                  <div className="postsxs w-full h-3/4 ">
-                    {pagestate === 0 &&
-                      (posts.length === 0 ? (
-                        <div className="text-2xl m-4 flex justify-center w-full h-full align-middle text-middle">
-                          No Posts Yet
-                        </div>
-                      ) : (
-                        <div className="h-screen py-20 w-full">
-                          <LayoutGrid cards={posts} type="posts" />
-                        </div>
-                      ))}
-                    {pagestate === 1 &&
-                      (reels.length === 0 ? (
-                        <div className="text-2xl m-4 flex justify-center w-full h-full align-middle text-middle">
-                          No Reels Yet
-                        </div>
-                      ) : (
-                        <div>
-                          <LayoutGrid cards={reels} type="reels" />
-                        </div>
-                      ))}
+                  <div className="postsxs w-full h-3/4">
+                    {pagestate === 0 && (
+                      <>
+                        {posts.length === 0 ? (
+                          <div className="text-2xl m-4 flex justify-center items-center w-full h-full">
+                            No Posts Yet
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-3 md:grid-cols-4 gap-4 p-4">
+                            {posts.map((post, index) => (
+                              <div
+                                key={index}
+                                className="relative h-full"
+                                onClick={() => {
+                                  router.push(
+                                    `/feed/profile/${userdata.userName}?postid=${post.id}`
+                                  );
+                                }}
+                              >
+                                {isVideoFile(post.mediaFiles[0]) ? (
+                                  <>
+                                    <video
+                                      src={post.mediaFiles[0]}
+                                      className="w-full h-full object-cover"
+                                    ></video>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Image
+                                      src={post.mediaFiles[0]}
+                                      alt=""
+                                      width={100}
+                                      height={100}
+                                      className="w-full h-full object-cover"
+                                    />
+                                  </>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    )}
+                    {pagestate === 1 && (
+                      <>
+                        {reels.length === 0 ? (
+                          <div className="text-2xl m-4 flex justify-center items-center w-full h-full">
+                            No Reels Yet
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-3 md:grid-cols-4 gap-4 p-4">
+                            {reels.map((reel, index) => (
+                              <div
+                                key={index}
+                                onClick={() => {
+                                  router.push(`/feed/reels?reelid=${reel.id}`);
+                                }}
+                                className="relative aspect-w-16 aspect-h-9"
+                              >
+                                <video
+                                  src={reel.mediaFiles}
+                                  controls
+                                  className="w-full h-full object-cover"
+                                ></video>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
