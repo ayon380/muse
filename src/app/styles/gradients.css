@@ -22,9 +22,9 @@
 /* .pol{
 	width: 100%;
 }*/
-.chatwindow {
+/* .chatwindow {
   height: 84.5vh;
-}
+} */
 
 @media only screen and (max-width: 768px) {
   .chatwindow {

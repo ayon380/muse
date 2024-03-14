@@ -358,7 +358,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
     <>
       {/* {open && ( */}
       <div
-        className={`lp w-screen  h-screen lg:h-full overflow-hidden lg:w-1/3 z-50 ${
+        className={`lp w-screen  h-screen lg:h-full   lg:w-1/3 z-50 ${
           ismobile && "absolute"
         } ${isOpen ? "slide-in-right " : "slide-out-right "} ${
           !isAnimationComplete && !isOpen && "hidden"
@@ -561,7 +561,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                         )}
                       </div>
                     </div>
-                    <div className="flex flex-col ">
+                    <div className="flex flex-col h-96 lg:h-72 overflow-y-auto">
                       {notifications.length == 0 && (
                         <div className="text-center mt-10">
                           No Notifications
@@ -762,7 +762,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                 className="pl text-xs cursor-pointer mb-4"
                 onClick={() => router.push("/releasenotes")}
               >
-                Muse v0.56 beta @NoFilter LLC 2024-2025
+                Muse v0.57 beta @NoFilter LLC 2024-2025
               </div>
             </div>
           )}

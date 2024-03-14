@@ -18,15 +18,15 @@ const Bottomnav = () => {
   const router = useRouter();
   return (
     <div className="b">
-      <div className={`flex ${isMobile ? "absolute" : "hidden"}  bottomnav rounded-t-lg bottom-0 bg-opacity-90 bg-white dark:bg-black z-40 w-full`}>
-        <div className="options flex my-5  justify-evenly items-center flex-auto">
+      <div className={`flex ${isMobile ? "absolute" : "hidden"}  bottomnav rounded-t-lg bottom-0 bg-opacity-30 backdrop-filter backdrop-blur-2xl bg-white dark:bg-black z-40 w-full`}>
+        <div className="options flex my-3  justify-evenly items-center flex-auto">
           <div className="explore">
             <div
               className="text-2xl text-left dark:invert font-bold transform-gpu hover:scale-110 cursor-pointer"
               onClick={() => router.push("/feed")}
             >
               <Image
-                className="h-8 w-8"
+                className="h-6 w-6"
                 src="/icons/category.png"
                 width={100}
                 height={100}
@@ -40,7 +40,7 @@ const Bottomnav = () => {
               onClick={() => router.push("/feed/explore")}
             >
               <Image
-                className="h-8 w-8"
+                className="h-6 w-6"
                 src="/icons/direction.png"
                 width={100}
                 height={100}
@@ -54,7 +54,7 @@ const Bottomnav = () => {
               onClick={() => router.push("/feed/reels")}
             >
               <Image
-                className="h-8 w-8"
+                className="h-6 w-6"
                 src="/icons/video.png"
                 width={100}
                 height={100}
@@ -70,7 +70,7 @@ const Bottomnav = () => {
               }}
             >
               <Image
-                className="h-8 w-8"
+                className="h-6 w-6"
                 src="/icons/conversation.png"
                 width={100}
                 height={100}
@@ -84,7 +84,7 @@ const Bottomnav = () => {
               onClick={() => router.push("/feed/settings")}
             >
               <Image
-                className="h-8 w-8"
+                className="h-6 w-6"
                 src="/icons/setting.png"
                 width={100}
                 height={100}

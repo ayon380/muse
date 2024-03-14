@@ -29,6 +29,7 @@ import { getFirestore, getDoc } from "firebase/firestore";
 import dynamic from "next/dynamic";
 import { useSidebarStore } from "@/app/store/zustand";
 import imageCompression from "browser-image-compression";
+const SearchChat = dynamic(() => import("@/components/SearchChat"));
 const GroupChat = dynamic(() => import("@/components/GroupChat"));
 import toast, { Toaster } from "react-hot-toast";
 const options = {
@@ -75,7 +76,8 @@ const Home = () => {
   const [mediaFiles, setMediaFiles] = useState([]);
   const [ismobile, setismobile] = useState(false);
   const { chatopen, setchatopen, isOpen, toggle } = useSidebarStore();
-  //function to get data of messagerooms
+  //function to get data of messagerooms'
+  const [searchopen, setsearchopen] = useState(false);
   useEffect(() => {
     if (window.innerWidth < 768) {
       setismobile(true);
@@ -119,6 +121,9 @@ const Home = () => {
         console.log("Opening chat");
         setcurrentmsglength(51);
         setchatopen(true);
+      }
+      if (rid == "" && chatopen) {
+        setchatopen(false);
       }
       setChattype(ct);
       setRoomid(rid);
@@ -349,7 +354,9 @@ const Home = () => {
               setChatuserdata(usnap.data());
             }
             setRoomid(commonChatDocs[0].id);
-          } else console.log("No common chat docs found");
+          } else {
+            console.log("No common chat docs found");
+          }
           // Set chPrevChat based on whether common chat documents were found
           setchprevchat(commonChatDocs.length > 0);
         }
@@ -583,7 +590,7 @@ const Home = () => {
             receiver: chatwindow,
             timestamp: Date.now(),
           });
-          toast.success("Message sent");
+          console.log("Message sent");
         } else {
           toast.error("No chat selected");
         }
@@ -595,6 +602,7 @@ const Home = () => {
   };
   useEffect(() => {
     checkprevchat();
+    console.log("Chat window changed:", chatwindow);
   }, [roomid, chatwindow]);
   function convertToChatTime(timestamp) {
     const now = new Date();
@@ -782,64 +790,22 @@ const Home = () => {
       toast.error("Error " + error.message);
     }
   };
+  const checkchat = (Q) => {
+    if (ismobile) {
+      console.log("Mobile chat open" + chatopen);
+      return chatopen;
+    } else if (Q === "Q" && !ismobile) {
+      return false;
+    } else {
+      return true;
+    }
+  };
   return (
     <div className="lg:ml-5 w-full h-full overflow-hidden">
       <Toaster />
       {userdata && (
-        <div className="main2 w-full rounded-2xl   bg-white bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-20 shadow-2xl border-1 border-black h-full">
-          {!chatopen && (
-            <>
-              <div className="flex w-full ">
-                <button onClick={toggle}>open</button>
-                <div className="messages text-3xl lg:text-5xl ml-6 mt-6 mr-6 font-lucy w-1/4 ">
-                  Messages
-                </div>
-                <div className="flex justify-between w-3/4">
-                  <button
-                    className="createchat cursor-pointer h-auto mt-5 p-3 rounded-2xl bg-purple-600 mr-10 backdrop-filter backdrop-blur-lg bg-opacity-90 shadow-2xl hover:bg-purple-700"
-                    onClick={() => setopengrpchatcreate(true)}
-                  >
-                    Create a Group
-                  </button>
-                </div>
-              </div>
-              <div className="flex justify-between mt-2 my-5 mx-6 ">
-                {opengrpchatcreate && (
-                  <GroupChat
-                    userdata={userdata}
-                    onClose={handleclosegrpchatcreation}
-                  />
-                )}
-              </div>
-            </>
-          )}
-          {!ismobile && (
-            <>
-              <div className="flex w-full ">
-                <button onClick={toggle}>open</button>
-                <div className="messages text-3xl lg:text-5xl ml-6 mt-6 mr-6 font-lucy w-1/4 ">
-                  Messages
-                </div>
-                <div className="flex justify-between w-3/4">
-                  <button
-                    className="createchat cursor-pointer h-auto mt-5 p-3 rounded-2xl bg-purple-600 mr-10 backdrop-filter backdrop-blur-lg bg-opacity-90 shadow-2xl hover:bg-purple-700"
-                    onClick={() => setopengrpchatcreate(true)}
-                  >
-                    Create a Group
-                  </button>
-                </div>
-              </div>
-              <div className="flex justify-between mt-2 my-5 mx-6 ">
-                {opengrpchatcreate && (
-                  <GroupChat
-                    userdata={userdata}
-                    onClose={handleclosegrpchatcreation}
-                  />
-                )}
-              </div>
-            </>
-          )}
-          <div className="flex justify-between w-full ">
+        <div className="main2 w-full lg:rounded-2xl  dark:bg-black md:dark:bg-gray-900 bg-white md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 border-black h-full">
+          <div className="flex justify-between w-full h-full">
             {gifopen && (
               <div className="absolute right-0 bottom-4 z-40 mb-12 lg:mb-20 mr-1 lg:mr-10">
                 <GifPicker
@@ -849,6 +815,15 @@ const Home = () => {
                   onGifClick={(gif) => handlesendGif(gif)}
                 />
               </div>
+            )}
+            {searchopen && (
+              <SearchChat
+                setsearchopen={setsearchopen}
+                userdata={userdata}
+                chats={chats}
+                setChatwindow={setChatwindow}
+                usernames={usernames}
+              />
             )}
             {showaddfiles && (
               <div className="absolute right-0 w-full bottom-4 z-40 mb-12 lg:mb-20 lg:mr-10 bg-opacity-85 bg-white rounded-xl p-4">
@@ -920,11 +895,56 @@ const Home = () => {
                 </div>
               </div>
             )}
-            {!chatopen && (
+            {!checkchat("Q") && (
               <div
-                className="followingusers lg:w-1/4 m-6 overflow-y-auto"
+                className="followingusers w-full lg:w-1/3 m-6 overflow-y-auto"
                 key={roomid}
               >
+                <div className="flex w-full justify-between">
+                  <div className="messages text-3xl lg:text-3xl   ">
+                    Messages
+                  </div>
+                  <div className="flex justify-end ">
+                    <button
+                      className="createchat cursor-pointer h-auto  p-3 rounded-2xl md:backdrop-filter md:backdrop-blur-lg bg-opacity-90 "
+                      onClick={() => setopengrpchatcreate(true)}
+                    >
+                      <Image
+                        src="/icons/add-group.png"
+                        className="h-6 w-6"
+                        height={50}
+                        width={50}
+                        alt="Create Group Chat"
+                      />
+                    </button>
+                    <button onClick={toggle}>
+                      <Image
+                        className="h-7 w-7 mr-2"
+                        src="/icons/sidebar.png"
+                        width={50}
+                        alt="Sidebar"
+                        height={50}
+                      />
+                    </button>
+                    <button onClick={() => setsearchopen(true)}>
+                      <Image
+                        className="h-6 w-6"
+                        src="/icons/search.png"
+                        width={50}
+                        height={50}
+                        alt="Search"
+                      />
+                    </button>
+                  </div>
+                </div>
+                <div className="flex justify-between mt-2 my-5 mx-6 ">
+                  {opengrpchatcreate && (
+                    <GroupChat
+                      userdata={userdata}
+                      onClose={handleclosegrpchatcreation}
+                    />
+                  )}
+                </div>
                 {chats &&
                   chats.map((chat, index) =>
                     chat.type == "p" ? (
@@ -992,108 +1012,46 @@ const Home = () => {
                   )}
               </div>
             )}
-            {!ismobile && (
+            {checkchat() && (
               <div
-                className="followingusers lg:w-1/4 m-6 overflow-y-auto"
-                key={roomid}
-              >
-                {chats &&
-                  chats.map((chat, index) =>
-                    chat.type == "p" ? (
-                      <div
-                        className="key cursor-pointer"
-                        key={index}
-                        onClick={() => {
-                          router.push(
-                            `/feed/messages?roomid=${
-                              chat.roomid
-                            }&chattype=p&chatwindow=${
-                              chat.participants[0] == userdata.uid
-                                ? chat.participants[1]
-                                : chat.participants[0]
-                            }`
-                          );
-                        }}
-                      >
-                        <div className="flex my-4 ">
-                          <div className="pfp mr-2">
-                            {chat.participants[0] == userdata.uid ? (
-                              <Image
-                                className="h-10 w-10 rounded-full"
-                                src={pfps[chat.participants[1]]}
-                                height={50}
-                                width={50}
-                                alt={chat.participants[1]}
-                              ></Image>
-                            ) : (
-                              <Image
-                                className="h-10 w-10 rounded-full"
-                                src={pfps[chat.participants[0]]}
-                                height={50}
-                                width={50}
-                                alt={chat.participants[0]}
-                              ></Image>
-                            )}
-                          </div>
-
-                          <div className="username font-bold text-xl">
-                            {chat.participants[0] == userdata.uid
-                              ? usernames[chat.participants[1]]
-                              : usernames[chat.participants[0]]}
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div
-                        className="key cursor-pointer"
-                        key={index}
-                        onClick={() => {
-                          router.push(
-                            `/feed/messages?roomid=${chat.roomid}&chattype=g&chatwindow=${chat.title}`
-                          );
-                        }}
-                      >
-                        <div className="title font-bold text-xl">
-                          {chat.title}
-                        </div>
-                        {chat.participants.map(
-                          (participant) => usernames[participant] + " "
-                        )}{" "}
-                      </div>
-                    )
-                  )}
-              </div>
-            )}
-            {chatopen && (
-              <div
-                className="chatwindow w-full lg
-              :w-3/4 border-2 lg:mx-6 bg-gray-700  bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-10 shadow-2xl border-none rounded-2xl h-full relative"
+                className={`chatwindow w-full lg
+              :w-2/3 border-2 bg-violet-200 dark:bg-black md:dark:bg-gray-700  bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-10 shadow-2xl border-none  md:rounded-2xl h-full relative`}
               >
                 {roomid != "" && (
                   <>
                     <div className="overflow-y-auto h-full pb-16 pt-10 w-full">
-                      <div className="g fixed top-0 rounded-2xl h-10 pt-2 w-full text-center bg-purple-500 bg-clip-padding backdrop-filter backdrop-blur-lg bg-opacity-100 shadow-2xl  border-none">
-                        <div className="flex justify-center">
+                      <div className="g fixed top-0 rounded-b-xl md:rounded-2xl h-10 pt-2 w-full text-center  backdrop-filter backdrop-blur-3xl  shadow-2xl  border-none">
+                        <div className="flex justify-between mx-2">
                           <button
                             onClick={() => {
                               router.push("/feed/messages");
-                              setchatopen(false);
-                              setRoomid("");
+                              // setchatopen(false);
+                              // setRoomid("");
+                              // setChatwindow("");
                             }}
                           >
-                            Back
-                          </button>
-                          {chattype == "p" && (
                             <Image
-                              className="h-7 w-7 rounded-full mr-2"
-                              src={pfps[chatwindow]}
+                              className=" h-4  w-4"
+                              src="/icons/arrow.png"
                               height={50}
                               width={50}
-                              alt={chatwindow}
-                            ></Image>
-                          )}
-                          {usernames[chatwindow]}
-                          {chattype == "g" && chatwindow}
+                              alt=""
+                            />
+                          </button>
+                          <div className="lpa flex">
+                            {chattype == "p" && (
+                              <Image
+                                className="h-7 w-7 rounded-full mr-2"
+                                src={pfps[chatwindow]}
+                                height={50}
+                                width={50}
+                                alt={chatwindow}
+                              ></Image>
+                            )}
+                            {usernames[chatwindow]}
+                            {chattype == "g" && chatwindow}
+                          </div>
+                          <div className="sa"></div>
                         </div>
                       </div>
                       <div className="flex justify-center">
@@ -1118,18 +1076,18 @@ const Home = () => {
                         >
                           {message.sender == userdata.uid ? (
                             <div className="ko flex justify-end my-5 ">
-                              <div className="e  text-right bg-purple-400 p-3 rounded-xl">
+                              <div className="e  text-right bg-purple-400 p-2 lg:p-3 rounded-xl">
                                 <div
                                   className="lp"
                                   onClick={() => handledropdown(message)}
                                 >
                                   <div className="flex justify-end">
-                                    <div className="time text-xs mr-2 mt-1">
+                                    <div className="time text-xs opacity-50 mr-2 mt-1">
                                       {convertToChatTime(message.timestamp)}
                                     </div>
-                                    <div className="td text-sm font-bold">
+                                    {/* <div className="td text-sm font-bold">
                                       {usernames[message.sender]}
-                                    </div>
+                                    </div> */}
                                     <Image
                                       className="rounded-full h-5 w-5 ml-1"
                                       src={userdata.pfp}
@@ -1196,7 +1154,7 @@ const Home = () => {
                                     )}
                                     {message.type == "text" &&
                                       (message.text ? (
-                                        <span className="fg text-xl">
+                                        <span className="fg text-lg md:text-xl">
                                           {message.text
                                             .split(/(@\S+|https?:\/\/\S+)/)
                                             .map((part, index) => {
@@ -1268,7 +1226,7 @@ const Home = () => {
                           ) : (
                             <>
                               <div className="ko  flex right-0 my-5">
-                                <div className="e bg-purple-400 p-3 rounded-xl">
+                                <div className="e bg-purple-400 p-2 rounded-xl">
                                   <div className="flex">
                                     {/* {console.log(pfps[message.sender])} */}
                                     {pfps[message.sender] && (
@@ -1280,10 +1238,8 @@ const Home = () => {
                                         width={50}
                                       />
                                     )}
-                                    <div className="td text-sm font-bolda">
-                                      {usernames[message.sender]}
-                                    </div>
-                                    <div className="time text-xs ml-2 mt-1">
+
+                                    <div className="time text-xs ml-1  opacity-50">
                                       {convertToChatTime(message.timestamp)}
                                     </div>
                                   </div>
@@ -1344,7 +1300,7 @@ const Home = () => {
                                   )}
                                   {message.type == "text" &&
                                     (message.text ? (
-                                      <span className="fg text-xl">
+                                      <span className="fg text-lg md:text-xl">
                                         {message.text
                                           .split(/(@\S+|https?:\/\/\S+)/)
                                           .map((part, index) => {
@@ -1390,11 +1346,12 @@ const Home = () => {
                       ))}
 
                       <div ref={messagesEndRef} />
-                      <div className="textbox absolute flex bottom-0 pb-2 w-full m-2">
+                      <div className="textbox absolute flex bottom-0 rounded-t-xl p-2 backdrop-filter backdrop-blur-xl w-full ">
                         <input
                           type="text"
+                          autoFocus
                           placeholder="Type a message..."
-                          className="placeholder-italic w-full h-12 text-2xl p-2  rounded-xl text-black border-black transition-all duration-300 outline-none shadow-2xl hover:shadow-3xl focus:shadow-3xl  "
+                          className="placeholder-italic w-full h-10 text-lg px-1  rounded-xl text-black border-black transition-all duration-300 outline-none shadow-2xl hover:shadow-3xl focus:shadow-3xl  "
                           value={messagetext}
                           onChange={(e) => setMessagetext(e.target.value)}
                           onKeyDown={(e) => {
@@ -1404,29 +1361,47 @@ const Home = () => {
                           }}
                         ></input>
                         <button
-                          className="btn px-4 mx-2"
+                          className="m-1"
                           onClick={() => {
                             setgifopen(!gifopen);
                             setshowaddfiles(false);
                           }}
                         >
-                          GIF
+                          <Image
+                          className="h-8 w-10"
+                            src="/icons/gif.png"
+                            height={50}
+                            width={50}
+                            alt="Gif"
+                          />
                         </button>
                         <button
-                          className="btn px-4 mr-2 text-4xl"
+                          className="m-1"
                           onClick={() => {
                             setgifopen(false);
                             setshowaddfiles(!showaddfiles);
                           }}
                         >
-                          +
+                          <Image
+                          className=" h-6 w-7 mr-1"
+                            src="/icons/attach.png"
+                            height={50}
+                            width={50}
+                            alt="Attach"
+                          />
                         </button>
                         <button
                           onClick={sendMesage}
                           disabled={messagetext.length === 0}
-                          className="btn disabled:cursor-not-allowed disabled:text-gray-300 px-4 mr-4"
+                          className=" disabled:cursor-not-allowed disabled:text-gray-300"
                         >
-                          Send
+                          <Image
+                          className="h-6 w-8 m-1"
+                            src="/icons/send.png"
+                            height={50}
+                            width={50}
+                            alt="Send"
+                          />
                         </button>
                       </div>
                     </div>

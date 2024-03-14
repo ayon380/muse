@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { collection, addDoc, doc, updateDoc, query, where, orderBy, limit, getDocs, arrayUnion } from "firebase/firestore";
 import { getFirestore } from "firebase/firestore";
 import toast, { Toaster } from "react-hot-toast";
-import { on } from "events";
 
 const GroupChat = ({ userdata, onClose }) => {
     const db = getFirestore();
