@@ -101,7 +101,9 @@ const Reels = () => {
     const docSnap = await getDoc(q);
     if (docSnap.exists()) {
       console.log("Document data:", docSnap.data());
+      enqueueUserMetadata(docSnap.data().uid);
       setReel(docSnap.data());
+      setReels((prevReels) => [...prevReels, ...[docSnap.data()]]); 
     } else {
       console.log("No such document!");
       // Handle the case where user data doesn't exist
@@ -173,10 +175,12 @@ const Reels = () => {
 
     return () => unsubscribe();
   }, [auth]);
-
+useEffect(() => {
+  console.log("reels", reels);
+}, [reels]);
   return (
     <div className="lg:ml-5 w-full h-full">
-      {userdata && !id && (
+      {userdata  && (
         <div>
           <div className="main2 grid md:rounded-2xl bg-white dark:bg-black md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 p-1 lg:p-8 App  border-black w-full h-full">
             <div className="flex">
@@ -223,7 +227,7 @@ const Reels = () => {
                 id="video-container "
               >
                 {reels.map((reel, idx) => (
-                  <div className="pk " play={reel.id} key={reel.id}>
+                  <div className="pk " play={reel.id} key={reel.id + idx}>
                     <Video
                       reel={reel}
                       idx={idx}
@@ -241,7 +245,7 @@ const Reels = () => {
           </div>
         </div>
       )}
-      {reel && id && (
+      {/* {reel && id && (
         <div>
           <div className="main2 grid rounded-2xl bg-white md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 p-8 App  border-black w-full h-full">
             <div className="flex">
@@ -268,7 +272,7 @@ const Reels = () => {
             </div>
           </div>
         </div>
-      )}
+      )} */}
     </div>
   );
 };

@@ -214,7 +214,7 @@ const Home = () => {
     <div className=" lg:ml-5 w-full h-full">
       {userdata && (
         <div>
-          <div className="main2 rounded-2xl bg-white dark:bg-black md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 border-black h-full overflow-y-auto">
+          <div className="main2 md:rounded-2xl bg-white dark:bg-black md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 border-black h-full overflow-y-auto">
             <div className="flex justify-between mt-5 mx-2">
               <div className="fg font-lucy text-4xl">Muse</div>
 

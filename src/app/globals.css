@@ -162,6 +162,12 @@
 .slide-out-right {
   animation: slideOutRight 0.5s forwards;
 }
-.qw{
-  z-index:  100;
+.qw {
+  z-index: 100;
+}
+.editpost {
+  z-index: 100;
+}
+.modal {
+  z-index: 150;
 }

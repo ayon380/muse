@@ -1346,7 +1346,7 @@ const Home = () => {
                       ))}
 
                       <div ref={messagesEndRef} />
-                      <div className="textbox absolute flex bottom-0 rounded-t-xl p-2 backdrop-filter backdrop-blur-xl w-full ">
+                      <div className="textbox absolute flex bottom-5 rounded-t-xl pb-4  p-2 backdrop-filter backdrop-blur-xl w-full ">
                         <input
                           type="text"
                         

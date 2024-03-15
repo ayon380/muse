@@ -12,6 +12,7 @@ import toast, { Toaster } from "react-hot-toast";
 import {
   getFirestore,
   updateDoc,
+  deleteDoc,
   arrayUnion,
   arrayRemove,
   addDoc,
@@ -104,6 +105,9 @@ function formatTimestamp(firebaseTimestamp) {
 }
 
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
+const Modal = dynamic(() => import("./Modal"));
+const EditPost = dynamic(() => import("./EditPost"));
 const FeedPost = ({
   db,
   type,
@@ -123,6 +127,8 @@ const FeedPost = ({
   const [commentlikes, setCommentlikes] = useState({});
   const [replies, setReplies] = useState({});
   const [commentreply, setCommentreply] = useState({});
+  const [showedit, setShowedit] = useState(false);
+  const [showdelete, setShowdelete] = useState(false);
   const [reply, setReply] = useState("");
   const router = useRouter();
   const limit = 50;
@@ -400,6 +406,21 @@ const FeedPost = ({
       toast.error("Error posting comment: " + error.message);
     }
   };
+  const handleDelete = async () => {
+    try {
+      const postRef = doc(db, "posts", postdata.id);
+      await deleteDoc(postRef);
+      const userRef = doc(db, "users", userdata.email);
+      await updateDoc(userRef, {
+        posts: arrayRemove(postdata.id),
+        postcount: increment(-1),
+      });
+      toast.success("Post deleted successfully");
+      router.push(`/feed/profile/${userdata.userName}`);
+    } catch (error) {
+      toast.error("Error deleting post: " + error.message);
+    }
+  };
   return (
     <>
       <div
@@ -407,8 +428,28 @@ const FeedPost = ({
         key={postdata.id}
       >
         <Toaster />
+        {showedit && (
+          <EditPost
+            post={postdata}
+            db={db}
+            setShowedit={setShowedit}
+            userdata={userdata}
+            refetchPost={refetchPost}
+            usermetadata={usermetadata}
+            enqueueUserMetadata={enqueueUserMetadata}
+          />
+        )}
+        {showdelete && (
+          <Modal
+            setShowModal={setShowdelete}
+            handleDelete={handleDelete}
+            title="Delete Post"
+            type='deletepost'
+            content="Are you sure you want to delete this post?"
+          />
+        )}
         {showComments && (
-          <div className="absolute inset-0 h-full w-full bg-black  flex justify-center items-center lg:px-96 py-4 z-50">
+          <div className="absolute inset-0 h-full w-full bg-white dark:bg-black  flex justify-center items-center lg:px-96 py-4 z-50">
             <div className=" md:bg-white md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-80 shadow-2xl border-1 border-black rounded-xl md:p-8 h-full w-full">
               <button
                 className="absolute flex justify-center rounded-t-xl backdrop-filter backdrop-blur-3xl qw w-full text-xl"
@@ -426,7 +467,7 @@ const FeedPost = ({
                 {commentList.map((comment) => (
                   <div
                     key={comment.timestamp + Math.random()}
-                    className="comment transition transform-gpu bg-gray-900 rounded-xl md:bg-gray-600 my-3 md:my-5 p-3 md:p-5 mx-2 md:mx-5 md:bg-opacity-10"
+                    className="comment transition transform-gpu bg-slate-50 dark:bg-gray-900 rounded-xl md:dark:bg-gray-600 my-3 md:my-5 p-3 md:p-5 mx-2 md:mx-5 md:bg-opacity-10"
                   >
                     <div className="flex z-20">
                       {usermetadata[comment.uid] ? (
@@ -552,6 +593,7 @@ const FeedPost = ({
                               type="text"
                               className="text-sm text-black w-5/6 rounded-2xl leading-6 px-2 py-1 transition duration-100 border border-gray-300 bg-gray-200 block h-9 focus:border-purple-600 focus:bg-white"
                               placeholder="Reply"
+                              autoFocus
                               value={reply}
                               onKeyDown={(e) => {
                                 if (e.key === "Enter") {
@@ -559,8 +601,6 @@ const FeedPost = ({
                                 }
                               }}
                               onChange={(e) => setReply(e.target.value)}
-                              autoComplete=""
-                              autoCorrect="" // Prevent event propagation
                             />
 
                             <button
@@ -623,8 +663,8 @@ const FeedPost = ({
             </div>
           </div>
         )}
-        <div className="df bg-white dark:bg-black bg-opacity-40 rounded-2xl px-2 py-2 ">
-          {usermetadata && usermetadata[postdata.uid] && (
+        <div className="df bg-white dark:bg-black bg-opacity-40 rounded-2xl px-2 py-2 m-2">
+          {usermetadata && usermetadata[postdata.uid] && type != "profile" && (
             <div className="header flex justify-between">
               <Link
                 href={`/feed/profile/${usermetadata[postdata.uid].userName}`}
@@ -698,16 +738,27 @@ const FeedPost = ({
                 </div>
                 <div className="l12 flex text-3xl">
                   <div
-                    className="share cursor-pointer mr-3"
+                    className="share cursor-pointer "
                     onClick={() => Shareposttt()}
                   >
                     <Image
                       src="/icons/send.png"
                       alt="Share"
-                      className="dark:invert w-7 h-7 "
+                      className="dark:invert w-7 h-7 mr-1"
                       width={100}
                       height={100}
                     />
+                  </div>
+                  <div className="tagged h-7 w-7 flex mr-2">
+                    <Image
+                      src="/icons/supermarket.png"
+                      width={50}
+                      height={50}
+                      alt=""
+                    />
+                    <div className="asd text-sm -mt-2 text-red-500 font-bold ">
+                      {postdata.taggedUsers.length}
+                    </div>
                   </div>
                   <div
                     className="report cursor-pointer mr-3"
@@ -728,22 +779,44 @@ const FeedPost = ({
                 <div className="caption m-1 w-full">{postdata.caption}</div>
               ) : null}
 
-              <div
-                className="comments flex m-1"
-                onClick={() => setShowComments(!showComments)}
-              >
-                <button>
-                  <Image
-                    src="/icons/comment.png"
-                    className="dark:invert h-7 w-7"
-                    width={100}
-                    height={100}
-                    alt="Comment"
-                  />
-                </button>
-                <div className="k mt-0.5">
-                  {postdata ? postdata.commentcount : 0} comments
+              <div className="comments flex justify-between m-1">
+                <div
+                  className="om flex"
+                  onClick={() => setShowComments(!showComments)}
+                >
+                  <button>
+                    <Image
+                      src="/icons/comment.png"
+                      className="dark:invert h-7 w-7"
+                      width={100}
+                      height={100}
+                      alt="Comment"
+                    />
+                  </button>
+                  <div className="k mt-0.5">
+                    {postdata ? postdata.commentcount : 0} comments
+                  </div>
                 </div>
+                {currentuserdata && currentuserdata.uid == userdata.uid && (
+                  <div className="flex ">
+                    <Image
+                      className="dark:invert h-7 w-7"
+                      src="/icons/editing.png"
+                      height={50}
+                      width={50}
+                      alt=""
+                      onClick={() => setShowedit(true)}
+                    />
+                    <Image
+                      className="dark:invert h-7 w-7"
+                      src="/icons/delete.png"
+                      height={50}
+                      width={50}
+                      alt=""
+                      onClick={() => setShowdelete(true)}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           </div>

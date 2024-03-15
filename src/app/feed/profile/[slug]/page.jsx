@@ -334,7 +334,7 @@ const Page = ({ params }) => {
             </div>
           )}
 
-          <div className="main2 grid rounded-2xl bg-white dark:bg-black md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 p-2 App  border-black w-full h-full">
+          <div className="main2 grid md:rounded-2xl bg-white dark:bg-black md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 p-2 App  border-black w-full h-full">
             {userdataloading && (
               <div className="text-2xl m-4 flex justify-center w-full h-full align-middle text-middle">
                 Loading...
@@ -542,7 +542,7 @@ const Page = ({ params }) => {
                                   <>
                                     <video
                                       src={post.mediaFiles[0]}
-                                      className="w-full h-full object-cover"
+                                      className="w-full h-full object-cover rounded-md lg:rounded-lg "
                                     ></video>
                                   </>
                                 ) : (
@@ -552,7 +552,7 @@ const Page = ({ params }) => {
                                       alt=""
                                       width={100}
                                       height={100}
-                                      className="w-full h-full object-cover"
+                                      className="w-full rounded-md md:rounded-lg h-full object-cover"
                                     />
                                   </>
                                 )}
@@ -580,8 +580,8 @@ const Page = ({ params }) => {
                               >
                                 <video
                                   src={reel.mediaFiles}
-                                  controls
-                                  className="w-full h-full object-cover"
+                                
+                                  className="w-full h-full rounded-md lg:rounded-lg object-cover"
                                 ></video>
                               </div>
                             ))}
