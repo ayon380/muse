@@ -120,6 +120,9 @@ export const metadata: Metadata = {
     },
     description: APP_DESCRIPTION,
   },
+  other: {
+    "google-site-verification": "CIv4oLnjs20Qn8pwxENCBMm42fVzQEkAeos5F5jRpv4"
+  }
 };
 
 const lucy = localFont({
