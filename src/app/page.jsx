@@ -1,154 +1,159 @@
 "use client";
-// import { useState, useEffect } from "react";
-// import app from "@/lib/firebase/firebaseConfig";
-// import { getFirestore } from "firebase/firestore";
-// import {
-//   getAuth,
-//   signOut,
-//   signInWithPopup,
-//   GoogleAuthProvider,
-//   onAuthStateChanged,
-// } from "firebase/auth";
-// import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import React from "react";
+import Image from "next/image";
+import { useEffect } from "react";
+import app from "@/lib/firebase/firebaseConfig";
+import { motion } from "framer-motion";
+import { getFirestore, doc, getDoc } from "firebase/firestore";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+import Hello from "../components/Hello";
+const SparklesPreview = () => {
+  const auth = getAuth(app);
+  const [loggedin, setLoggedin] = React.useState(false);
+  const user = auth.currentUser;
+  const db = getFirestore(app);
+  const checkIfUserExists = async (email) => {
+    try {
+      const userRef = doc(db, "users", email);
+      const userSnapshot = await getDoc(userRef);
+      return userSnapshot.exists();
+    } catch (error) {
+      console.error("Error checking user existence:", error.message);
+      return false;
+    }
+  };
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        checkIfUserExists(user.email).then((exists) => {
+          if (exists) {
+            setLoggedin(true);
+          } else {
+            setLoggedin(false);
+          }
+        });
+      } else {
+        setLoggedin(false);
+      }
+    });
 
-import { signOut } from "firebase/auth";
-import Link from "next/link";
+    return () => unsubscribe();
+  }, [auth]);
+  const handleClick = () => {
+    if (loggedin) {
+      window.location.href = "/feed";
+    } else {
+      window.location.href = "/login";
+    }
+  };
+  const handlesignup = () => {
+    window.location.href = "/signup";
+  };
+  const boxVariant = {
+    visible: { opacity: 1, scale: 2 },
+    hidden: { opacity: 0, scale: 0 },
+  };
+  return (
+    <div className="maindiv h-dvh w-screen overflow-y-auto">
+      <div className="fixed w-screen top-0 z-20 ">
+        <div className="flex lg:mx-96 justify-between shadow-2xl border-2 border-gray-400 backdrop-filter backdrop-blur-3xl bg-white bg-opacity-50 py-2 my-2 rounded-full px-5">
+          <button className="font-lucy ">Muse</button>
+          <div className="dede flex">
+            <button className="mr-10" onClick={handleClick}>
+              {loggedin ? "Go to Feed" : "Log in"}
+            </button>
+            <button className="" onClick={handlesignup}>
+              Sign Up
+            </button>
+          </div>
+        </div>
+      </div>
+      <Hello />
+      <div className="hj flex ">
+        <div className="w-1/2 px-20 mt-36">
+          <div className="qw text-8xl font-lucy ">
+            Muse: A Symphony of Design and Functionality
+          </div>
+          <div className="w text-3xl mt-24 opacity-60">
+            Immerse yourself in the harmonious blend of artistry and utility, as
+            Muse orchestrates a new era of social interaction.
+          </div>
+        </div>
+        <Image
+          src="/main/p1.png"
+          className="rounded-l-xl w-1/2"
+          height={1000}
+          width={1000}
+          alt=""
+        />
+      </div>
 
-// import {  doc, setDoc } from "firebase/firestore";
-export default function Home() {
-  //   const auth = getAuth();
-  //   const [videoUrl, setVideoUrl] = useState("");
-  //   const storage = getStorage(app);
-  //   const provider = new GoogleAuthProvider();
-  //   const [user, setUser] = useState(null);
-  //   const db = getFirestore(app);
-  //   const uploadImage = async () => {
-  //     console.log("uploading image");
-  //     console.log(user.uid);
+      <div className="hj flex mt-16 ">
+        <Image
+          src="/main/p2.png"
+          className="rounded-r-xl w-1/2"
+          height={1000}
+          width={1000}
+          alt=""
+        />
+        <div className="w-1/2 px-20 mt-36">
+          <div className="qw text-8xl font-lucy ">
+            Muse: Spark Instant Connections with Effortless Messaging
+          </div>
+          <div className="w text-3xl mt-24 opacity-60">
+            Experience the thrill of instant communication, where every message
+            ignites new conversations and strengthens bonds.
+          </div>
+        </div>
+      </div>
+      <div className="hj flex  mt-16">
+        <div className="w-1/2 px-20 mt-36">
+          <div className="qw text-8xl font-lucy ">
+            Muse: Unveiling Reels, Your Stage for Captivating Stories
+          </div>
+          <div className="w text-3xl mt-24 opacity-60">
+            Step into the spotlight and unleash your creativity with Muse Reels,
+            where every moment shines bright.
+          </div>
+        </div>
+        <Image
+          src="/main/p3.png"
+          className="rounded-l-xl w-1/2"
+          height={1000}
+          width={1000}
+          alt=""
+        />
+      </div>
+      <div className="hj flex mt-16 ">
+        <Image
+          src="/main/p4.png"
+          className="rounded-r-xl w-1/2"
+          height={1000}
+          width={1000}
+          alt=""
+        />
+        <div className="w-1/2 px-20 mt-36">
+          <div className="qw text-8xl font-lucy ">
+            Muse: Explore the Uncharted Depths of Social Discovery
+          </div>
+          <div className="w text-3xl mt-24 opacity-60">
+            Embark on a journey of endless exploration, where each click
+            uncovers new stories, ideas, and connections waiting to be
+            discovered.
+          </div>
+        </div>
+      </div>
+      <div className="footer mt-10 mx-2 mb-2 pt-10 backdrop-filter backdrop-blur-3xl bg-white bg-opacity-50 rounded-xl ">
+        <div className="font-lucy text-center text-5xl pb-5">Muse</div>
+        <div className="text-center font-medium">Made with ❤️</div>
+        <div className="text-center">by</div>
+        <div className="font-bold text-center">No Filter LLC</div>
+        <div className="container mx-auto text-center mt-10">
+          <p className="text-sm">© 2024 NoFilter LLC. All rights reserved.</p>
+        </div>
+      </div>
+    </div>
+  );
+};
 
-  //     // Get the file input element
-  //     const fileInput = document.getElementById("fileInput");
-
-  //     // Check if a file is selected
-  //     if (fileInput.files.length > 0) {
-  //       const file = fileInput.files[0];
-
-  //       const storageRef = ref(storage, `images/${user.uid}/${file.name}`);
-
-  //       try {
-  //         const snapshot = await uploadBytes(storageRef, file);
-  //         console.log("Image uploaded successfully:", snapshot.ref.fullPath);
-
-  //         // Use the download URL as needed (e.g., store it in Firestore)
-  //         const downloadURL = await getDownloadURL(snapshot.ref);
-  //         setVideoUrl(downloadURL);
-  //         updateUserDataWithFile(downloadURL);
-
-  //         return snapshot.ref.fullPath;
-  //       } catch (error) {
-  //         console.error("Error uploading image:", error.message);
-  //         return null;
-  //       }
-  //     } else {
-  //       console.error("No file selected.");
-  //       return null;
-  //     }
-  //   };
-
-  //   const updateUserDataWithFile = async (fileUrl) => {
-  //     const userRef = doc(db, "users", user.uid);
-
-  //     try {
-  //       await setDoc(userRef, { fileUrl }, { merge: true });
-  //       console.log("User data updated with file URL");
-  //     } catch (error) {
-  //       console.error("Error updating user data:", error.message);
-  //     }
-  //   };
-  //   useEffect(() => {
-  //     const unsubscribe = onAuthStateChanged(auth, (user) => {
-  //       setUser(user);
-  //     });
-
-  //     return () => unsubscribe();
-  //   }, [auth]);
-  //   onAuthStateChanged(auth, (user) => {
-  //     if (user) {
-  //       const userRef = doc(db, "users", user.uid);
-  //       const userData = {
-  //         displayName: user.displayName,
-  //         email: user.email,
-  //         photoURL: user.photoURL,
-  //         uid: user.uid,
-  //         // Add other user data as needed
-  //       };
-
-  //       setDoc(userRef, userData, { merge: true })
-  //         .then(() => {
-  //           console.log("User data stored in Firestore");
-  //         })
-  //         .catch((error) => {
-  //           console.error("Error storing user data:", error.message);
-  //         });
-  //     }
-  //   });
-  //   const handlelogin = () => {
-  //     signInWithPopup(auth, provider)
-  //       .then((result) => {
-  //         // This gives you a Google Access Token. You can use it to access the Google API.
-  //         const credential = GoogleAuthProvider.credentialFromResult(result);
-  //         const token = credential?.accessToken;
-  //         // The signed-in user info.
-  //         const user = result.user;
-  //         console.log(user);
-  //         setUser(user);
-  //         // IdP data available using getAdditionalUserInfo(result)
-  //         // ...
-  //       })
-  //       .catch((error) => {
-  //         // Handle Errors here.
-  //         const errorCode = error.code;
-  //         const errorMessage = error.message;
-  //         // The email of the user's account used.
-  //         const email = error.customData.email;
-  //         // The AuthCredential type that was used.
-  //         const credential = GoogleAuthProvider.credentialFromError(error);
-  //         // ...
-  //       });
-  //   };
-  //   const handleLogout = async () => {
-  //     try {
-  //       console.log("logout");
-  //       await signOut(auth).then(() => {
-  //         setUser(null);
-  //       });
-
-  //       // Redirect or update the UI as needed
-  //       // router.push("/");
-  //     } catch (error) {
-  //       console.error("Sign-out error:", error.message);
-  //     }
-  //   };
-
-  //   return (
-  //     <main className="font-lucy">
-  //       <button onClick={() => handlelogin()}>Login</button>
-  //       {user ? <h1>Logged in{user.name}</h1> : <h1>Not logged in</h1>}
-  //       {user ? <button onClick={() => handleLogout()}>Logout</button> : null}
-  //       <input type="file" id="fileInput" accept="image/*,video/*" />
-  //       <button onClick={() => uploadImage()}>Upload</button>
-  //       {videoUrl && (
-  //         <video controls width="640" height="360">
-  //           <source src={videoUrl} type="video/mp4" />
-  //           Your browser does not support the video tag.
-  //         </video>
-  //       )}
-  //     </main>
-  //   );
-  // }
-
-  return <div>Main Page
-    <Link href="/login">Login</Link>
-    <button onClick={() => signOut}>Logout</button>
-  </div>;
-}
+export default SparklesPreview;

@@ -906,7 +906,7 @@ const Home = () => {
                   </div>
                   <div className="flex justify-end ">
                     <button
-                      className="createchat cursor-pointer h-auto  p-3 rounded-2xl md:backdrop-filter md:backdrop-blur-lg bg-opacity-90 "
+                      className="createchat cursor-pointer h-auto  p-3 rounded-2xl   "
                       onClick={() => setopengrpchatcreate(true)}
                     >
                       <Image
@@ -1346,11 +1346,9 @@ const Home = () => {
                       ))}
 
                       <div ref={messagesEndRef} />
-                      <div className="textbox absolute flex bottom-5 rounded-t-xl pb-4  p-2 backdrop-filter backdrop-blur-xl w-full ">
+                      <div className="textbox absolute flex bottom-5 md:bottom-0 rounded-xl pb-4  p-2 backdrop-filter backdrop-blur-xl w-full ">
                         <input
                           type="text"
-                        
-
                           placeholder="Type a message..."
                           className="placeholder-italic w-full h-10 text-lg px-1  rounded-xl text-black border-black transition-all duration-300 outline-none shadow-2xl hover:shadow-3xl focus:shadow-3xl  "
                           value={messagetext}

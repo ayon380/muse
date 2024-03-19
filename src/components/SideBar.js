@@ -480,7 +480,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                   </div>
                 )}
               {usage == "feed" && (
-                <div className="h-full w-full">
+                <div className="h-full w-full ">
                   <div className="options hidden md:flex mb-5 justify-evenly items-center flex-auto mt-10">
                     <div className="explore">
                       <div
@@ -562,13 +562,25 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                     >
                       <div className="flex justify-between">
                         {" "}
-                        Notifications
+                        <Image
+                          className="darK:invert ml-2"
+                          src="/icons/notification.png"
+                          width={20}
+                          height={20}
+                          alt="Notification"
+                        />
                         {notifications.length > 0 && (
                           <div
                             className="df cursor-pointer"
                             onClick={() => handleclearallnotifications()}
                           >
-                            Clear All
+                            <Image
+                              className="mr-2 darK:invert"
+                              src="/icons/clear.png"
+                              width={20}
+                              height={20}
+                              alt="Clear ALL"
+                            />
                           </div>
                         )}
                       </div>
@@ -582,12 +594,12 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                       {notifications.map((notification) => (
                         <div
                           key={notification.id}
-                          className="cursor-pointer justify-between rounded-xl bg-blue-400 p-5 my-2"
+                          className="cursor-pointer backdrop-filter backdrop-blur-2xl bg-opacity-50 shadow-lg justify-between rounded-xl bg-transparent p-5 my-2"
                         >
                           {usermetadata[notification.sender] && (
                             <div className="d flex justify-between">
                               <>
-                                <div className="flex">
+                                <div className="flex mb-3">
                                   <Image
                                     src={usermetadata[notification.sender].pfp}
                                     width={50}
@@ -734,10 +746,10 @@ const SideBar = ({ usage, data, currentuserdata }) => {
               )}
               <div className="s fixed bottom-0">
                 {(currentuserdata || usage == "feed") && (
-                  <div className="flex w-full justify-evenly ">
+                  <div className="flex w-full  ">
                     {usage == "feed" && (
                       <button
-                        className="create btn px-6 py-2 font-rethink mb-4 "
+                        className="create btn px-6 py-2 font-rethink mb-4 mr-5"
                         onClick={() => setcreatereelOpen(true)}
                         disabled={createreelopen}
                       >
@@ -757,7 +769,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                 )}
                 <div className="okedoesd flex w-full justify-evenly  text-sm">
                   <div
-                    className=" font-bold text-center cursor-pointer"
+                    className=" font-bold text-center cursor-pointer "
                     onClick={() => router.push("/contactus")}
                   >
                     Contact Us
@@ -772,7 +784,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                   </div>
                 </div>
                 <div
-                  className="pl text-xs cursor-pointer mb-4"
+                  className="pl text-xs text-center cursor-pointer mb-4"
                   onClick={() => router.push("/releasenotes")}
                 >
                   Muse v0.60 beta @NoFilter LLC 2024-2025

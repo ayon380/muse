@@ -3,6 +3,12 @@ import React from "react";
 const ReleaseNotes = () => {
   const releaseNotes = [
     {
+      version: "v0.61",
+      descriptions: ["Added Explore", "Landing Page"],
+      commit: "e3cdd58",
+      date: "2024-03-19",
+    },
+    {
       version: "v0.60",
       descriptions: ["-> Added Edit and Delete Posts", "Bug Fixes"],
       commit: "e3cdd58",

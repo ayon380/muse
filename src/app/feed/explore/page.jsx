@@ -3,13 +3,17 @@ import React from "react";
 import { useState, useEffect } from "react";
 import { getAuth } from "firebase/auth";
 import app from "@/lib/firebase/firebaseConfig";
+import Image from "next/image";
+import Masonry, { ResponsiveMasonry } from "react-responsive-masonry";
 import { onAuthStateChanged } from "firebase/auth";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 const Explore = () => {
   const [userdata, setUserData] = useState(null);
   const auth = getAuth(app);
   const [user, setUser] = useState(auth.currentUser);
-  const [explore, setexplore] = useState([]);
+  const [posts, setPosts] = useState([]);
+  const [reels, setReels] = useState([]);
+  const [feed, setfeed] = useState([]);
   const db = getFirestore(app);
   const getuserdata = async (currentUser) => {
     const userRef = doc(db, "users", currentUser.email);
@@ -37,8 +41,8 @@ const Explore = () => {
   useEffect(() => {
     const fetchexplore = async () => {
       if (user) {
-        const response = await fetch("/api/feed/explore", {
-          method: "POST",
+        const response = await fetch("/api/explore", {
+          method: "GET",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${await gettoken()}`,
@@ -47,12 +51,20 @@ const Explore = () => {
         });
         const data = await response.json();
         if (data.status === "true") {
-          setexplore(data.posts);
+          data.fdata.posts.map((post) => {
+            post.type = "post";
+          });
+          data.fdata.reels.map((reel) => {
+            reel.type = "reel";
+          });
+          setPosts(data.fdata.posts);
+          setReels(data.fdata.reels);
         }
       }
     };
     fetchexplore();
   }, [user]);
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
@@ -66,13 +78,44 @@ const Explore = () => {
 
     return () => unsubscribe();
   }, [auth]);
-
+  useEffect(() => {
+    console.log(posts);
+    const mixedFeed = [...posts, ...reels].sort(() => Math.random() - 0.5);
+    setfeed(mixedFeed);
+  }, [posts]);
   return (
-    <div className=" ml-5 w-full h-full">
+    <div className=" md:ml-5 w-full h-full">
       {userdata && (
         <div>
-          <div className="main2 rounded-2xl bg-white bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-20 shadow-2xl border-1 border-black h-full">
-            Explore
+          <div className="main2 md:rounded-2xl dark:bg-black bg-white md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 border-black md:p-10 overflow-y-auto">
+            <div className="header flex">
+              <div className="lk text-3xl  ">Explore</div>
+            </div>
+            {/* <div className="er">frdtrte</div> */}
+            <ResponsiveMasonry columnsCountBreakPoints={{ 350: 3 }}>
+              <Masonry>
+                {feed.map((post) => (
+                  <div key={post.id} className="m-0.5 md:m-2">
+                    {post.type == "post" ? (
+                      <Image
+                        src={post.mediaFiles[0]}
+                        alt=""
+                        width={300}
+                        height={300}
+                        className="md:rounded-2xl rounded-lg w-full"
+                      />
+                    ) : (<>
+                       <video
+                         src={post.mediaFiles}
+                         className="md:rounded-xl rounded-lg"
+                        
+                      />
+                      </>
+                    )}
+                  </div>
+                ))}
+              </Masonry>
+            </ResponsiveMasonry>
           </div>
         </div>
       )}
