@@ -38,11 +38,14 @@
   transform: rotate(-90deg) translateY(-250px);
   transform-origin: right top;
 }
+
 ::-webkit-scrollbar {
   width: 0px;
-  background: transparent; /* make scrollbar transparent */
+  background: transparent;
+  /* make scrollbar transparent */
 }
-.horizontal-scroll-wrapper > div {
+
+.horizontal-scroll-wrapper>div {
   display: block;
   padding: 5px;
   background: #cab;
@@ -73,6 +76,7 @@
   0% {
     background-position: 0%;
   }
+
   100% {
     background-position: 400%;
   }
@@ -132,6 +136,7 @@
   box-shadow: 0 0 40px 40px #ff0f7b inset, 0 0 0 0 #ff0f7b;
   transition: 0.5s;
 }
+
 /* Define animations */
 /*  */
 /* Define animations */
@@ -139,6 +144,7 @@
   from {
     transform: translateX(-100%);
   }
+
   to {
     transform: translateX(0);
   }
@@ -148,6 +154,7 @@
   from {
     transform: translateX(0);
   }
+
   to {
     transform: translateX(-100%);
     display: hidden;
@@ -162,74 +169,84 @@
 .slide-out-right {
   animation: slideOutRight 0.5s forwards;
 }
+
 .qw {
   z-index: 100;
 }
+
 .editpost {
   z-index: 100;
 }
+
 .modal {
   z-index: 150;
 }
+
 .nav {
   z-index: 1000;
 }
+
 body {
   background-color: white;
 }
+
 body {
   padding: 0;
   margin: 0;
-  background: linear-gradient(
-      217deg,
+  background: linear-gradient(217deg,
       rgba(255, 159, 237),
-      rgba(255, 0, 0, 0) 70.71%
-    ),
+      rgba(255, 0, 0, 0) 70.71%),
     linear-gradient(127deg, rgba(118, 164, 255), rgba(0, 255, 0, 0) 65%),
     linear-gradient(336deg, rgba(255, 191, 138), rgba(0, 0, 255, 0) 70.71%);
 }
 .new__bg {
   height: 100%;
-  min-height: 500px;
-
+  min-height: 300px;
+  width: 100%;
   display: flex;
   justify-content: center;
+  align-items: center; /* Center vertically */
 }
+
 .hello__div {
   display: flex;
   justify-content: center;
+  align-items: center; /* Center vertically */
   flex-direction: column;
   margin: 0 auto;
   text-align: center;
   width: 100%;
-  max-width: 1000px;
+  max-width: 500px;
 }
 .hello__svg {
   fill: none;
   stroke: #fff;
   stroke-linecap: round;
   stroke-miterlimit: 10;
-  stroke-width: 96px;
-  stroke-dasharray: 5800px;
-  stroke-dashoffset: 5800px;
+  stroke-width: 5vw; /* Adjust stroke width relative to viewport width */
+  stroke-dasharray: 4000; /* Adjust according to the path length of your SVG */
+  stroke-dashoffset: 4000; /* Set equal to dasharray initially */
   animation: anim__hello linear 5s forwards;
-  width: 100%;
-  /* margin-left: -50px; */
-  display: flex;
-  justify-content: center;
-  flex-direction: column;
-  margin: 0 auto;
-  text-align: center;
+  width: 80vw; /* Adjust width relative to viewport width */
+  max-width: 500px; /* Limit maximum width */
 }
 
 @keyframes anim__hello {
   0% {
-    stroke-dashoffset: 5800;
+    stroke-dashoffset: 4000; /* Set equal to dasharray initially */
   }
   25% {
-    stroke-dashoffset: 5800;
+    stroke-dashoffset: 4000; /* Set equal to dasharray initially */
   }
   100% {
     stroke-dashoffset: 0;
+  }
+}
+
+
+@media screen and (min-width: 768px) {
+  .hello__svg {
+    width: 400px; /* Adjust width for larger screens */
+    stroke-width: 4px; /* Adjust stroke width */
   }
 }

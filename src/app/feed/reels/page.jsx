@@ -200,7 +200,7 @@ useEffect(() => {
                     />
                   </button>
                 </div>
-                <button onClick={toggleGlobalMute}>
+                <button onClick={toggleGlobalMute} className="-mt-4">
                   {isGlobalMuted ? (
                     <Image
                       src="/icons/soundon.png"
