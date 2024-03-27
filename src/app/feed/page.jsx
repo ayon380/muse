@@ -23,8 +23,6 @@ import { getStorage, deleteObject } from "firebase/storage";
 import Image from "next/image";
 import { getFirestore, getDoc, doc } from "firebase/firestore";
 import { useSidebarStore } from "../store/zustand";
-import Link from "next/link";
-
 import FeedPost from "@/components/FeedPost";
 const Home = () => {
   const auth = getAuth(app);

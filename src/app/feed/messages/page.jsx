@@ -31,6 +31,8 @@ import { useSidebarStore } from "@/app/store/zustand";
 import imageCompression from "browser-image-compression";
 const SearchChat = dynamic(() => import("@/components/SearchChat"));
 const GroupChat = dynamic(() => import("@/components/GroupChat"));
+const ChatDetail = dynamic(() => import("@/components/ChatDetail"));
+const GroupChatDetail = dynamic(() => import("@/components/GroupChatDetail"));
 import toast, { Toaster } from "react-hot-toast";
 const options = {
   maxSizeMB: 1,
@@ -56,6 +58,7 @@ const Home = () => {
   const [chatuserdata, setChatuserdata] = useState("");
   const [maxlength, setmaxlength] = useState(0);
   const [pfps, setPfps] = useState({});
+
   const [usernames, setusernames] = useState({});
   const db = getFirestore(app);
   const [searchResults, setSearchResults] = useState([]);
@@ -75,6 +78,8 @@ const Home = () => {
   const [showaddfiles, setshowaddfiles] = useState(false);
   const [mediaFiles, setMediaFiles] = useState([]);
   const [ismobile, setismobile] = useState(false);
+  const [chatdetailopen, setchatdetailopen] = useState(false);
+  const [roomdata, setroomdata] = useState({});
   const { chatopen, setchatopen, isOpen, toggle } = useSidebarStore();
   //function to get data of messagerooms'
   const [searchopen, setsearchopen] = useState(false);
@@ -92,6 +97,16 @@ const Home = () => {
       }
     });
   }, []);
+  useEffect(() => {
+    const func = async () => {
+      if (roomid) {
+        const data = await getroomdata(roomid);
+        setroomdata(data);
+      }
+    };
+    func();
+  }, [roomid]);
+
   const handleFileChange = (e) => {
     const files = e.target.files;
     const filesArray = Array.from(files).slice(0, 10);
@@ -550,11 +565,16 @@ const Home = () => {
       setcurrentmsglength(50);
     }
   }, [roomid]);
+
   useEffect(() => {
     // Scroll to the bottom of the chat window when messages update
-    if (messages.length != 0 && !loadingold)
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    setloadingold(false);
+    if (loadingold) console.log("loading older" + loadingold);
+    if (messages.length != 0 && !loadingold) {
+      messagesEndRef.current?.scrollIntoView();
+      // rm--;
+      // console.log(rm);
+    }
+    // if (rm == 0) setloadingold(false);
   }, [messages]);
   const sendMesage = async () => {
     try {
@@ -800,6 +820,9 @@ const Home = () => {
       return true;
     }
   };
+  const handlemessagereply = (message) => {
+    setMessagetext(`@${usernames[message.sender]} ${message.text}`);
+  }
   return (
     <div className="lg:ml-5 w-full h-full overflow-hidden">
       <Toaster />
@@ -816,6 +839,24 @@ const Home = () => {
                 />
               </div>
             )}
+            {chatdetailopen &&
+              (chattype == "p" ? (
+                <ChatDetail
+                  userdata={userdata}
+                  chatuserdata={chatuserdata}
+                  onClose={() => setchatdetailopen(false)}
+                  roomdata={roomdata}
+                />
+              ) : (
+                <GroupChatDetail
+                  userdata={userdata}
+                  usernames={usernames}
+                  chatuserdata={chatuserdata}
+                  onClose={() => setchatdetailopen(false)}
+                  db={db}
+                  roomdata={roomdata}
+                />
+              ))}
             {searchopen && (
               <SearchChat
                 setsearchopen={setsearchopen}
@@ -1001,8 +1042,17 @@ const Home = () => {
                           );
                         }}
                       >
-                        <div className="title font-bold text-xl">
-                          {chat.title}
+                        <div className="flex">
+                          <Image
+                            className="h-10 w-10 rounded-full"
+                            src={roomdata.pfp}
+                            height={50}
+                            width={50}
+                            alt=""
+                          />
+                          <div className="title font-bold text-xl">
+                            {chat.title}
+                          </div>
                         </div>
                         {chat.participants.map(
                           (participant) => usernames[participant] + " "
@@ -1031,14 +1081,17 @@ const Home = () => {
                             }}
                           >
                             <Image
-                              className=" h-4  w-4"
+                              className=" h-4  w-4 dark:invert"
                               src="/icons/arrow.png"
                               height={50}
                               width={50}
                               alt=""
                             />
                           </button>
-                          <div className="lpa flex">
+                          <div
+                            className="lpa flex"
+                            onClick={() => setchatdetailopen(true)}
+                          >
                             {chattype == "p" && (
                               <Image
                                 className="h-7 w-7 rounded-full mr-2"
@@ -1049,7 +1102,19 @@ const Home = () => {
                               ></Image>
                             )}
                             {usernames[chatwindow]}
-                            {chattype == "g" && chatwindow}
+                            {chattype == "g" && (
+                              <>
+                                {" "}
+                                <Image
+                                  className="h-7 w-7 rounded-full mr-2"
+                                  src={roomdata.pfp}
+                                  height={50}
+                                  width={50}
+                                  alt={chatwindow}
+                                />{" "}
+                                {chatwindow}
+                              </>
+                            )}
                           </div>
                           <div className="sa"></div>
                         </div>
@@ -1058,6 +1123,7 @@ const Home = () => {
                         {currentmsglength < maxlength && (
                           <button
                             onClick={() => {
+                              // rm = maxlength - currentmsglength;
                               setcurrentmsglength(currentmsglength + 50);
                               setloadingold(true);
                             }}
@@ -1196,11 +1262,39 @@ const Home = () => {
                                 </div>
                                 {isDropdownOpen &&
                                   selectedMessage == message && (
-                                    <div className="dropdown-menu  mt-4">
+                                    <div className="dropdown-menu  mt-4 flex">
+                                      <button onClick={()=>handlemessagereply(message)}>
+                                        <Image
+                                          className="h-5 w-5 rounded-full"
+                                          src="/icons/reply.png"
+                                          height={50}
+                                          width={50}
+                                          alt=""
+                                        />
+                                      </button>
                                       {message.readstatus ? (
-                                        <>seen</>
+                                        <>
+                                          {""}
+                                          <Image
+                                            className="w-5 h-5 
+                                            filter invert-89 sepia-25 saturate-3907 hue-rotate-358 brightness-101 contrast-103"
+                                            src="/icons/read.png"
+                                            height={100}
+                                            width={100}
+                                            alt="delete"
+                                          />
+                                        </>
                                       ) : (
-                                        <>delivered</>
+                                        <>
+                                          {" "}
+                                          <Image
+                                            className="w-5 h-5 "
+                                            src="/icons/read.png"
+                                            height={50}
+                                            width={50}
+                                            alt="delete"
+                                          />
+                                        </>
                                       )}
                                       <button
                                         className=" ml-2 dropdown-item mr-2 disabled:hidden"
@@ -1210,13 +1304,25 @@ const Home = () => {
                                           message.type == "gif"
                                         }
                                       >
-                                        Copy
+                                        <Image
+                                          className="w-5 h-5 "
+                                          src="/icons/copy.png"
+                                          height={50}
+                                          width={50}
+                                          alt="delete"
+                                        />
                                       </button>
                                       <button
                                         className="dropdown-item"
                                         onClick={handleDelete}
                                       >
-                                        Delete
+                                        <Image
+                                          className="w-5 h-5 "
+                                          src="/icons/delete.png"
+                                          height={50}
+                                          width={50}
+                                          alt="delete"
+                                        />
                                       </button>
                                       {/* Delete button */}
                                     </div>
@@ -1367,7 +1473,7 @@ const Home = () => {
                           }}
                         >
                           <Image
-                          className="h-8 w-10 dark:invert"
+                            className="h-8 w-10 dark:invert"
                             src="/icons/gif.png"
                             height={50}
                             width={50}
@@ -1382,7 +1488,7 @@ const Home = () => {
                           }}
                         >
                           <Image
-                          className=" h-6 w-7 mr-1 dark:invert"
+                            className=" h-6 w-7 mr-1 dark:invert"
                             src="/icons/attach.png"
                             height={50}
                             width={50}
@@ -1395,7 +1501,7 @@ const Home = () => {
                           className=" disabled:cursor-not-allowed disabled:text-gray-300"
                         >
                           <Image
-                          className="h-6 w-8 m-1 dark:invert"
+                            className="h-6 w-8 m-1 dark:invert"
                             src="/icons/send.png"
                             height={50}
                             width={50}

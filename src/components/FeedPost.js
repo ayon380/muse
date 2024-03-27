@@ -20,6 +20,7 @@ import {
   doc,
   increment,
 } from "firebase/firestore";
+
 function formatFirebaseTimestamp(firebaseTimestamp) {
   // Check if the timestamp is valid
   if (
@@ -108,6 +109,9 @@ import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 const Modal = dynamic(() => import("./Modal"));
 const EditPost = dynamic(() => import("./EditPost"));
+const ShareMenu = dynamic(() => import("@/components/ShareMenu"), {
+  ssr: false,
+});
 const FeedPost = ({
   db,
   type,
@@ -130,6 +134,7 @@ const FeedPost = ({
   const [showedit, setShowedit] = useState(false);
   const [showdelete, setShowdelete] = useState(false);
   const [reply, setReply] = useState("");
+  const [sharemenu, setSharemenu] = useState(false);
   const router = useRouter();
   const limit = 50;
   useEffect(() => {
@@ -365,14 +370,7 @@ const FeedPost = ({
   const Reportposttt = async () => {
     router.push(`/report/post/${postdata.id}`);
   };
-  const Shareposttt = async () => {
-    const url = `${window.location.origin}/feed/${postdata.uid}/${postdata.id}`;
-    navigator.share({
-      title: "Post - Muse",
-      text: postdata.caption,
-      url: url,
-    });
-  };
+
   const handleCommentSubmit = async () => {
     try {
       if (comment.trim() === "") {
@@ -428,6 +426,8 @@ const FeedPost = ({
         key={postdata.id}
       >
         <Toaster />
+        {sharemenu && (
+          <ShareMenu userdata={userdata} setSharemenu={setSharemenu} postdata={postdata} />)}
         {showedit && (
           <EditPost
             post={postdata}
@@ -472,9 +472,8 @@ const FeedPost = ({
                     <div className="flex z-20">
                       {usermetadata[comment.uid] ? (
                         <Link
-                          href={`/feed/profile/${
-                            usermetadata[comment.uid].userName
-                          }`}
+                          href={`/feed/profile/${usermetadata[comment.uid].userName
+                            }`}
                         >
                           <div className="flex ">
                             <Image
@@ -546,9 +545,8 @@ const FeedPost = ({
                                     >
                                       {usermetadata[comment.uid] ? (
                                         <Link
-                                          href={`/feed/profile/${
-                                            usermetadata[reply.uid].userName
-                                          }`}
+                                          href={`/feed/profile/${usermetadata[reply.uid].userName
+                                            }`}
                                         >
                                           <div className="flex ">
                                             <Image
@@ -700,7 +698,7 @@ const FeedPost = ({
                         src={media}
                         controls
                         style={{ maxHeight: "500px" }}
-                        // className="h-96 rounded-xl w-96"
+                      // className="h-96 rounded-xl w-96"
                       />
                     </>
                   ) : (
@@ -711,7 +709,7 @@ const FeedPost = ({
                         width="500"
                         alt=""
                         className="rounded-xl object-center"
-                        // style={{maxHeight: "500px"}}
+                      // style={{maxHeight: "500px"}}
                       />
                     </>
                   )}
@@ -739,7 +737,7 @@ const FeedPost = ({
                 <div className="l12 flex text-3xl">
                   <div
                     className="share cursor-pointer "
-                    onClick={() => Shareposttt()}
+                    onClick={() => setSharemenu(true)}
                   >
                     <Image
                       src="/icons/send.png"

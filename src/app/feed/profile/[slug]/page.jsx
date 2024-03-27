@@ -1,6 +1,5 @@
 "use client";
 import { getAuth, signOut } from "firebase/auth";
-import Masonry, { ResponsiveMasonry } from "react-responsive-masonry";
 import React, { useEffect } from "react";
 import app from "@/lib/firebase/firebaseConfig";
 import { collection, getFirestore, query } from "firebase/firestore";
@@ -16,6 +15,8 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 const FeedPost = dynamic(() => import("@/components/FeedPost"), { ssr: false });
+const Follower = dynamic(() => import("@/components/Follower"), { ssr: false });
+const Following = dynamic(()=> import ("@/components/Follwing"))
 const Page = ({ params }) => {
   const { slug } = params;
   const router = useRouter();
@@ -33,6 +34,8 @@ const Page = ({ params }) => {
   const [restrictchecking, setRestrictChecking] = React.useState(true);
   const [usermetadata, setUsermetadata] = React.useState({});
   const [globalrestrict, setGlobalRestrict] = React.useState(false);
+  const [followersbox, setFollowersbox] = React.useState();
+  const [followingbox, setfollowingbox] = React.useState();
   const userMetadataQueue = [];
   let isUserMetadataQueueProcessing = false;
 
@@ -270,7 +273,7 @@ const Page = ({ params }) => {
     // const userref = doc(db, "users", userdata.email);
     setRestrict(!restrict);
     const currentuserref = doc(db, "users", user.email);
-    if (currentuserdata.blocked.includes(user.uid)) {
+    if (currentuserdata.blocked.includes(userdata.uid)) {
       await updateDoc(currentuserref, {
         blocked: arrayRemove(userdata.uid),
       });
@@ -312,6 +315,24 @@ const Page = ({ params }) => {
         </div>
       ) : (
         <>
+          {followersbox && (
+            <Follower
+            db={db}
+              close={() => setFollowersbox(false)}
+              currentuserdata={currentuserdata}
+              usermetadata={usermetadata}
+              enqueueUserMetadata={enqueueUserMetadata}
+            />
+          )}
+           {followingbox && (
+            <Following
+              close={() => setfollowingbox(false)}
+              db={db}
+              currentuserdata={currentuserdata}
+              usermetadata={usermetadata}
+              enqueueUserMetadata={enqueueUserMetadata}
+            />
+          )}
           {postid !== -1 && showPost && posts[0] && (
             <div
               className="lop h-screen w-screen fixed top-0 left-0 flex justify-center items-center z-10 backdrop-filter backdrop-blur-3xl"
@@ -463,7 +484,10 @@ const Page = ({ params }) => {
                         </div>
                         <div className="flex justify-between mt-3 mx-10  md:mx-96">
                           <div className="followers text-center w-16">
-                            <div className="lp flex ">
+                            <div
+                              className="lp flex "
+                              onClick={() => setFollowersbox(true)}
+                            >
                               <div className="text-4xl  font-bold">
                                 {userdata.followers.length}
                               </div>
@@ -473,7 +497,8 @@ const Page = ({ params }) => {
                             </div>
                           </div>
                           <div className="following text-center w-16">
-                            <div className="flex">
+                            
+                            <div className="flex"   onClick={() => setfollowingbox(true)}>
                               <div className="text-4xl font-bold">
                                 {userdata.following.length}
                               </div>
@@ -580,7 +605,6 @@ const Page = ({ params }) => {
                               >
                                 <video
                                   src={reel.mediaFiles}
-                                
                                   className="w-full h-full rounded-md lg:rounded-lg object-cover"
                                 ></video>
                               </div>

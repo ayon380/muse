@@ -505,7 +505,7 @@ const Reel = ({
             <div
               className="flex mb-2 cursor-pointer font-bold"
               onClick={() =>
-                router.push(`/${usermetadata[reeldata.uid].userName}`)
+                router.push(`/feed/profile/${usermetadata[reeldata.uid].userName}`)
               }
             >
               <Image
