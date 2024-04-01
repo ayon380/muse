@@ -3,6 +3,7 @@ import app from "@/lib/firebase/firebaseConfig";
 import React, { useRef, useEffect, useState } from "react";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { motion } from "framer-motion";
 import "../../styles/gradients.css";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import Link from "next/navigation";
@@ -1059,7 +1060,7 @@ const Home = () => {
                       >
                         <div className="flex">
                           <Image
-                            className="h-10 w-10 rounded-full"
+                            className="h-10 w-10 rounded-full mr-2"
                             src={pfps[chat.roomid]}
                             height={50}
                             width={50}
@@ -1069,9 +1070,9 @@ const Home = () => {
                             {chat.title}
                           </div>
                         </div>
-                        {chat.participants.map(
+                        {/* {chat.participants.map(
                           (participant) => usernames[participant] + " "
-                        )}{" "}
+                        )}{" "} */}
                       </div>
                     )
                   )}
@@ -1149,11 +1150,14 @@ const Home = () => {
                       </div>
 
                       {messages.map((message) => (
-                        <div
+                        <motion.div
                           className="px-6"
                           key={
                             message.timestamp + message.sender + message.text
                           }
+                          initial={{ opacity: 0, y: 50 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.5 }}
                         >
                           {message.sender == userdata.uid ? (
                             <div className="ko flex justify-end my-5 ">
@@ -1277,7 +1281,23 @@ const Home = () => {
                                 </div>
                                 {isDropdownOpen &&
                                   selectedMessage == message && (
-                                    <div className="dropdown-menu  mt-4 flex">
+                                    <motion.div
+                                      className="dropdown-menu  mt-4 flex"
+                                      initial={{ opacity: 0, height: 0 }}
+                                      animate={{
+                                        opacity: isDropdownOpen ? 1 : 0,
+                                        height: isDropdownOpen ? "auto" : 0,
+                                      }}
+                                      transition={{
+                                        duration: 0.3,
+                                        ease: "easeInOut",
+                                      }}
+                                      layoutTransition={{
+                                        type: "tween",
+                                        duration: 0.3,
+                                        ease: "easeInOut",
+                                      }}
+                                    >
                                       <button
                                         onClick={() =>
                                           handlemessagereply(message)
@@ -1344,7 +1364,7 @@ const Home = () => {
                                         />
                                       </button>
                                       {/* Delete button */}
-                                    </div>
+                                    </motion.div>
                                   )}
                               </div>
                             </div>
@@ -1467,7 +1487,7 @@ const Home = () => {
                               </div>
                             </>
                           )}
-                        </div>
+                        </motion.div>
                       ))}
 
                       <div ref={messagesEndRef} />
@@ -1507,7 +1527,7 @@ const Home = () => {
                           }}
                         >
                           <Image
-                            className=" h-6 w-7 mr-1 dark:invert"
+                            className=" h-6 w-6 mr-1 dark:invert"
                             src="/icons/attach.png"
                             height={50}
                             width={50}
@@ -1520,7 +1540,7 @@ const Home = () => {
                           className=" disabled:cursor-not-allowed disabled:text-gray-300"
                         >
                           <Image
-                            className="h-6 w-8 m-1 dark:invert"
+                            className="h-6 w-6 m-1 dark:invert"
                             src="/icons/send.png"
                             height={50}
                             width={50}

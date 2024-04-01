@@ -769,7 +769,7 @@ const FeedPost = ({
                     />
                   </div>
                   <div className="tagged h-7 w-7 flex mr-2">
-                    <Image src="/icons/supermarket.png" width={50} height={50} alt="" />
+                    <Image src="/icons/supermarket.png" width={50} height={50} alt="" className="dark:invert"/>
                     <div className="asd text-sm -mt-2 text-red-500 font-bold ">
                       {postdata.taggedUsers.length}
                     </div>
