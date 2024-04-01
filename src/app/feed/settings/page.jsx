@@ -6,6 +6,7 @@ import { FaQuestion } from "react-icons/fa6";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useEffect } from "react";
 import { FileUploader } from "react-drag-drop-files";
+import { motion } from "framer-motion";
 import imageCompression from "browser-image-compression";
 import { getAuth } from "firebase/auth";
 import { toast, Toaster } from "react-hot-toast";
@@ -152,6 +153,21 @@ const Home = () => {
   const fileTypes = ["JPG", "PNG"];
   const [deleting, setdeleting] = React.useState(false);
   const [fileDataURL, setFileDataURL] = React.useState(null);
+  const [ismobile, setismobile] = React.useState(false);
+  useEffect(() => {
+    if (window.innerWidth < 768) {
+      setismobile(true);
+    } else {
+      setismobile(false);
+    }
+    window.addEventListener("resize", () => {
+      if (window.innerWidth < 768) {
+        setismobile(true);
+      } else {
+        setismobile(false);
+      }
+    });
+  }, []);
   const getuserdata = async (user) => {
     try {
       if (auth.currentUser) {
@@ -215,7 +231,7 @@ const Home = () => {
       await deleteUser(user);
       const userref = doc(db, "users", user.email);
       const usernameref = doc(db, "usernames", userdata.userName);
-      const stref=ref(storage,`images/${userdata.uid}`);
+      const stref = ref(storage, `images/${userdata.uid}`);
       const chatref = doc(db, "chats", user.userName);
       await deleteDoc(userref);
       await deleteDoc(usernameref);
@@ -285,80 +301,96 @@ const Home = () => {
     }
   };
   return (
-    <div className=" ml-5 w-full">
+    <div className={`${ismobile ? "" : "ml-5"} w-full`}>
       <Toaster />
-      <div className="main2 rounded-2xl overflow-y-auto bg-white bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-20 shadow-2xl border-1 border-black p-6">
-        <div className="heading font-lucy text-5xl  ">Settings</div>
+      <motion.div
+        className={`main2 rounded-2xl overflow-y-auto bg-white ${ismobile ?" dark:bg-black" : "bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-20 shadow-2xl"} border-1 border-black p-6`}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="heading font-lucy text-5xl">Settings</div>
         {userdata && (
           <div className="body overflow-y-auto">
             <div className="username my-6 font-bold text-xl">
               Welcome {userdata.userName}
             </div>
-            <div>
-              <div className="flex justify-center">
-                <input
-                  className="input bg-transparent border-white border-2 dark:text-black  dark:border-black p-2 rounded-xl shadow-2xl focus:border-2 dark:focus:border-black focus:outline-none placeholder-white dark:placeholder-black"
-                  onChange={(e) => {
-                    setFormData({ ...formdata, userName: e.target.value });
-                    setCheckStatus(1);
-                  }}
-                  value={formdata.userName}
-                  placeholder="UserName"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") checkUserName();
-                  }}
-                />
-              </div>
-
-              <div className="btn mt-10 flex justify-center">
-                <button
-                  className="fd font-rethink  flex mb-5 pl-6 pr-5 "
-                  onClick={checkUserName}
-                >
-                  Check
-                  <div className="lp mt-3 ml-2">
-                    {checkStatus === 1 ? (
-                      <FaQuestion />
-                    ) : checkStatus === 2 ? (
-                      <Image
-                        src="/btngif.gif"
-                        height={20}
-                        width={20}
-                        alt="gif"
-                      />
-                    ) : checkStatus === 3 ? (
-                      <Image src="/suc.png" height={20} width={20} alt="png" />
-                    ) : null}
-                  </div>
-                </button>
-              </div>
+            <div className="flex justify-center">
+              <motion.input
+                className="input bg-transparent border-white border-2 dark:text-black dark:border-black p-2 rounded-xl shadow-2xl focus:border-2 dark:focus:border-black focus:outline-none placeholder-white dark:placeholder-black"
+                onChange={(e) => {
+                  setFormData({ ...formdata, userName: e.target.value });
+                  setCheckStatus(1);
+                }}
+                value={formdata.userName}
+                placeholder="UserName"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") checkUserName();
+                }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+              />
             </div>
-            <div className="name">
+            <div className="btn mt-10 flex justify-center">
+              <motion.button
+                className="fd font-rethink flex mb-5 pl-6 pr-5 "
+                onClick={checkUserName}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+              >
+                Check
+                <div className="lp mt-3 ml-2">
+                  {checkStatus === 1 ? (
+                    <FaQuestion />
+                  ) : checkStatus === 2 ? (
+                    <Image src="/btngif.gif" height={20} width={20} alt="gif" />
+                  ) : checkStatus === 3 ? (
+                    <Image src="/suc.png" height={20} width={20} alt="png" />
+                  ) : null}
+                </div>
+              </motion.button>
+            </div>
+            <motion.div
+              className="name"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
+            >
               <input
                 type="text"
-                className="input  bg-transparent border-white border-2 dark:text-black  dark:border-black p-2 rounded-xl shadow-2xl focus:border-2 dark:focus:border-black focus:outline-none placeholder-white dark:placeholder-black"
+                className="input bg-transparent border-white border-2 dark:text-black dark:border-black p-2 rounded-xl shadow-2xl focus:border-2 dark:focus:border-black focus:outline-none placeholder-white dark:placeholder-black"
                 value={formdata.fullname}
                 onChange={(e) => {
-                  {
-                    setFormData({ ...formdata, fullname: e.target.value });
-                  }
+                  setFormData({ ...formData, fullname: e.target.value });
                 }}
                 placeholder={userdata.displayName}
-              ></input>
-            </div>
-            <div className="bio">
+              />
+            </motion.div>
+            <motion.div
+              className="bio"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
+            >
               <input
                 type="text"
-                className="input bg-transparent border-white border-2 dark:text-black  dark:border-black p-2 w-96 mt-2 rounded-xl shadow-2xl focus:border-2 dark:focus:border-black focus:outline-none placeholder-current placeholder-white dark:placeholder-black"
+                className="input bg-transparent border-white border-2 dark:text-black dark:border-black p-2 w-96 mt-2 rounded-xl shadow-2xl focus:border-2 dark:focus:border-black focus:outline-none placeholder-current placeholder-white dark:placeholder-black"
                 value={formdata.bio}
                 placeholder={userdata.bio}
                 onChange={(e) => {
-                  setFormData({ ...formdata, bio: e.target.value });
+                  setFormData({ ...formData, bio: e.target.value });
                   console.log(bio);
                 }}
-              ></input>
-            </div>
-            <div className="txt mx-20 ">
+              />
+            </motion.div>
+            <motion.div
+              className="txt mx-20"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
+            >
               <div className="kl my-5 text-center">
                 Upload your Profile Picture
                 <div className="fg text-xs opacity-70">
@@ -375,67 +407,95 @@ const Home = () => {
                 name="Profile Picture"
                 types={fileTypes}
               />
-            </div>
-            <div className="flex justify-center h-24 my-5">
+            </motion.div>
+            <motion.div
+              className="flex justify-center h-24 my-5"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
+            >
               {fileDataURL ? (
                 <Image
-                  alt="PFP "
+                  alt="PFP"
                   height={100}
                   width={100}
                   layout="fixed"
                   className="object-cover rounded-full"
                   src={fileDataURL}
-                ></Image>
+                />
               ) : (
                 <div className="border pt-9 opacity-70 text-xs w-24 text-center rounded-full">
                   Profile Image
                 </div>
               )}
-            </div>
-            <div className="flex justify-center mt-4">
+            </motion.div>
+            <motion.div
+              className="flex justify-center mt-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
+            >
               <input
-                className="input bg-transparent border-white border-2 dark:text-black  dark:border-black p-2 rounded-xl shadow-2xl focus:border-2 dark:focus:border-black focus:outline-none placeholder-current placeholder-white dark:placeholder-black"
+                className="input bg-transparent border-white border-2 dark:text-black dark:border-black p-2 rounded-xl shadow-2xl focus:border-2 dark:focus:border-black focus:outline-none placeholder-current placeholder-white dark:placeholder-black"
                 onChange={(e) =>
-                  setFormData({ ...formdata, profession: e.target.value })
+                  setFormData({ ...formData, profession: e.target.value })
                 }
                 value={formdata.profession}
                 placeholder={userdata.profession}
               />
-            </div>
-            <div className="flex justify-center mt-4">
+            </motion.div>
+            <motion.div
+              className="flex justify-center mt-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
+            >
               <input
-                className="input bg-transparent border-white border-2 dark:text-black  dark:border-black p-2 rounded-xl shadow-2xl focus:border-2 dark:focus:border-black focus:outline-none placeholder-current placeholder-white dark:placeholder-black"
+                className="input bg-transparent border-white border-2 dark:text-black dark:border-black p-2 rounded-xl shadow-2xl focus:border-2 dark:focus:border-black focus:outline-none placeholder-current placeholder-white dark:placeholder-black"
                 onChange={(e) =>
-                  setFormData({ ...formdata, org: e.target.value })
+                  setFormData({ ...formData, org: e.target.value })
                 }
                 value={formdata.org}
                 placeholder={userdata.org}
               />
-            </div>
+            </motion.div>
             <div className="flex justify-center">
-              <select
-                className="input w-64 bg-transparent border-white border-2 dark:text-black  dark:border-black p-2 rounded-xl my-5 shadow-2xl focus:border-2 dark:focus:border-black focus:outline-none placeholder-current placeholder-white dark:placeholder-black"
+              <motion.select
+                className="input w-64 bg-transparent border-white border-2 dark:text-black dark:border-black p-2 rounded-xl my-5 shadow-2xl focus:border-2 dark:focus:border-black focus:outline-none placeholder-current placeholder-white dark:placeholder-black"
                 onChange={(e) =>
-                  setFormData({ ...formdata, state: e.target.value })
+                  setFormData({ ...formData, state: e.target.value })
                 }
                 value={formdata.state}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
               >
                 {state_arr.map((key) => (
                   <option className="text-black" key={key} value={key}>
                     {key}
                   </option>
                 ))}
-              </select>
+              </motion.select>
             </div>
-            <div className="flex justify-center">
+            <motion.div
+              className="flex justify-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
+            >
               <input
-                className="input bg-transparent border-white border-2 dark:text-black  dark:border-black p-2 rounded-xl shadow-2xl focus:border-2 dark:focus:border-black focus:outline-none placeholder-current"
+                className="input bg-transparent border-white border-2 dark:text-black dark:border-black p-2 rounded-xl shadow-2xl focus:border-2 dark:focus:border-black focus:outline-none placeholder-current"
                 onChange={handleCityChange}
                 placeholder={userdata.city}
                 value={formdata.city}
               />
-            </div>
-            <div className="flex justify-center">
+            </motion.div>
+            <motion.div
+              className="flex justify-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
+            >
               <div className="absolute text-black rounded-md px-14 w-62 bg-white cursor-pointer z-10">
                 {cities.current.map((cityy) => (
                   <div key={cityy} onClick={handleCityDropdwonClick}>
@@ -443,30 +503,41 @@ const Home = () => {
                   </div>
                 ))}
               </div>
-            </div>
+            </motion.div>
             <div className="flex my-10 justify-center">
-              <button
+              <motion.button
                 onClick={() => {
                   setFormData({ ...formdata, pubpriv: "Private" });
                 }}
                 className={`fd btn mr-24 px-10 ${
                   formdata.pubpriv == "Private" ? "!bg-green-600" : null
                 }`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
               >
                 Private
-              </button>
-              <button
+              </motion.button>
+              <motion.button
                 className={`fd btn px-10 ${
                   formdata.pubpriv == "Public" ? "!bg-red-600" : null
                 }`}
                 onClick={() => {
                   setFormData({ ...formdata, pubpriv: "Public" });
                 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
               >
                 Public
-              </button>
+              </motion.button>
             </div>
-            <div className="flex justify-center">
+            <motion.div
+              className="flex justify-center"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
+            >
               <button
                 className="fd btn px-10"
                 onClick={async () => {
@@ -476,13 +547,19 @@ const Home = () => {
               >
                 {saving ? "Saving..." : "Save"}
               </button>
-            </div>
-            <button onClick={deleteaccount} disabled={deleting}>
+            </motion.div>
+            <motion.button
+              onClick={deleteaccount}
+              disabled={deleting}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
+            >
               {deleting ? "Deleting Account" : " Delete Account"}
-            </button>
+            </motion.button>
           </div>
         )}
-      </div>
+      </motion.div>
     </div>
   );
 };

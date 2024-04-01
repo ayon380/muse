@@ -14,9 +14,10 @@ import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import dynamic from "next/dynamic";
+import { get } from "http";
 const FeedPost = dynamic(() => import("@/components/FeedPost"), { ssr: false });
 const Follower = dynamic(() => import("@/components/Follower"), { ssr: false });
-const Following = dynamic(()=> import ("@/components/Follwing"))
+const Following = dynamic(() => import("@/components/Follwing"));
 const Page = ({ params }) => {
   const { slug } = params;
   const router = useRouter();
@@ -33,6 +34,8 @@ const Page = ({ params }) => {
   const [pagestate, setPageState] = React.useState(0);
   const [restrictchecking, setRestrictChecking] = React.useState(true);
   const [usermetadata, setUsermetadata] = React.useState({});
+  const [taggedPosts, setTaggedPosts] = React.useState([]);
+  const [savedPosts, setSavedPosts] = React.useState([]);
   const [globalrestrict, setGlobalRestrict] = React.useState(false);
   const [followersbox, setFollowersbox] = React.useState();
   const [followingbox, setfollowingbox] = React.useState();
@@ -303,6 +306,48 @@ const Page = ({ params }) => {
     // Return true if either condition is met
     return hasVideoExtension || hasVideoQueryParameter;
   }
+  const getTaggedPosts = async () => {
+    if (!userdata) return;
+    console.log("getTaggedPosts running...");
+    let temp = [];
+    for (let i = 0; i < userdata.taggedPosts.length; i++) {
+      const postRef = doc(db, "posts", userdata.taggedPosts[i]);
+      const docSnap = await getDoc(postRef);
+      if (docSnap.exists()) {
+        // console.log("Document data:", docSnap.data());
+
+        temp.push(docSnap.data());
+      } else {
+        console.log("No such document!");
+        // Handle the case where user data doesn't exist
+      }
+      // console.log(docSnap.data());
+      // console.log(docSnap.data());
+      console.log(temp);
+    }
+    setTaggedPosts(temp);
+  };
+  const getSavedPosts = async () => {
+    if (!userdata) return;
+    console.log("getSavedPosts running...");
+    let temp = [];
+    for (let i = 0; i < userdata.savedposts.length; i++) {
+      const postRef = doc(db, "posts", userdata.savedposts[i]);
+      const docSnap = await getDoc(postRef);
+      if (docSnap.exists()) {
+        // console.log("Document data:", docSnap.data());
+
+        temp.push(docSnap.data());
+      } else {
+        console.log("No such document!");
+        // Handle the case where user data doesn't exist
+      }
+      // console.log(docSnap.data());
+      // console.log(docSnap.data());
+      console.log(temp);
+    }
+    setSavedPosts(temp);
+  };
   return (
     <div className="md:ml-5 w-full h-full">
       <Toaster />
@@ -317,17 +362,19 @@ const Page = ({ params }) => {
         <>
           {followersbox && (
             <Follower
-            db={db}
+              db={db}
               close={() => setFollowersbox(false)}
               currentuserdata={currentuserdata}
               usermetadata={usermetadata}
+              userdata={userdata}
               enqueueUserMetadata={enqueueUserMetadata}
             />
           )}
-           {followingbox && (
+          {followingbox && (
             <Following
               close={() => setfollowingbox(false)}
               db={db}
+              userdata={userdata}
               currentuserdata={currentuserdata}
               usermetadata={usermetadata}
               enqueueUserMetadata={enqueueUserMetadata}
@@ -345,7 +392,13 @@ const Page = ({ params }) => {
               <FeedPost
                 db={db}
                 userdata={userdata}
-                post={posts.find((post) => post.id === postid)}
+                post={
+                  pagestate === 0
+                    ? posts.find((post) => post.id == postid)
+                    : pagestate === 2
+                    ? taggedPosts.find((post) => post.id == postid)
+                    : savedPosts.find((post) => post.id == postid)
+                }
                 onclose={onclose}
                 type="profile"
                 usermetadata={usermetadata}
@@ -497,8 +550,10 @@ const Page = ({ params }) => {
                             </div>
                           </div>
                           <div className="following text-center w-16">
-                            
-                            <div className="flex"   onClick={() => setfollowingbox(true)}>
+                            <div
+                              className="flex"
+                              onClick={() => setfollowingbox(true)}
+                            >
                               <div className="text-4xl font-bold">
                                 {userdata.following.length}
                               </div>
@@ -539,10 +594,25 @@ const Page = ({ params }) => {
                     </button>
                     <button
                       className="btn py-2 px-3 "
-                      onClick={() => setPageState(2)}
+                      onClick={() => {
+                        setPageState(2);
+                        getTaggedPosts();
+                      }}
                     >
                       Tagged
                     </button>
+                    {currentuserdata &&
+                      currentuserdata.email == userdata.email && (
+                        <button
+                          className="btn py-2 px-3 "
+                          onClick={() => {
+                            setPageState(3);
+                            getSavedPosts();
+                          }}
+                        >
+                          Saved
+                        </button>
+                      )}
                   </div>
                   <div className="postsxs w-full h-3/4">
                     {pagestate === 0 && (
@@ -612,6 +682,90 @@ const Page = ({ params }) => {
                           </div>
                         )}
                       </>
+                    )}
+                    {pagestate === 2 && (
+                      <div className="text-2xl m-4 flex justify-center items-center w-full h-full">
+                        {taggedPosts.length > 0 ? (
+                          <div className="grid grid-cols-3 md:grid-cols-4 gap-4 p-4">
+                            {taggedPosts.map((post, index) => (
+                              <div
+                                key={index}
+                                className="relative h-full"
+                                onClick={() => {
+                                  router.push(
+                                    `/feed/profile/${userdata.userName}?postid=${post.id}`
+                                  );
+                                }}
+                              >
+                                {isVideoFile(post.mediaFiles[0]) ? (
+                                  <>
+                                    <video
+                                      src={post.mediaFiles[0]}
+                                      className="w-full h-full object-cover rounded-md lg:rounded-lg "
+                                    ></video>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Image
+                                      src={post.mediaFiles[0]}
+                                      alt=""
+                                      width={100}
+                                      height={100}
+                                      className="w-full rounded-md md:rounded-lg h-full object-cover"
+                                    />
+                                  </>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-2xl m-4 flex justify-center items-center w-full h-full">
+                            No Tagged Posts Yet
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {pagestate === 3 && (
+                      <div className="text-2xl m-4 flex justify-center w-full h-full">
+                        {savedPosts.length > 0 ? (
+                          <div className="grid grid-cols-3 md:grid-cols-4 gap-4 p-4">
+                            {savedPosts.map((post, index) => (
+                              <div
+                                key={index}
+                                className="relative h-full"
+                                onClick={() => {
+                                  router.push(
+                                    `/feed/profile/${userdata.userName}?postid=${post.id}`
+                                  );
+                                }}
+                              >
+                                {isVideoFile(post.mediaFiles[0]) ? (
+                                  <>
+                                    <video
+                                      src={post.mediaFiles[0]}
+                                      className="w-full h-full object-cover rounded-md lg:rounded-lg "
+                                    ></video>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Image
+                                      src={post.mediaFiles[0]}
+                                      alt=""
+                                      width={100}
+                                      height={100}
+                                      className="w-full rounded-md md:rounded-lg h-36 object-cover"
+                                    />
+                                  </>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-2xl m-4 flex justify-center items-center w-full h-full">
+                            No Saved Posts Yet
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>

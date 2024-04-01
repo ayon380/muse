@@ -4,10 +4,10 @@ import { arrayRemove, arrayUnion, doc, increment, updateDoc } from 'firebase/fir
 import toast, { Toaster } from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 
-const Follower = ({ currentuserdata, usermetadata, enqueueUserMetadata, close, db }) => {
+const Follower = ({ currentuserdata, userdata, usermetadata, enqueueUserMetadata, close, db }) => {
     const [following, setfollowing] = React.useState(currentuserdata.following);
     const [isOpen, setIsOpen] = React.useState(false);
-const Router = useRouter();
+    const Router = useRouter();
     const handleremove = async (follower) => {
         try {
             const uref = doc(db, "users", currentuserdata.email);
@@ -64,13 +64,13 @@ const Router = useRouter();
                         return (
                             <div key={follower} className="flex items-center mb-4">
                                 <Image src={usermetadata[follower].pfp} height={50} width={50} alt="" className="rounded-full h-10 w-10" />
-                                <p className="ml-4  cursor-pointer" onClick={()=>Router.push(`/feed/profile/${usermetadata[follower].userName}`)}>{usermetadata[follower].userName}</p>
-                                <button
+                                <p className="ml-4  cursor-pointer" onClick={() => Router.push(`/feed/profile/${usermetadata[follower].userName}`)}>{usermetadata[follower].userName}</p>
+                                {userdata.email == currentuserdata.email && <button
                                     onClick={() => handleremove(follower)}
                                     className="ml-auto bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors duration-300"
                                 >
                                     UnFollow
-                                </button>
+                                </button>}
                             </div>
                         );
                     }

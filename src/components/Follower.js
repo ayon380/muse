@@ -3,7 +3,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import toast, { Toaster } from 'react-hot-toast';
 import { arrayRemove, doc, increment, updateDoc } from 'firebase/firestore';
-const Follower = ({ currentuserdata, usermetadata, enqueueUserMetadata, close, db }) => {
+const Follower = ({ currentuserdata, userdata, usermetadata, enqueueUserMetadata, close, db }) => {
     const [followers, setfollowers] = React.useState(currentuserdata.followers);
     const [isOpen, setIsOpen] = React.useState(false);
     const Router = useRouter();
@@ -68,12 +68,12 @@ const Follower = ({ currentuserdata, usermetadata, enqueueUserMetadata, close, d
                                     className=" w-10 h-10 rounded-full"
                                 />
                                 <p className="ml-4 cursor-pointer" onClick={() => Router.push(`/feed/profile/${usermetadata[follower].userName}`)}>{usermetadata[follower].userName}</p>
-                                <button
+                                {currentuserdata.email == userdata.email && <button
                                     onClick={() => handleremove(follower)}
                                     className="ml-auto bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors duration-300"
                                 >
                                     Remove
-                                </button>
+                                </button>}
                             </div>
                         );
                     }

@@ -22,7 +22,7 @@ import {
   uploadBytes,
 } from "firebase/storage";
 import imageCompression from "browser-image-compression";
-
+import { motion } from "framer-motion";
 const options = {
   maxSizeMB: 1,
   maxWidthOrHeight: 1920,
@@ -191,122 +191,193 @@ const GroupChatDetail = ({ onClose, roomdata, usernames, db }) => {
       setNewPfpPreview(URL.createObjectURL(file));
     }
   };
+  const colors = {
+    primary: '#ff5e5e',
+    secondary: '#ffc107',
+    background: '#1a1a1a',
+    text: '#ffffff',
+  };
 
+  // Define some animations
+  const fadeInUpVariants = {
+    hidden: { opacity: 0, y: 50 },
+    visible: { opacity: 1, y: 0 },
+  };
   return (
-    <div className="relative">
+    <div className="relative bg-gray-900">
       <Toaster />
-      <div className={`fixed inset-0 z-50 flex items-center justify-center transition-all duration-500 ${showModal ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-        <div className={`absolute inset-0 rounded-2xl backdrop-filter backdrop-blur-3xl bg-opacity-20 shadow-2xl border-1 transition-allduration-500 ${showModal ? 'opacity-100' : 'opacity-0'} bg-gray-800 bg-clip-padding border-gray-600`}>
-        </div>
-        <div className={`w-96 p-8 rounded-xl shadow-2xl relative z-10 transition-all duration-500 ${showModal ? 'translate-y-0' : 'translate-y-full'} bg-gray-800 text-white`}>
-          {editMode ? (
-            <>
-              <input
-                type="text"
-                value={newTitle}
-                onChange={(e) => setNewTitle(e.target.value)}
-                placeholder="Edit Title"
-                className="w-full p-2 mb-2 rounded bg-gray-700 text-white"
-              />
-              <textarea
-                value={newInfo}
-                onChange={(e) => setNewInfo(e.target.value)}
-                placeholder="Edit Info"
-                className="w-full p-2 mb-2 rounded bg-gray-700 text-white"
-              />
-              <div className="mb-4 block max-h-24 overflow-y-auto">
-                Participants:
-                {newParticipants.map((participant) => (
-                  <div key={participant} className="flex items-center">
-                    {usernames[participant]}
-                    <button
-                      className="bg-red-600 hover:bg-red-500 text-white px-2 py-1 rounded-lg transition-colors duration-300 ml-2"
-                      onClick={() => handleRemoveParticipant(participant)}
+      <motion.div
+        className={`fixed inset-0 z-50 flex items-center justify-center transition-all duration-500 ${showModal ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          }`}
+        initial="hidden"
+        animate={showModal ? 'visible' : 'hidden'}
+        variants={fadeInUpVariants}
+      >
+        <div
+          className={`absolute inset-0 rounded-2xl backdrop-filter backdrop-blur-3xl bg-opacity-20 shadow-2xl border-1 transition-all duration-500 ${showModal ? 'opacity-100' : 'opacity-0'
+            } bg-gray-800 bg-clip-padding border-gray-600`}
+        ></div>
+        <motion.div
+          className={`w-96  rounded-xl shadow-2xl relative z-10 transition-all duration-500 ${showModal ? 'translate-y-0' : 'translate-y-full'
+            } bg-white dark:bg-black text-black dark:text-white`}
+          initial="hidden"
+          animate={showModal ? 'visible' : 'hidden'}
+          variants={fadeInUpVariants}
+        >
+          {editMode ? (<div className="p-8">
+            <div className="kl">Edit Title</div>
+            <input
+              type="text"
+              value={newTitle}
+              onChange={(e) => setNewTitle(e.target.value)}
+              placeholder="Edit Title"
+              className="w-full p-2 mb-2 rounded border border-gray-300"
+            />
+            <div className="kl">Edit Info</div>
+            <textarea
+              value={newInfo}
+              onChange={(e) => setNewInfo(e.target.value)}
+              placeholder="Edit Info"
+              className="w-full p-2 mb-2 rounded border border-gray-300"
+            />
+            <div className="mb-4 block max-h-24 overflow-y-auto">
+              <p className="text-gray-600 mb-2">Participants:</p>
+              {newParticipants.map((participant) => (
+  
+                <motion.div
+                  key={participant}
+                  className="flex items-center mb-2 justify-between"
+                  initial={{ opacity: 0, x: -50 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <span className="text-gray-800">{usernames[participant]}</span>
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    className="bg-red-600 hover:bg-red-500 text-white px-2 py-1 rounded-lg transition-colors duration-300 ml-2"
+                    onClick={() => handleRemoveParticipant(participant)}
+                  >
+                    Remove
+                  </motion.button>
+                </motion.div>
+              ))}
+            </div>
+            <input
+              type="text"
+              value={searchtext}
+              onChange={(e) => setSearchtext(e.target.value)}
+              className="border border-gray-300 text-gray-800 rounded-lg p-2 w-full my-2"
+              placeholder="Search Participants"
+            />
+            {searchResults.length > 0 && searchtext.length > 0 && (
+              <motion.div
+                className="search-results mt-2 bg-gray-100 rounded-lg p-2"
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <ul>
+                  {searchResults.map((user) => (
+                    <motion.div
+                      whileHover={{ backgroundColor: '#FCD34D', color: '#333' }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => handleAddParticipant(user)}
+                      key={user.uid}
+                      className="cursor-pointer p-2 rounded-lg transition-colors duration-300"
                     >
-                      Remove
-                    </button>
-                  </div>
-                ))}
-              </div>
-              <input
-                type="text"
-                value={searchtext}
-                onChange={(e) => setSearchtext(e.target.value)}
-                className="border border-gray-600 bg-gray-700 text-white rounded-lg p-2 w-full mt-2"
-                placeholder="Search"
-              />
-              {searchResults.length > 0 && searchtext.length > 0 && (
-                <div className="search-results mt-2">
-                  <ul>
-                    {searchResults.map((user) => (
-                      <div
-                        onClick={() => handleAddParticipant(user)}
-                        key={user.uid}
-                        className="cursor-pointer"
-                      >
-                        <li>{user.userName}</li>
-                      </div>
-                    ))}
-                  </ul>
-                </div>
-              )}
+                      <li>{user.userName}</li>
+                    </motion.div>
+                  ))}
+                </ul>
+              </motion.div>
+            )}
 
+            <div className="flex items-center justify-between">
               <input
                 type="file"
                 accept="image/*"
                 onChange={handlePfpChange}
-                className="w-full p-2 mb-2 rounded bg-gray-700 text-white"
+                className="w-full p-2 mb-2 rounded border border-gray-300 text-gray-800"
               />
-              {newPfpPreview && <Image src={newPfpPreview} height={50} width={50} alt="Preview" />}
-              <button
-                className="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded-lg transition-colors duration-300 mr-2"
+              {newPfpPreview && (
+                <Image src={newPfpPreview} height={50} width={50} alt="Preview" className="rounded-full" />
+              )}
+            </div>
+            <div className="flex justify-between">
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors duration-300 mr-2"
                 onClick={handleEdit}
               >
                 Save Changes
-              </button>
-              <button
-                className="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded-lg transition-colors duration-300"
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                className="bg-gray-300 hover:bg-gray-400 text-gray-800 px-4 py-2 rounded-lg transition-colors duration-300"
                 onClick={() => setEditMode(false)}
               >
-                Cancel
-              </button>
-            </>
+                Cancel <Image src="/icons/close.png" height={20} width={20} alt="Close" className="inline-block ml-2" />
+              </motion.button>
+            </div>
+          </div>
           ) : (
             <>
-              Group Chat Info<br />
-              {roomdata.title}
-              {roomdata.info}
-              {roomdata.participants.map((participant) => {
-                return (
-                  <div key={participant} className="flex items-center">
-                    {usernames[participant]}
-                  </div>
-                );
-              })}
-              <Image src={roomdata.pfp} height={50} width={50} alt="854" />
-              <button
-                className="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded-lg transition-colors duration-300 mr-2"
-                onClick={() => setEditMode(true)}
-              >
-                Edit Chat
-              </button>
-              <button
-                className="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg transition-colors duration-300 mr-2"
-                onClick={handleDelete}
-              >
-                Delete Group
-              </button>
-              <button
-                onClick={() => onClose()}
-                className="bg-gray-600 hover:bg-gray-500 text-white px-4 py-2 rounded-lg transition-colors duration-300"
-              >
-                Cancel
-              </button>
+              {/* <h2 className="text-2xl font-bold mb-4 ">Group Chat Info</h2> */}
+              <Image src={roomdata.pfp} height={100} width={500} alt="854" className="rounded-md h-48 object-cover " />
+              <div className="lp p-8">
+                <p className="font-bold text-center text-xl mb-2">{roomdata.title}</p>
+                <p className="text-center text-opacity-75 mb-4">{roomdata.info}</p>
+                <div className="mb-4 h-48 overflow-y-auto">
+                  <p className=" mb-2">Participants:</p>
+                  {roomdata.participants.map((participant) => (
+                    <motion.div
+                      key={participant}
+                      className="flex items-center mb-2"
+                      initial={{ opacity: 0, x: -50 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3, delay: 0.2 }}
+                    >
+                      <span className="text-opacity-65">{usernames[participant]}</span>
+                    </motion.div>
+                  ))}
+                </div>
+
+                <div className="flex justify-between">
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    className=" text-white px-4 py-2 rounded-lg transition-colors duration-300 mr-2"
+                    onClick={() => setEditMode(true)}
+                  >
+                    <Image src="/icons/editing.png" height={20} width={20} alt="Edit" />
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    className=" text-white px-4 py-2 rounded-lg transition-colors duration-300 mr-2"
+                    onClick={handleDelete}
+                  >
+                    <Image src="/icons/delete.png" height={20} width={20} alt="Delete" />
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => onClose()}
+                    className=" text-white px-4 py-2 rounded-lg transition-colors duration-300"
+                  >
+                    <Image src="/icons/close.png" height={20} width={20} alt="Close" />
+                  </motion.button>
+                </div>
+              </div>
             </>
           )}
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </div>
+
   );
 };
 

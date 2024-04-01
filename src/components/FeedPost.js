@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { FaRegHeart, FaComments, FaShare } from "react-icons/fa";
 import { TiHeartFullOutline } from "react-icons/ti";
 import { MdOutlineReportGmailerrorred } from "react-icons/md";
+import { motion } from "framer-motion";
 import { Carousel } from "react-responsive-carousel";
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 import Image from "next/image";
@@ -124,6 +125,7 @@ const FeedPost = ({
   const [liked, setLiked] = React.useState(false);
   const [showComments, setShowComments] = useState(false);
   const [comment, setComment] = useState("");
+  console.log(post + "post");
   const [postdata, setPostdata] = useState(post);
   const [commentList, setCommentList] = useState([]);
   const [commentsloading, setCommentsloading] = useState(false);
@@ -419,15 +421,56 @@ const FeedPost = ({
       toast.error("Error deleting post: " + error.message);
     }
   };
+  const handleSave = async () => {
+    try {
+      const userRef = doc(db, "users", userdata.email);
+      const q = await getDoc(userRef);
+      if (q.data().savedposts.includes(postdata.id)) {
+        await updateDoc(userRef, {
+          savedposts: arrayRemove(postdata.id),
+        });
+        toast.success("Post unsaved successfully");
+        return;
+      }
+
+      await updateDoc(userRef, {
+        savedposts: arrayUnion(postdata.id),
+      });
+      toast.success("Post saved successfully");
+    } catch (error) {
+      toast.error("Error saving post: " + error.message);
+    }
+  };
+  const fadeInVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { duration: 0.5 } },
+  };
+
+  const scaleUpVariants = {
+    hover: { scale: 1.2, transition: { duration: 0.2 } },
+  };
+
+  const slideInVariants = {
+    hidden: { x: '100%' },
+    visible: { x: 0, transition: { duration: 0.5, ease: 'easeOut' } },
+  };
   return (
     <>
-      <div
-        className=" z-10 justify-center relative  w-full py-4  lg:px-96 dark:bg-black"
+      <motion.div
+        className="z-10 justify-center relative w-full py-4 lg:px-96 dark:bg-black"
         key={postdata.id}
+        initial="hidden"
+        animate="visible"
+        variants={fadeInVariants}
       >
         <Toaster />
         {sharemenu && (
-          <ShareMenu userdata={userdata} setSharemenu={setSharemenu} postdata={postdata} />)}
+          <ShareMenu
+            userdata={userdata}
+            setSharemenu={setSharemenu}
+            postdata={postdata}
+          />
+        )}
         {showedit && (
           <EditPost
             post={postdata}
@@ -444,13 +487,18 @@ const FeedPost = ({
             setShowModal={setShowdelete}
             handleDelete={handleDelete}
             title="Delete Post"
-            type='deletepost'
+            type="deletepost"
             content="Are you sure you want to delete this post?"
           />
         )}
         {showComments && (
-          <div className="absolute inset-0 h-full w-full bg-white dark:bg-black  flex justify-center items-center lg:px-96 py-4 z-50">
-            <div className=" md:bg-white md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-80 shadow-2xl border-1 border-black rounded-xl md:p-8 h-full w-full">
+          <motion.div
+            className="absolute inset-0 h-full w-full bg-white dark:bg-black flex justify-center items-center lg:px-96 py-4 z-50"
+            initial="hidden"
+            animate="visible"
+            variants={slideInVariants}
+          >
+            <div className="md:bg-white md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-80 shadow-2xl border-1 border-black rounded-xl md:p-8 h-full w-full">
               <button
                 className="absolute flex justify-center rounded-t-xl backdrop-filter backdrop-blur-3xl qw w-full text-xl"
                 onClick={() => setShowComments(false)}
@@ -463,7 +511,7 @@ const FeedPost = ({
                   alt=""
                 />
               </button>
-              <div className="comments rounded-xl pt-5 w-full h-full  overflow-y-auto">
+              <div className="comments rounded-xl pt-5 w-full h-full overflow-y-auto">
                 {commentList.map((comment) => (
                   <div
                     key={comment.timestamp + Math.random()}
@@ -472,21 +520,19 @@ const FeedPost = ({
                     <div className="flex z-20">
                       {usermetadata[comment.uid] ? (
                         <Link
-                          href={`/feed/profile/${usermetadata[comment.uid].userName
-                            }`}
+                          href={`/feed/profile/${usermetadata[comment.uid].userName}`}
                         >
-                          <div className="flex ">
+                          <div className="flex">
                             <Image
-                              className="rounded-full h-6 w-6 "
+                              className="rounded-full h-6 w-6"
                               src={usermetadata[comment.uid].pfp}
                               height={50}
                               width={50}
                               alt="Commenter Profile Pic"
                             />
-
                             <div
                               className="hy text-xs w-24 opacity-80 ml-2"
-                              style={{ marginTop: "2px" }}
+                              style={{ marginTop: '2px' }}
                             >
                               {usermetadata[comment.uid].userName}
                             </div>
@@ -497,12 +543,12 @@ const FeedPost = ({
                       )}
                       <div
                         className="time text-xs opacity-60"
-                        style={{ marginTop: "2px" }}
+                        style={{ marginTop: '2px' }}
                       >
                         {comment.timestamp}
                       </div>
                       <div
-                        className="btnl text-2xl  ml-10 "
+                        className="btnl text-2xl ml-10"
                         onClick={() => handleCommentLike(comment.id)}
                       >
                         {!commentlikes[comment.id] ? (
@@ -510,7 +556,7 @@ const FeedPost = ({
                             <FaRegHeart />
                           </div>
                         ) : (
-                          <TiHeartFullOutline style={{ color: "red" }} />
+                          <TiHeartFullOutline style={{ color: 'red' }} />
                         )}
                         <div />
                       </div>
@@ -530,7 +576,7 @@ const FeedPost = ({
                           }));
                         }}
                       >
-                        {commentreply[comment.id] ? "" : "Show Replies"}
+                        {commentreply[comment.id] ? '' : 'Show Replies'}
                       </div>
                       {commentreply[comment.id] && (
                         <div className="q">
@@ -539,18 +585,12 @@ const FeedPost = ({
                               <>
                                 {replies[comment.id].map((reply) => (
                                   <>
-                                    <div
-                                      className="flex z-20 my-3"
-                                      key={reply.id}
-                                    >
+                                    <div className="flex z-20 my-3" key={reply.id}>
                                       {usermetadata[comment.uid] ? (
-                                        <Link
-                                          href={`/feed/profile/${usermetadata[reply.uid].userName
-                                            }`}
-                                        >
-                                          <div className="flex ">
+                                        <Link href={`/feed/profile/${usermetadata[reply.uid].userName}`}>
+                                          <div className="flex">
                                             <Image
-                                              className="rounded-full h-6 w-6 "
+                                              className="rounded-full h-6 w-6"
                                               src={usermetadata[reply.uid].pfp}
                                               height={50}
                                               width={50}
@@ -559,7 +599,7 @@ const FeedPost = ({
 
                                             <div
                                               className="hy text-xs w-24 opacity-80 ml-2"
-                                              style={{ marginTop: "2px" }}
+                                              style={{ marginTop: '2px' }}
                                             >
                                               {usermetadata[reply.uid].userName}
                                             </div>
@@ -568,23 +608,16 @@ const FeedPost = ({
                                       ) : (
                                         <>Loading..</>
                                       )}
-                                      <div
-                                        className="time text-xs opacity-60"
-                                        style={{ marginTop: "2px" }}
-                                      >
+                                      <div className="time text-xs opacity-60" style={{ marginTop: '2px' }}>
                                         {reply.timestamp}
                                       </div>
                                     </div>
-                                    <p className="-mt-2 mb-2">
-                                      {reply.content}
-                                    </p>
+                                    <p className="-mt-2 mb-2">{reply.content}</p>
                                   </>
                                 ))}
                               </>
                             ) : (
-                              <div className="flex justify-center w-full my-10">
-                                No Replies Yet
-                              </div>
+                              <div className="flex justify-center w-full my-10">No Replies Yet</div>
                             ))}
                           <div className="lp flex">
                             <input
@@ -594,7 +627,7 @@ const FeedPost = ({
                               autoFocus
                               value={reply}
                               onKeyDown={(e) => {
-                                if (e.key === "Enter") {
+                                if (e.key === 'Enter') {
                                   handleReplySubmit(comment);
                                 }
                               }}
@@ -603,7 +636,6 @@ const FeedPost = ({
 
                             <button
                               className="ml-2 btn px-2"
-                              // onClick={handleCommentSubmit}
                               onClick={() => {
                                 handleReplySubmit(comment);
                               }}
@@ -630,9 +662,7 @@ const FeedPost = ({
                   </div>
                 ))}
                 {commentList.length === 0 && (
-                  <div className="flex justify-center w-full mt-20">
-                    No Comments Yet
-                  </div>
+                  <div className="flex justify-center w-full mt-20">No Comments Yet</div>
                 )}
               </div>
               <div className="gf rounded-xl pt-6 w-full"></div>
@@ -640,33 +670,28 @@ const FeedPost = ({
               <div className="comment-section absolute flex bottom-4 md:-ml-8 w-full p-4">
                 <input
                   type="text"
-                  class="text-sm text-black w-5/6 rounded-2xl leading-6 backdrop-filter backdrop-blur-3xl px-2 py-1 transition duration-100 border border-gray-300 bg-gray-200 block h-9 hover:border-gray-400 focus:border-purple-600 focus:bg-white"
+                  className="text-sm text-black w-5/6 rounded-2xl leading-6 backdrop-filter backdrop-blur-3xl px-2 py-1 transition duration-100 border border-gray-300 bg-gray-200 block h-9 hover:border-gray-400 focus:border-purple-600 focus:bg-white"
                   placeholder="Add a comment emoji 😀"
                   value={comment}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter") {
+                    if (e.key === 'Enter') {
                       handleCommentSubmit();
                     }
                   }}
                   onChange={(e) => setComment(e.target.value)}
                 />
 
-                <button
-                  className=" ml-2 md:ml-5 btn px-4 md:px-10"
-                  onClick={handleCommentSubmit}
-                >
+                <button className="ml-2 md:ml-5 btn px-4 md:px-10" onClick={handleCommentSubmit}>
                   Comment
                 </button>
               </div>
             </div>
-          </div>
+          </motion.div>
         )}
         <div className="df bg-white dark:bg-black bg-opacity-40 rounded-2xl px-2 py-2 m-2">
-          {usermetadata && usermetadata[postdata.uid] && type != "profile" && (
+          {usermetadata && usermetadata[postdata.uid]  && (
             <div className="header flex justify-between">
-              <Link
-                href={`/feed/profile/${usermetadata[postdata.uid].userName}`}
-              >
+              <Link href={`/feed/profile/${usermetadata[postdata.uid].userName}`}>
                 <div className="flex items-center">
                   <div className="profile-pic">
                     <Image
@@ -687,18 +712,17 @@ const FeedPost = ({
               </div>
             </div>
           )}
-          <div className="gf  rounded-xl  pt-6 z-20 w-full  ">
+          <div className="gf rounded-xl pt-6 z-20 w-full">
             <Carousel showThumbs={false}>
               {postdata?.mediaFiles.map((media) => (
                 <>
                   {isVideoFile(media) ? (
                     <>
                       <video
-                        className="max-h-96 w-full bg-transparent bg-opacity-80  rounded-xl"
+                        className="max-h-96 w-full bg-transparent bg-opacity-80 rounded-xl"
                         src={media}
                         controls
-                        style={{ maxHeight: "500px" }}
-                      // className="h-96 rounded-xl w-96"
+                        style={{ maxHeight: '500px' }}
                       />
                     </>
                   ) : (
@@ -709,24 +733,24 @@ const FeedPost = ({
                         width="500"
                         alt=""
                         className="rounded-xl object-center"
-                      // style={{maxHeight: "500px"}}
                       />
                     </>
                   )}
                 </>
               ))}
             </Carousel>
-            <div className="footer mt-3 ">
+            <div className="footer mt-3">
               <div className="flex justify-between">
                 <div className="like flex">
-                  <div className="btnl mt-0.5 text-2xl" onClick={handleLike}>
-                    {!liked ? (
-                      <FaRegHeart />
-                    ) : (
-                      <TiHeartFullOutline style={{ color: "red" }} />
-                    )}
+                  <motion.div
+                    className="btnl mt-0.5 text-2xl"
+                    onClick={handleLike}
+                    whileHover="hover"
+                    variants={scaleUpVariants}
+                  >
+                    {!liked ? <FaRegHeart /> : <TiHeartFullOutline style={{ color: 'red' }} />}
                     <div />
-                  </div>
+                  </motion.div>
                   <div className="flex">
                     <div className="count text-xl font-bold mr-1">
                       {postdata.likecount ? postdata.likecount : 0}
@@ -735,10 +759,7 @@ const FeedPost = ({
                   </div>
                 </div>
                 <div className="l12 flex text-3xl">
-                  <div
-                    className="share cursor-pointer "
-                    onClick={() => setSharemenu(true)}
-                  >
+                  <div className="share cursor-pointer " onClick={() => setSharemenu(true)}>
                     <Image
                       src="/icons/send.png"
                       alt="Share"
@@ -748,20 +769,21 @@ const FeedPost = ({
                     />
                   </div>
                   <div className="tagged h-7 w-7 flex mr-2">
-                    <Image
-                      src="/icons/supermarket.png"
-                      width={50}
-                      height={50}
-                      alt=""
-                    />
+                    <Image src="/icons/supermarket.png" width={50} height={50} alt="" />
                     <div className="asd text-sm -mt-2 text-red-500 font-bold ">
                       {postdata.taggedUsers.length}
                     </div>
                   </div>
-                  <div
-                    className="report cursor-pointer mr-3"
-                    onClick={() => Reportposttt()}
-                  >
+                  <div className="sad mr-1" onClick={handleSave}>
+                    <Image
+                      src="/icons/save.png"
+                      alt="Sad"
+                      className="dark:invert w-7 h-7"
+                      width={100}
+                      height={100}
+                    />
+                  </div>
+                  <div className="report cursor-pointer mr-3" onClick={() => Reportposttt()}>
                     <Image
                       src="/icons/warning.png"
                       alt="Report"
@@ -773,15 +795,10 @@ const FeedPost = ({
                 </div>
               </div>
 
-              {post ? (
-                <div className="caption m-1 w-full">{postdata.caption}</div>
-              ) : null}
+              {postdata.caption && <div className="caption m-1 w-full">{postdata.caption}</div>}
 
               <div className="comments flex justify-between m-1">
-                <div
-                  className="om flex"
-                  onClick={() => setShowComments(!showComments)}
-                >
+                <div className="om flex" onClick={() => setShowComments(!showComments)}>
                   <button>
                     <Image
                       src="/icons/comment.png"
@@ -795,8 +812,8 @@ const FeedPost = ({
                     {postdata ? postdata.commentcount : 0} comments
                   </div>
                 </div>
-                {currentuserdata && currentuserdata.uid == userdata.uid && (
-                  <div className="flex ">
+                {currentuserdata && currentuserdata.uid === userdata.uid && (
+                  <div className="flex">
                     <Image
                       className="dark:invert h-7 w-7"
                       src="/icons/editing.png"
@@ -819,7 +836,7 @@ const FeedPost = ({
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
     </>
   );
 };

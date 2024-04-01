@@ -162,6 +162,20 @@ const Home = () => {
     }
   };
   //function to get chats of user
+  const getgpfp = async (roomidd) => {
+    try {
+      const roomdata = await getroomdata(roomidd);
+      setPfps((prevPfps) => ({
+        ...prevPfps,
+        [roomidd]: roomdata.pfp,
+      }));
+    } catch (error) {
+      console.error("Error fetching profile picture:", error);
+    }
+  };
+  useEffect(() => {
+    console.log(pfps);
+  }, [pfps]);
   const getchats = async () => {
     try {
       if (!userdata) return;
@@ -185,6 +199,7 @@ const Home = () => {
             roomData.participants.map(async (participant) => {
               getpfp(participant);
             });
+            getgpfp(roomId);
           }
           const lastMessageId =
             roomData.messages.length > 0
@@ -822,7 +837,7 @@ const Home = () => {
   };
   const handlemessagereply = (message) => {
     setMessagetext(`@${usernames[message.sender]} ${message.text}`);
-  }
+  };
   return (
     <div className="lg:ml-5 w-full h-full overflow-hidden">
       <Toaster />
@@ -1045,7 +1060,7 @@ const Home = () => {
                         <div className="flex">
                           <Image
                             className="h-10 w-10 rounded-full"
-                            src={roomdata.pfp}
+                            src={pfps[chat.roomid]}
                             height={50}
                             width={50}
                             alt=""
@@ -1263,7 +1278,11 @@ const Home = () => {
                                 {isDropdownOpen &&
                                   selectedMessage == message && (
                                     <div className="dropdown-menu  mt-4 flex">
-                                      <button onClick={()=>handlemessagereply(message)}>
+                                      <button
+                                        onClick={() =>
+                                          handlemessagereply(message)
+                                        }
+                                      >
                                         <Image
                                           className="h-5 w-5 rounded-full"
                                           src="/icons/reply.png"
