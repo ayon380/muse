@@ -3,6 +3,7 @@ import React from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { FaQuestion } from "react-icons/fa6";
+import { useSidebarStore } from "../../store/zustand";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useEffect } from "react";
 import { FileUploader } from "react-drag-drop-files";
@@ -152,6 +153,7 @@ const Home = () => {
   const [showEmoji, setshowemoji] = React.useState(false);
   const fileTypes = ["JPG", "PNG"];
   const [deleting, setdeleting] = React.useState(false);
+  const {initialLoad,toggleload}=useSidebarStore()
   const [fileDataURL, setFileDataURL] = React.useState(null);
   const [ismobile, setismobile] = React.useState(false);
   useEffect(() => {
@@ -315,6 +317,8 @@ const Home = () => {
             <div className="username my-6 font-bold text-xl">
               Welcome {userdata.userName}
             </div>
+            <div className="df">1. Change 
+            username</div>
             <div className="flex justify-center">
               <motion.input
                 className="input bg-transparent border-white border-2 dark:text-black dark:border-black p-2 rounded-xl shadow-2xl focus:border-2 dark:focus:border-black focus:outline-none placeholder-white dark:placeholder-black"
@@ -332,7 +336,7 @@ const Home = () => {
                 transition={{ duration: 0.5 }}
               />
             </div>
-            <div className="btn mt-10 flex justify-center">
+            <div className=" mt-10 flex justify-center">
               <motion.button
                 className="fd font-rethink flex mb-5 pl-6 pr-5 "
                 onClick={checkUserName}
@@ -352,6 +356,7 @@ const Home = () => {
                 </div>
               </motion.button>
             </div>
+            <div className="sdd">2. Change Name</div>
             <motion.div
               className="name"
               initial={{ opacity: 0 }}
@@ -368,6 +373,7 @@ const Home = () => {
                 placeholder={userdata.displayName}
               />
             </motion.div>
+            <div className="ds">3. Change Bio</div>
             <motion.div
               className="bio"
               initial={{ opacity: 0 }}
@@ -385,14 +391,15 @@ const Home = () => {
                 }}
               />
             </motion.div>
+
             <motion.div
-              className="txt mx-20"
+              className="txt mx-20 max-w-48"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5 }}
             >
               <div className="kl my-5 text-center">
-                Upload your Profile Picture
+                Change your Profile Picture
                 <div className="fg text-xs opacity-70">
                   Smile, it is contagious! 😊
                 </div>
@@ -400,8 +407,8 @@ const Home = () => {
               <FileUploader
                 styles={{
                   color: "white",
-                  display: "flex",
-                  justifyContent: "center",
+                  width:"100px"
+                
                 }}
                 handleChange={handlePPChange}
                 name="Profile Picture"
@@ -549,6 +556,7 @@ const Home = () => {
               </button>
             </motion.div>
             <motion.button
+            className="mb-20"
               onClick={deleteaccount}
               disabled={deleting}
               initial={{ opacity: 0 }}

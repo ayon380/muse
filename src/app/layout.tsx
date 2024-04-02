@@ -6,6 +6,7 @@ import "./globals.css";
 import type { Viewport } from "next";
 import { Analytics } from "@vercel/analytics/react";
 import Head from "next/head";
+import { SpeedInsights } from '@vercel/speed-insights/next';
 import { StrictMode } from "react";
 // import { SpeedInsights } from '@vercel/speed-insights/next';
 
@@ -130,7 +131,7 @@ const lucy = localFont({
   variable: "--font-lucy",
 });
 export const viewport: Viewport = {
-  themeColor: "violet",
+  themeColor: "#FFFFFF",
 };
 const rethink = localFont({
   src: [
@@ -169,7 +170,7 @@ export default function RootLayout({
         <body className={inter.className}>
           {children}
           <Analytics />
-          {/* <SpeedInsights /> */}
+          <SpeedInsights />
         </body>
       </StrictMode>
     </html>

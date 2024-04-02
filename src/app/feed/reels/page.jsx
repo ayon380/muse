@@ -8,6 +8,8 @@ import "../../styles/reels.css";
 import Image from "next/image";
 import { useSidebarStore } from "../../store/zustand";
 import { usePathname, useSearchParams } from "next/navigation";
+import dynamic from "next/dynamic";
+const MainLoading = dynamic(() => import("@/components/MainLoading"));
 const Reels = () => {
   // console.log("Sidebaropen", Sidebaropen);
   const [userdata, setUserData] = useState(null);
@@ -24,9 +26,10 @@ const Reels = () => {
   // State to hold the next page cursor
   const [nextPageCursor, setNextPageCursor] = useState(0);
   const [usermetadata, setUsermetadata] = useState({});
+  const [reelsloading, setReelsloading] = useState(true);
   const [currentreel, setCurrentReel] = useState(0);
   const pathname = usePathname();
-  const { isOpen, toggle } = useSidebarStore();
+  const { isOpen, toggle, initialLoad, toggleload } = useSidebarStore();
   const limit = 5; // Number of documents to fetch per page
   const toggleGlobalMute = () => {
     setIsGlobalMuted((prevState) => !prevState);
@@ -103,7 +106,7 @@ const Reels = () => {
       console.log("Document data:", docSnap.data());
       enqueueUserMetadata(docSnap.data().uid);
       setReel(docSnap.data());
-      setReels((prevReels) => [...prevReels, ...[docSnap.data()]]); 
+      setReels((prevReels) => [...prevReels, ...[docSnap.data()]]);
     } else {
       console.log("No such document!");
       // Handle the case where user data doesn't exist
@@ -148,6 +151,7 @@ const Reels = () => {
       if (reels.length > 20) {
         setReels(reels.slice(reel.length - 20, reels.length));
       }
+      setReelsloading(false);
     }
   };
 
@@ -175,12 +179,42 @@ const Reels = () => {
 
     return () => unsubscribe();
   }, [auth]);
-useEffect(() => {
-  console.log("reels", reels);
-}, [reels]);
+  useEffect(() => {
+    console.log("reels", reels);
+  }, [reels]);
+  useEffect(() => {
+    if (!reelsloading) {
+      toggleload();
+    }
+  }, [reelsloading]);
   return (
     <div className="lg:ml-5 w-full h-full">
-      {userdata  && (
+      {reelsloading && initialLoad && <MainLoading />}
+      {reelsloading && !initialLoad && (
+        <>
+          <div className="main2 md:rounded-2xl bg-white dark:bg-black md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 border-black h-full overflow-y-auto">
+            <div className="flex justify-center items-center h-full">
+              <div className="edwdw ">
+                {" "}
+                {/* Added text-center class here */}
+                <div className="sd flex justify-center">
+                  <Image
+                    src="/loading.gif"
+                    height={150}
+                    width={150}
+                    alt="Loading"
+                  />
+                </div>
+                <div className="de font-lucy mt-24 mx-10 text-center md-text-3xl">
+                  🎬 Lights, camera, action! Get ready to groove and be
+                  amazed... Your front-row seat to the reel world awaits! 🌟
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+      {userdata && !reelsloading && (
         <div>
           <div className="main2 grid md:rounded-2xl bg-white dark:bg-black md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 p-1 lg:p-8 App  border-black w-full h-full">
             <div className="flex">

@@ -1,6 +1,6 @@
 "use client";
 import app from "@/lib/firebase/firebaseConfig";
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, use } from "react";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
@@ -32,6 +32,7 @@ import { useSidebarStore } from "@/app/store/zustand";
 import imageCompression from "browser-image-compression";
 const SearchChat = dynamic(() => import("@/components/SearchChat"));
 const GroupChat = dynamic(() => import("@/components/GroupChat"));
+const MainLoading = dynamic(() => import("@/components/MainLoading"));
 const ChatDetail = dynamic(() => import("@/components/ChatDetail"));
 const GroupChatDetail = dynamic(() => import("@/components/GroupChatDetail"));
 import toast, { Toaster } from "react-hot-toast";
@@ -81,9 +82,16 @@ const Home = () => {
   const [ismobile, setismobile] = useState(false);
   const [chatdetailopen, setchatdetailopen] = useState(false);
   const [roomdata, setroomdata] = useState({});
-  const { chatopen, setchatopen, isOpen, toggle } = useSidebarStore();
+  const [mainloading, setmainloading] = useState(true);
+  const { chatopen, setchatopen, isOpen, toggle, initialLoad, toggleload } =
+    useSidebarStore();
   //function to get data of messagerooms'
   const [searchopen, setsearchopen] = useState(false);
+  useEffect(() => {
+    if (!mainloading) {
+      toggleload();
+    }
+  }, [mainloading]);
   useEffect(() => {
     if (window.innerWidth < 768) {
       setismobile(true);
@@ -228,6 +236,7 @@ const Home = () => {
 
         // console.log("After sorting:", chatroomsWithTimestamp);
         setChats(chatroomsWithTimestamp);
+        setmainloading(false);
       }
     } catch (error) {
       console.error("Error getting chats:", error.message);
@@ -842,7 +851,31 @@ const Home = () => {
   return (
     <div className="lg:ml-5 w-full h-full overflow-hidden">
       <Toaster />
-      {userdata && (
+      {mainloading && initialLoad && <MainLoading />}
+      {mainloading && !initialLoad && (
+        <>
+          <div className="main2 md:rounded-2xl bg-white dark:bg-black md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 border-black h-full overflow-y-auto">
+            <div className="flex justify-center items-center h-full">
+              <div className="edwdw ">
+                {" "}
+                {/* Added text-center class here */}
+                <div className="sd flex justify-center">
+                  <Image
+                    src="/loading.gif"
+                    height={150}
+                    width={150}
+                    alt="Loading"
+                  />
+                </div>
+                <div className="de font-lucy mt-24 md-text-3xl">
+                  Weaving threads of communication, hold tight! 🧵
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+      {userdata && !mainloading && (
         <div className="main2 w-full lg:rounded-2xl  dark:bg-black md:dark:bg-gray-900 bg-white md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 border-black h-full">
           <div className="flex justify-between w-full h-full">
             {gifopen && (

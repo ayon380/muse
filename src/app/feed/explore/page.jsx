@@ -1,18 +1,23 @@
 "use client";
-import React from "react";
+import React, { use } from "react";
 import { useState, useEffect } from "react";
 import { getAuth } from "firebase/auth";
 import app from "@/lib/firebase/firebaseConfig";
 import Image from "next/image";
+import dynamic from "next/dynamic";
 import Masonry, { ResponsiveMasonry } from "react-responsive-masonry";
+import { useSidebarStore } from "@/app/store/zustand";
 import { onAuthStateChanged } from "firebase/auth";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
+const MainLoading = dynamic(() => import("../../../components/MainLoading"));
 const Explore = () => {
   const [userdata, setUserData] = useState(null);
   const auth = getAuth(app);
   const [user, setUser] = useState(auth.currentUser);
   const [posts, setPosts] = useState([]);
   const [reels, setReels] = useState([]);
+  const { initialLoad, toggleload } = useSidebarStore();
+  const [loading, setloading] = useState(true);
   const [feed, setfeed] = useState([]);
   const db = getFirestore(app);
   const getuserdata = async (currentUser) => {
@@ -60,6 +65,7 @@ const Explore = () => {
           setPosts(data.fdata.posts);
           setReels(data.fdata.reels);
         }
+        setloading(false);
       }
     };
     fetchexplore();
@@ -83,9 +89,39 @@ const Explore = () => {
     const mixedFeed = [...posts, ...reels].sort(() => Math.random() - 0.5);
     setfeed(mixedFeed);
   }, [posts]);
+  useEffect(() => {
+    if (!loading) {
+      toggleload();
+    }
+  }, [loading]);
   return (
     <div className=" md:ml-5 w-full h-full">
-      {userdata && (
+      {loading && initialLoad && <MainLoading />}
+      {loading && !initialLoad && (
+        <>
+          <div className="main2 md:rounded-2xl bg-white dark:bg-black md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 border-black h-full overflow-y-auto">
+            <div className="flex justify-center items-center h-full">
+              <div className="edwdw ">
+                {" "}
+                {/* Added text-center class here */}
+                <div className="sd flex justify-center">
+                  <Image
+                    src="/loading.gif"
+                    height={150}
+                    width={150}
+                    alt="Loading"
+                  />
+                </div>
+                <div className="de font-lucy mt-24 mx-10 text-center md-text-3xl">
+                  🔍 Exploring the digital cosmos for your perfect match...
+                  Let&apos;s uncover some gems! 💎
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+      {userdata && !loading && (
         <div>
           <div className="main2 md:rounded-2xl dark:bg-black bg-white md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 border-black md:p-10 overflow-y-auto">
             <div className="header flex">
@@ -104,12 +140,12 @@ const Explore = () => {
                         height={300}
                         className="md:rounded-2xl rounded-lg w-full"
                       />
-                    ) : (<>
-                       <video
-                         src={post.mediaFiles}
-                         className="md:rounded-xl rounded-lg"
-                        
-                      />
+                    ) : (
+                      <>
+                        <video
+                          src={post.mediaFiles}
+                          className="md:rounded-xl rounded-lg"
+                        />
                       </>
                     )}
                   </div>

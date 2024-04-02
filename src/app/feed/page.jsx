@@ -23,7 +23,9 @@ import { getStorage, deleteObject } from "firebase/storage";
 import Image from "next/image";
 import { getFirestore, getDoc, doc } from "firebase/firestore";
 import { useSidebarStore } from "../store/zustand";
+import dynamic from "next/dynamic";
 import FeedPost from "@/components/FeedPost";
+const MainLoading = dynamic(() => import("@/components/MainLoading"));
 const Home = () => {
   const auth = getAuth(app);
   const [user, setUser] = useState(auth.currentUser);
@@ -38,7 +40,7 @@ const Home = () => {
   const [searchtext, setSearchtext] = useState("");
   const [usermetadata, setUsermetadata] = useState({});
   const userMetadataQueue = [];
-  const { isOpen, toggle } = useSidebarStore();
+  const { isOpen, toggle, initialLoad, toggleload } = useSidebarStore();
   let isUserMetadataQueueProcessing = false;
 
   const processUserMetadataQueue = async () => {
@@ -207,10 +209,40 @@ const Home = () => {
       setSearchResults([]);
     }
   }, [searchtext]);
+  useEffect(() => {
+    if (!postloading) {
+      toggleload();
+    }
+  }, [postloading]);
   const [liked, setLiked] = useState(false);
   return (
     <div className=" lg:ml-5 w-full h-full">
-      {userdata && (
+      {/* <MainLoading /> */}
+      {postloading && initialLoad && <MainLoading />}
+      {postloading && !initialLoad && (
+        <>
+          <div className="main2 md:rounded-2xl bg-white dark:bg-black md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 border-black h-full overflow-y-auto">
+            <div className="flex justify-center items-center h-full">
+            <div className="edwdw ">
+                {" "}
+                {/* Added text-center class here */}
+                <div className="sd flex justify-center">
+                  <Image
+                    src="/loading.gif"
+                    height={150}
+                    width={150}
+                    alt="Loading"
+                  />
+                </div>
+                <div className="de font-lucy mt-24 md-text-3xl">
+                🌟 Loading your universe of endless updates... 💬
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+      {userdata && !postloading && (
         <div>
           <div className="main2 md:rounded-2xl bg-white dark:bg-black md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 border-black h-full overflow-y-auto">
             <div className="flex justify-between mt-5 mx-2">

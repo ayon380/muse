@@ -52,6 +52,9 @@ const SideBar = ({ usage, data, currentuserdata }) => {
       useSidebarStore.getState().isOpen = false;
       setismobile(true);
     }
+    else {
+      setismobile(false);
+    }
   }, []);
   const playSound = () => {
     notysound.play(); // Play the audio
@@ -358,11 +361,9 @@ const SideBar = ({ usage, data, currentuserdata }) => {
     <>
       {/* {open && ( */}
       <div
-        className={`lp w-screen  h-dvh lg:h-full   lg:w-1/3 z-50 ${
-          ismobile && "absolute"
-        } ${isOpen ? "slide-in-right " : "slide-out-right "} ${
-          !isAnimationComplete && !isOpen && "hidden"
-        }`}
+        className={`lp w-screen  h-dvh lg:h-full   lg:w-1/3 z-50 ${ismobile && "absolute"
+          } ${isOpen ? "slide-in-right " : "slide-out-right "} ${!isAnimationComplete && !isOpen && "hidden"
+          }`}
         onAnimationEnd={handleAnimationEnd}
       >
         <div className="bg-white z-50 pb-24 oveflow-hidden dark:bg-black h-full rounded-xl md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-40 shadow-2xl border-1 border-black lpo">
