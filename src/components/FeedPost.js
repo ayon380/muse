@@ -372,7 +372,7 @@ const FeedPost = ({
     }
   };
   const Reportposttt = async () => {
-    router.push(`/report/post/${postdata.id}`);
+    router.push(`/report?username=${usermetadata[postdata.uid].userName}&postid=${postdata.id}`);
   };
 
   const handleCommentSubmit = async () => {

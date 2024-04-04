@@ -1184,7 +1184,7 @@ const Home = () => {
 
                       {messages.map((message) => (
                         <motion.div
-                          className="px-6"
+                          className="px-6 "
                           key={
                             message.timestamp + message.sender + message.text
                           }
@@ -1193,7 +1193,7 @@ const Home = () => {
                           transition={{ duration: 0.5 }}
                         >
                           {message.sender == userdata.uid ? (
-                            <div className="ko flex justify-end my-5 ">
+                            <div className="ko flex justify-end my-5 ml-28">
                               <div className="e  text-right bg-purple-400 p-2 lg:p-3 rounded-xl">
                                 <div
                                   className="lp"
@@ -1272,7 +1272,7 @@ const Home = () => {
                                     )}
                                     {message.type == "text" &&
                                       (message.text ? (
-                                        <span className="fg text-lg md:text-xl">
+                                        <span className="fg text-lg md:text-xl text-wrap">
                                           {message.text
                                             .split(/(@\S+|https?:\/\/\S+)/)
                                             .map((part, index) => {
@@ -1524,7 +1524,7 @@ const Home = () => {
                       ))}
 
                       <div ref={messagesEndRef} />
-                      <div className="textbox absolute flex bottom-5 md:bottom-0 rounded-xl pb-4  p-2 backdrop-filter backdrop-blur-xl w-full ">
+                      <div className="textbox absolute flex bottom-0 md:bottom-0 rounded-xl pb-4  p-2 backdrop-filter backdrop-blur-xl w-full ">
                         <input
                           type="text"
                           placeholder="Type a message..."

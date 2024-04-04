@@ -258,7 +258,7 @@ const Reel = ({
     setIsMuted(newState);
   };
   const Reportposttt = async () => {
-    router.push(`/report/reel/${reeldata.id}`);
+    router.push(`/report?username=${usermetadata[reeldata.uid].userName}&reelId=${reeldata.id}`);
   };
   useEffect(() => {
     handleMuteToggle();
@@ -659,9 +659,8 @@ const Reel = ({
                                   >
                                     {usermetadata[comment.uid] ? (
                                       <Link
-                                        href={`/${
-                                          usermetadata[reply.uid].userName
-                                        }`}
+                                        href={`/${usermetadata[reply.uid].userName
+                                          }`}
                                       >
                                         <div className="flex ">
                                           <Image

@@ -78,6 +78,7 @@ const UserReport = ({ username }) => {
         const repref = collection(db, 'reports');
         const q = await addDoc(repref, {
             username: username,
+            type: 'user',
             reason: reason,
             evidence: evidenceUrls,
             description: description,
