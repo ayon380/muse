@@ -9,7 +9,7 @@ export async function POST(request) {
         host: 'smtp.gmail.com',
         auth: {
             user: 'connectonmuse@gmail.com',
-            pass: 'trov tcct pktt gjmq'
+            pass: process.env.EMAIL_PASSWORD,
         },
         secure: true,
     });
