@@ -7,7 +7,7 @@ import {
   onAuthStateChanged,
   signOut,
 } from "firebase/auth";
-import { firebase } from "@/lib/firebase/firebaseConfig";
+
 import { useRouter } from "next/navigation";
 import "../styles/gradients.css";
 import "../styles/feed.css";
@@ -26,6 +26,7 @@ import { useSidebarStore } from "../store/zustand";
 import dynamic from "next/dynamic";
 import FeedPost from "@/components/FeedPost";
 const MainLoading = dynamic(() => import("@/components/MainLoading"));
+const ShareMenu = dynamic(() => import("@/components/ShareMenu"));
 const Home = () => {
   const auth = getAuth(app);
   const [user, setUser] = useState(auth.currentUser);
@@ -39,6 +40,8 @@ const Home = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [searchtext, setSearchtext] = useState("");
   const [usermetadata, setUsermetadata] = useState({});
+  const [sharemenu, setSharemenu] = useState(false);
+  const [sharepostdata, setSharepostdata] = useState(null);
   const userMetadataQueue = [];
   const { isOpen, toggle, initialLoad, toggleload } = useSidebarStore();
   let isUserMetadataQueueProcessing = false;
@@ -217,13 +220,22 @@ const Home = () => {
   const [liked, setLiked] = useState(false);
   return (
     <div className=" lg:ml-5 w-full h-full">
-      {/* <MainLoading /> */}
+      {sharemenu && (
+        <ShareMenu
+          userdata={userdata}
+          postdata={sharepostdata} 
+          usermetadata={usermetadata}
+          enqueueUserMetadata={enqueueUserMetadata}
+          userName={usermetadata[sharepostdata?.uid]?.userName}
+          setSharemenu={setSharemenu}
+        />
+      )}
       {postloading && initialLoad && <MainLoading />}
       {postloading && !initialLoad && (
         <>
           <div className="main2 md:rounded-2xl bg-white dark:bg-black md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 border-black h-full overflow-y-auto">
             <div className="flex justify-center items-center h-full">
-            <div className="edwdw ">
+              <div className="edwdw ">
                 {" "}
                 {/* Added text-center class here */}
                 <div className="sd flex justify-center">
@@ -235,7 +247,7 @@ const Home = () => {
                   />
                 </div>
                 <div className="de font-lucy mt-24 md-text-3xl">
-                🌟 Loading your universe of endless updates... 💬
+                  🌟 Loading your universe of endless updates... 💬
                 </div>
               </div>
             </div>
@@ -258,193 +270,6 @@ const Home = () => {
                 />
               </button>
             </div>
-            {/* <div className="flex ">
-              <div className="search ml-5 mt-5">
-                <input
-                  className="w-96 h-12 text-2xl p-2  placeholder-italic  rounded-2xl bg-gray-300 border-black transition-all duration-300 outline-none shadow-2xl hover:shadow-3xl focus:shadow-3xl  hover:bg-gray-400 focus:bg-gray-400"
-                  type="text"
-                  value={searchtext}
-                  onChange={(e) => setSearchtext(e.target.value)}
-                  placeholder="Search"
-                  // Add hover and focus styles
-                  style={{
-                    background: "rgba(192,192,192,0.5)",
-                    ":hover": {
-                      transform: "scale(1.2)", // Scale up on hover
-                      background: "rgba(192,192,192,0.7)", // Lighter background on hover
-                    },
-                    // Focus styles
-                    ":focus": {
-                      background: "rgba(192,192,192,0.8)", // Deeper background color when selected
-                      outline: "none", // Remove outline when selected
-                    },
-                  }}
-                />
-                {searchResults.length > 0 && searchtext.length > 0 && (
-                  <div className="search-results absolute  bg-white z-10 w-96">
-                    <ul>
-                      {searchResults.map((user) => (
-                        <Link key={user} href={`/${user.userName}`}>
-                          <li key={user.id}>{user.userName}</li>
-                        </Link>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                <div className="stories mt-4">
-                  <div className="je font-lucy text-5xl">Stories</div>
-                  <div className="fp flex mt-2 overflow-x-auto">
-                    <Image
-                      className="rounded-full h-16 w-16 object-cover border-green-500 border-2 p-1 m-1 cursor-pointer"
-                      src={userdata.pfp}
-                      width={100}
-                      height={100}
-                      alt="Profile Picture"
-                    />
-                    <Image
-                      className="rounded-full h-16 w-16 object-cover border-pink-500 border-2 p-1 m-1 cursor-pointer"
-                      src={userdata.pfp}
-                      width={100}
-                      height={100}
-                      alt="Profile Picture"
-                    />
-                    <Image
-                      className="rounded-full h-16 w-16 object-cover border-green-500 border-2 p-1 m-1 cursor-pointer"
-                      src={userdata.pfp}
-                      width={100}
-                      height={100}
-                      alt="Profile Picture"
-                    />
-                    <Image
-                      className="rounded-full h-16 w-16 object-cover border-pink-500 border-2 p-1 m-1 cursor-pointer"
-                      src={userdata.pfp}
-                      width={100}
-                      height={100}
-                      alt="Profile Picture"
-                    />
-                    <Image
-                      className="rounded-full h-16 w-16 object-cover border-green-500 border-2 p-1 m-1 cursor-pointer"
-                      src={userdata.pfp}
-                      width={100}
-                      height={100}
-                      alt="Profile Picture"
-                    />
-                    <Image
-                      className="rounded-full h-16 w-16 object-cover border-pink-500 border-2 p-1 m-1 cursor-pointer"
-                      src={userdata.pfp}
-                      width={100}
-                      height={100}
-                      alt="Profile Picture"
-                    />
-                    <Image
-                      className="rounded-full h-16 w-16 object-cover border-green-500 border-2 p-1 m-1 cursor-pointer"
-                      src={userdata.pfp}
-                      width={100}
-                      height={100}
-                      alt="Profile Picture"
-                    />
-                    <Image
-                      className="rounded-full h-16 w-16 object-cover border-pink-500 border-2 p-1 m-1 cursor-pointer"
-                      src={userdata.pfp}
-                      width={100}
-                      height={100}
-                      alt="Profile Picture"
-                    />
-                    <Image
-                      className="rounded-full h-16 w-16 object-cover border-green-500 border-2 p-1 m-1 cursor-pointer"
-                      src={userdata.pfp}
-                      width={100}
-                      height={100}
-                      alt="Profile Picture"
-                    />
-                    <Image
-                      className="rounded-full h-16 w-16 object-cover border-pink-500 border-2 p-1 m-1 cursor-pointer"
-                      src={userdata.pfp}
-                      width={100}
-                      height={100}
-                      alt="Profile Picture"
-                    />
-                    <Image
-                      className="rounded-full h-16 w-16 object-cover border-green-500 border-2 p-1 m-1 cursor-pointer"
-                      src={userdata.pfp}
-                      width={100}
-                      height={100}
-                      alt="Profile Picture"
-                    />
-                    <Image
-                      className="rounded-full h-16 w-16 object-cover border-pink-500 border-2 p-1 m-1 cursor-pointer"
-                      src={userdata.pfp}
-                      width={100}
-                      height={100}
-                      alt="Profile Picture"
-                    />
-                    <Image
-                      className="rounded-full h-16 w-16 object-cover border-green-500 border-2 p-1 m-1 cursor-pointer"
-                      src={userdata.pfp}
-                      width={100}
-                      height={100}
-                      alt="Profile Picture"
-                    />
-                    <Image
-                      className="rounded-full h-16 w-16 object-cover border-pink-500 border-2 p-1 m-1 cursor-pointer"
-                      src={userdata.pfp}
-                      width={100}
-                      height={100}
-                      alt="Profile Picture"
-                    />
-                    <Image
-                      className="rounded-full h-16 w-16 object-cover border-green-500 border-2 p-1 m-1 cursor-pointer"
-                      src={userdata.pfp}
-                      width={100}
-                      height={100}
-                      alt="Profile Picture"
-                    />
-                    <Image
-                      className="rounded-full h-16 w-16 object-cover border-pink-500 border-2 p-1 m-1 cursor-pointer"
-                      src={userdata.pfp}
-                      width={100}
-                      height={100}
-                      alt="Profile Picture"
-                    />
-                    <Image
-                      className="rounded-full h-16 w-16 object-cover border-pink-500 border-2 p-1 m-1 cursor-pointer"
-                      src={userdata.pfp}
-                      width={100}
-                      height={100}
-                      alt="Profile Picture"
-                    />
-                    <Image
-                      className="rounded-full h-16 w-16 object-cover border-pink-500 border-2 p-1 m-1 cursor-pointer"
-                      src={userdata.pfp}
-                      width={100}
-                      height={100}
-                      alt="Profile Picture"
-                    />
-                    <Image
-                      className="rounded-full h-16 w-16 object-cover border-pink-500 border-2 p-1 m-1 cursor-pointer"
-                      src={userdata.pfp}
-                      width={100}
-                      height={100}
-                      alt="Profile Picture"
-                    />
-                    <Image
-                      className="rounded-full h-16 w-16 object-cover border-pink-500 border-2 p-1 m-1 cursor-pointer"
-                      src={userdata.pfp}
-                      width={100}
-                      height={100}
-                      alt="Profile Picture"
-                    />
-                    <Image
-                      className="rounded-full h-16 w-16 object-cover border-pink-500 border-2 p-1 m-1 cursor-pointer"
-                      src={userdata.pfp}
-                      width={100}
-                      height={100}
-                      alt="Profile Picture"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div> */}
             {postloading && (
               <div className="flex justify-center ">
                 Loading Feed..............
@@ -458,6 +283,8 @@ const Home = () => {
                       key={post.id}
                       post={post}
                       userdata={userdata}
+                      setSharemenu={setSharemenu}
+                      setSharepostdata={setSharepostdata}
                       enqueueUserMetadata={enqueueUserMetadata}
                       usermetadata={usermetadata}
                       db={db}

@@ -26,6 +26,8 @@
     "next": "14.0.4",
     "next-themes": "^0.3.0",
     "nodemailer": "^6.9.13",
+    "peer": "^1.0.2",
+    "peerjs": "^1.5.2",
     "react": "^18",
     "react-alice-carousel": "^2.8.0",
     "react-animation-on-scroll": "^5.1.0",
@@ -44,6 +46,7 @@
     "react-responsive-masonry": "^2.2.0",
     "react-slick": "^0.30.2",
     "tailwind-merge": "^2.2.1",
+    "vercel": "^33.6.2",
     "zustand": "^4.5.2"
   },
   "devDependencies": {

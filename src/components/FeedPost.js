@@ -117,6 +117,8 @@ const FeedPost = ({
   db,
   type,
   post,
+  setSharemenu,
+  setSharepostdata,
   userdata,
   usermetadata,
   currentuserdata,
@@ -136,7 +138,7 @@ const FeedPost = ({
   const [showedit, setShowedit] = useState(false);
   const [showdelete, setShowdelete] = useState(false);
   const [reply, setReply] = useState("");
-  const [sharemenu, setSharemenu] = useState(false);
+  // const [sharemenu, setSharemenu] = useState(false);
   const router = useRouter();
   const limit = 50;
   useEffect(() => {
@@ -457,20 +459,14 @@ const FeedPost = ({
   return (
     <>
       <motion.div
-        className="z-10 justify-center relative w-full py-4 lg:px-96 dark:bg-black"
+        className="z-10 justify-center relative w-full py-4 lg:px-64 md:px-24 dark:bg-black"
         key={postdata.id}
         initial="hidden"
         animate="visible"
         variants={fadeInVariants}
       >
         <Toaster />
-        {sharemenu && (
-          <ShareMenu
-            userdata={userdata}
-            setSharemenu={setSharemenu}
-            postdata={postdata}
-          />
-        )}
+
         {showedit && (
           <EditPost
             post={postdata}
@@ -689,7 +685,7 @@ const FeedPost = ({
           </motion.div>
         )}
         <div className="df bg-white dark:bg-black bg-opacity-40 rounded-2xl px-2 py-2 m-2">
-          {usermetadata && usermetadata[postdata.uid]  && (
+          {usermetadata && usermetadata[postdata.uid] && (
             <div className="header flex justify-between">
               <Link href={`/feed/profile/${usermetadata[postdata.uid].userName}`}>
                 <div className="flex items-center">
@@ -759,7 +755,7 @@ const FeedPost = ({
                   </div>
                 </div>
                 <div className="l12 flex text-3xl">
-                  <div className="share cursor-pointer " onClick={() => setSharemenu(true)}>
+                  <div className="share cursor-pointer " onClick={() => { setSharepostdata(postdata); setSharemenu(true) }}>
                     <Image
                       src="/icons/send.png"
                       alt="Share"
@@ -769,7 +765,7 @@ const FeedPost = ({
                     />
                   </div>
                   <div className="tagged h-7 w-7 flex mr-2">
-                    <Image src="/icons/supermarket.png" width={50} height={50} alt="" className="dark:invert"/>
+                    <Image src="/icons/supermarket.png" width={50} height={50} alt="" className="dark:invert" />
                     <div className="asd text-sm -mt-2 text-red-500 font-bold ">
                       {postdata.taggedUsers.length}
                     </div>
