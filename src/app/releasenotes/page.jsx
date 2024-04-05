@@ -3,6 +3,80 @@ import React from "react";
 const ReleaseNotes = () => {
   const releaseNotes = [
     {
+      version: "v0.72",
+      descriptions: [
+        "Migrated to Zustand Metadata Global Store for reduction in API Calls to backend",
+        "Bug Fixes",
+        " Added Last Seen in Chat",
+      ],
+      commit: "e3cdd58",
+      date: "2024-04-05",
+    },
+    {
+      version: "v0.71",
+      descriptions: ["Added REport functionality into post cards"],
+      commit: "ayon380",
+      date: "2024-04-04",
+    },
+    {
+      version: "v0.70",
+      descriptions: ["Fixed Nodemailer password"],
+      commit: "ayon380",
+      date: "2024-04-04",
+    },
+    {
+      version: "v0.69",
+      descriptions: ["Added Initaial user REport", "Fixed NodeMailer"],
+      commit: "ayon380",
+      date: "2024-04-04",
+    },
+    {
+      version: "v0.68",
+      descriptions: ["Fixed Vulnerability"],
+      commit: "ayon380",
+      date: "2024-04-02",
+    },
+    {
+      version: "v0.67",
+      descriptions: ["Fixed Vulnerability"],
+      commit: "ayon380",
+      date: "2024-04-01",
+    },
+    {
+      version: "v0.66",
+      commit: "ayon380",
+      descriptions: ["Bug Fixes"],
+      date: "2024-03-31",
+    },
+    {
+      version: "v0.65",
+      descriptions: ["Bug Fixes"],
+      commit: "ayon380",
+      date: "2024-03-31",
+    },
+    {
+      version: "v0.64",
+      descriptions: ["Added Saved Posts"],
+      commit: "ayon380",
+      date: "2024-03-27",
+    },
+    {
+      version: "v0.6",
+      descriptions: [
+        "added Following Follower Pages",
+        "Added REply",
+        "Added Groups Info",
+      ],
+      commit: "ayon380",
+      date: "2024-03-22",
+    },
+    {
+      version: "v0.62",
+      descriptions: ["Added Landing Page"],
+      commit: "ayon380",
+      date: "2024-03-22",
+    },
+    {
       version: "v0.61",
       descriptions: ["Added Explore", "Landing Page"],
       commit: "e3cdd58",

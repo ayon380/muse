@@ -39,62 +39,11 @@ const Home = () => {
   const [postloading, setPostLoading] = useState(true);
   const [searchResults, setSearchResults] = useState([]);
   const [searchtext, setSearchtext] = useState("");
-  const [usermetadata, setUsermetadata] = useState({});
+  // const [usermetadata, setUsermetadata] = useState({});
   const [sharemenu, setSharemenu] = useState(false);
   const [sharepostdata, setSharepostdata] = useState(null);
   const userMetadataQueue = [];
-  const { isOpen, toggle, initialLoad, toggleload } = useSidebarStore();
-  let isUserMetadataQueueProcessing = false;
-
-  const processUserMetadataQueue = async () => {
-    if (!isUserMetadataQueueProcessing && userMetadataQueue.length > 0) {
-      // Set processing flag to true
-      isUserMetadataQueueProcessing = true;
-
-      // Get the first item from the queue
-      const { uid, resolve } = userMetadataQueue.shift();
-      try {
-        // Call getusermetadata function
-
-        await getusermetadata(uid);
-        // Resolve the promise
-        resolve();
-      } catch (error) {
-        console.error("Error processing user metadata:", error);
-      }
-
-      // Process next item in the queue recursively
-      processUserMetadataQueue();
-    } else {
-      // Set processing flag to false when queue is empty
-      isUserMetadataQueueProcessing = false;
-    }
-  };
-
-  const enqueueUserMetadata = (uid) => {
-    return new Promise((resolve, reject) => {
-      // Add the user metadata task to the queue
-      userMetadataQueue.push({ uid, resolve });
-      // Start processing the queue
-      processUserMetadataQueue();
-    });
-  };
-
-  const getusermetadata = async (uid) => {
-    // console.log(uid, "uid");
-    if (!usermetadata[uid]) {
-      console.log("Fetching user metadata");
-      const userRef = doc(db, "username", uid);
-      const docSnap = await getDoc(userRef);
-      if (docSnap.exists()) {
-        setUsermetadata((prevUsermetadata) => ({
-          ...prevUsermetadata,
-          [uid]: docSnap.data(),
-        }));
-      }
-    }
-    console.log(usermetadata, "usermetadata");
-  };
+  const { isOpen, toggle, initialLoad, toggleload,usermetadata,enqueueUserMetadata } = useSidebarStore();
   async function gettoken() {
     if (user) {
       try {

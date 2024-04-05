@@ -23,6 +23,9 @@ module.exports = withPWA({
       }
     ]
   },
+  compiler:{
+    // removeConsole:true
+  }
 });
 // const nextConfig = {
 //   images: {

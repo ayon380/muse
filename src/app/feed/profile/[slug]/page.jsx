@@ -10,6 +10,7 @@ import { increment } from "firebase/firestore";
 import toast, { Toaster } from "react-hot-toast";
 import "../../../styles/feed.css";
 import "../../../styles/slug.css";
+import { useSidebarStore } from "@/app/store/zustand";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -33,61 +34,12 @@ const Page = ({ params }) => {
   const [userdataloading, setUserDataLoading] = React.useState(true);
   const [pagestate, setPageState] = React.useState(0);
   const [restrictchecking, setRestrictChecking] = React.useState(true);
-  const [usermetadata, setUsermetadata] = React.useState({});
   const [taggedPosts, setTaggedPosts] = React.useState([]);
   const [savedPosts, setSavedPosts] = React.useState([]);
   const [globalrestrict, setGlobalRestrict] = React.useState(false);
   const [followersbox, setFollowersbox] = React.useState();
   const [followingbox, setfollowingbox] = React.useState();
-  const userMetadataQueue = [];
-  let isUserMetadataQueueProcessing = false;
-
-  const processUserMetadataQueue = async () => {
-    if (!isUserMetadataQueueProcessing && userMetadataQueue.length > 0) {
-      // Set processing flag to true
-      isUserMetadataQueueProcessing = true;
-
-      // Get the first item from the queue
-      const { uid, resolve } = userMetadataQueue.shift();
-      try {
-        // Call getusermetadata function
-
-        await getusermetadata(uid);
-        // Resolve the promise
-        resolve();
-      } catch (error) {
-        console.error("Error processing user metadata:", error);
-      }
-
-      // Process next item in the queue recursively
-      processUserMetadataQueue();
-    } else {
-      // Set processing flag to false when queue is empty
-      isUserMetadataQueueProcessing = false;
-    }
-  };
-
-  const enqueueUserMetadata = (uid) => {
-    return new Promise((resolve, reject) => {
-      userMetadataQueue.push({ uid, resolve });
-      processUserMetadataQueue();
-    });
-  };
-
-  const getusermetadata = async (uid) => {
-    if (!usermetadata[uid]) {
-      console.log("Fetching user metadata");
-      const userRef = doc(db, "username", uid);
-      const docSnap = await getDoc(userRef);
-      if (docSnap.exists()) {
-        setUsermetadata((prevUsermetadata) => ({
-          ...prevUsermetadata,
-          [uid]: docSnap.data(),
-        }));
-      }
-    }
-    console.log(usermetadata, "usermetadata");
-  };
+  const { usermetadata, enqueueUserMetadata } = useSidebarStore();
   const checkfollow = () => {
     console.log(userdata.followers);
     console.log(currentuserdata.uid);

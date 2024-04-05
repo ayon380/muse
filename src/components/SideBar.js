@@ -20,6 +20,7 @@ import {
   desc,
   where,
 } from "firebase/firestore";
+import "@/externalfn/updatels";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import dynamic from "next/dynamic";
@@ -788,7 +789,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                   className="pl text-xs text-center cursor-pointer mb-4"
                   onClick={() => router.push("/releasenotes")}
                 >
-                  Muse v0.66 beta @NoFilter LLC 2024-2025
+                  Muse v{process.env.NEXT_PUBLIC_VERSION} beta @NoFilter LLC 2024-2025
                 </div>
               </div>
             </div>

@@ -88,8 +88,8 @@ const SearchChat = ({
                       <li>
                         {chat.type == "p"
                           ? chat.participants[0] == userdata.uid
-                            ? usernames[chat.participants[1]]
-                            : usernames[chat.participants[0]]
+                            ? usernames[chat.participants[1]].userName
+                            : usernames[chat.participants[0]].userName
                           : chat.title}
                       </li>
                     </div>

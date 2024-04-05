@@ -25,67 +25,22 @@ const Reels = () => {
   const [reelid, setReelid] = useState(id);
   // State to hold the next page cursor
   const [nextPageCursor, setNextPageCursor] = useState(0);
-  const [usermetadata, setUsermetadata] = useState({});
   const [reelsloading, setReelsloading] = useState(true);
   const [currentreel, setCurrentReel] = useState(0);
   const pathname = usePathname();
-  const { isOpen, toggle, initialLoad, toggleload } = useSidebarStore();
+  const {
+    isOpen,
+    toggle,
+    initialLoad,
+    toggleload,
+    usermetadata,
+    enqueueUserMetadata,
+  } = useSidebarStore();
   const limit = 5; // Number of documents to fetch per page
   const toggleGlobalMute = () => {
     setIsGlobalMuted((prevState) => !prevState);
   };
-  const userMetadataQueue = [];
-  let isUserMetadataQueueProcessing = false;
 
-  const processUserMetadataQueue = async () => {
-    if (!isUserMetadataQueueProcessing && userMetadataQueue.length > 0) {
-      // Set processing flag to true
-      isUserMetadataQueueProcessing = true;
-
-      // Get the first item from the queue
-      const { uid, resolve } = userMetadataQueue.shift();
-      try {
-        // Call getusermetadata function
-
-        await getusermetadata(uid);
-        // Resolve the promise
-        resolve();
-      } catch (error) {
-        console.error("Error processing user metadata:", error);
-      }
-
-      // Process next item in the queue recursively
-      processUserMetadataQueue();
-    } else {
-      // Set processing flag to false when queue is empty
-      isUserMetadataQueueProcessing = false;
-    }
-  };
-
-  const enqueueUserMetadata = (uid) => {
-    return new Promise((resolve, reject) => {
-      // Add the user metadata task to the queue
-      userMetadataQueue.push({ uid, resolve });
-      // Start processing the queue
-      processUserMetadataQueue();
-    });
-  };
-
-  const getusermetadata = async (uid) => {
-    // console.log(uid, "uid");
-    if (!usermetadata[uid]) {
-      console.log("Fetching user metadata");
-      const userRef = doc(db, "username", uid);
-      const docSnap = await getDoc(userRef);
-      if (docSnap.exists()) {
-        setUsermetadata((prevUsermetadata) => ({
-          ...prevUsermetadata,
-          [uid]: docSnap.data(),
-        }));
-      }
-    }
-    console.log(usermetadata, "usermetadata");
-  };
   const [reel, setReel] = useState(null);
   const getuserdata = async (currentUser) => {
     const userRef = doc(db, "users", currentUser.email);

@@ -18,7 +18,7 @@ const MainLoading = () => {
                 />
             </div>
             <div className="fixed bottom-4 text-sm md:text-base">
-                NoFilter LLC <span className="opacity-75">v0.65 Beta</span>
+                NoFilter LLC <span className="opacity-75">v{process.env.NEXT_PUBLIC_VERSION} Beta</span>
             </div>
         </div>
     );

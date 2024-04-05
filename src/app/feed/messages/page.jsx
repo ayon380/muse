@@ -59,9 +59,6 @@ const Home = () => {
   const messagesEndRef = React.useRef(null);
   const [chatuserdata, setChatuserdata] = useState("");
   const [maxlength, setmaxlength] = useState(0);
-  const [pfps, setPfps] = useState({});
-
-  const [usernames, setusernames] = useState({});
   const db = getFirestore(app);
   const [searchResults, setSearchResults] = useState([]);
   const [roomid, setRoomid] = useState(room);
@@ -83,8 +80,17 @@ const Home = () => {
   const [chatdetailopen, setchatdetailopen] = useState(false);
   const [roomdata, setroomdata] = useState({});
   const [mainloading, setmainloading] = useState(true);
-  const { chatopen, setchatopen, isOpen, toggle, initialLoad, toggleload } =
-    useSidebarStore();
+  const [pfps, setPfps] = useState({});
+  const {
+    chatopen,
+    setchatopen,
+    isOpen,
+    toggle,
+    initialLoad,
+    toggleload,
+    usermetadata,
+    enqueueUserMetadata,
+  } = useSidebarStore();
   //function to get data of messagerooms'
   const [searchopen, setsearchopen] = useState(false);
   useEffect(() => {
@@ -170,7 +176,6 @@ const Home = () => {
       return roomsnap.data();
     }
   };
-  //function to get chats of user
   const getgpfp = async (roomidd) => {
     try {
       const roomdata = await getroomdata(roomidd);
@@ -199,14 +204,14 @@ const Home = () => {
         const roomDataPromises = chasnap.data().rooms.map(async (roomId) => {
           const roomData = await getroomdata(roomId);
           if (roomData.type == "p") {
-            getpfp(
+            enqueueUserMetadata(
               roomData.participants[0] == userdata.uid
                 ? roomData.participants[1]
                 : roomData.participants[0]
             );
           } else {
             roomData.participants.map(async (participant) => {
-              getpfp(participant);
+              enqueueUserMetadata(participant);
             });
             getgpfp(roomId);
           }
@@ -286,30 +291,9 @@ const Home = () => {
       console.error("Error searching users:", error);
     }
   };
-  const getpfp = async (uid) => {
-    try {
-      if (!pfps[uid] && userdata) {
-        const useref = doc(db, "username", uid);
-        const userSnap = await getDoc(useref);
-        console.log("Running getpfp " + userSnap.data().userName);
-        // const username = userSnap.data().userName;
-        if (userSnap.exists()) {
-          setPfps((prevPfps) => ({
-            ...prevPfps,
-            [uid]: userSnap.data().pfp,
-          }));
-          setusernames((prevus) => ({
-            ...prevus,
-            [uid]: userSnap.data().userName,
-          }));
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching profile picture:", error);
-    }
-  };
+
   useEffect(() => {
-    getpfp(chatwindow);
+    enqueueUserMetadata(chatwindow);
   }, [chatwindow]);
 
   const getuserdata = async (currentUser) => {
@@ -846,8 +830,38 @@ const Home = () => {
     }
   };
   const handlemessagereply = (message) => {
-    setMessagetext(`@${usernames[message.sender]} ${message.text}`);
+    setMessagetext(`@${usermetadata[message.sender].userName} ${message.text}`);
   };
+  function formatLastSeen(timestamp) {
+    const now = new Date();
+    const lastSeen = new Date(timestamp);
+
+    const diff = now.getTime() - lastSeen.getTime();
+    const seconds = Math.floor(diff / 1000);
+
+    if (seconds <= 60) {
+      // 2 minutes = 120 seconds
+      return "Active";
+    } else {
+      const minutes = Math.floor(seconds / 60);
+      const hours = Math.floor(minutes / 60);
+      const days = Math.floor(hours / 24);
+
+      if (days > 0) {
+        if (days === 1) {
+          return "yesterday";
+        } else {
+          return `${days} days ago`;
+        }
+      } else if (hours > 0) {
+        return `${hours} hour${hours > 1 ? "s" : ""} ago`;
+      } else if (minutes > 0) {
+        return `${minutes} minute${minutes > 1 ? "s" : ""} ago`;
+      } else {
+        return "just now";
+      }
+    }
+  }
   return (
     <div className="lg:ml-5 w-full h-full overflow-hidden">
       <Toaster />
@@ -899,7 +913,7 @@ const Home = () => {
               ) : (
                 <GroupChatDetail
                   userdata={userdata}
-                  usernames={usernames}
+                  usernames={usermetadata}
                   chatuserdata={chatuserdata}
                   onClose={() => setchatdetailopen(false)}
                   db={db}
@@ -912,7 +926,7 @@ const Home = () => {
                 userdata={userdata}
                 chats={chats}
                 setChatwindow={setChatwindow}
-                usernames={usernames}
+                usernames={usermetadata}
               />
             )}
             {showaddfiles && (
@@ -1058,7 +1072,7 @@ const Home = () => {
                             {chat.participants[0] == userdata.uid ? (
                               <Image
                                 className="h-10 w-10 rounded-full"
-                                src={pfps[chat.participants[1]]}
+                                src={usermetadata[chat.participants[1]].pfp}
                                 height={50}
                                 width={50}
                                 alt={chat.participants[1]}
@@ -1066,7 +1080,7 @@ const Home = () => {
                             ) : (
                               <Image
                                 className="h-10 w-10 rounded-full"
-                                src={pfps[chat.participants[0]]}
+                                src={usermetadata[chat.participants[0]].pfp}
                                 height={50}
                                 width={50}
                                 alt={chat.participants[0]}
@@ -1076,8 +1090,8 @@ const Home = () => {
 
                           <div className="username font-bold text-xl">
                             {chat.participants[0] == userdata.uid
-                              ? usernames[chat.participants[1]]
-                              : usernames[chat.participants[0]]}
+                              ? usermetadata[chat.participants[1]].userName
+                              : usermetadata[chat.participants[0]].userName}
                           </div>
                         </div>
                       </div>
@@ -1144,13 +1158,13 @@ const Home = () => {
                             {chattype == "p" && (
                               <Image
                                 className="h-7 w-7 rounded-full mr-2"
-                                src={pfps[chatwindow]}
+                                src={usermetadata[chatwindow].pfp}
                                 height={50}
                                 width={50}
                                 alt={chatwindow}
                               ></Image>
                             )}
-                            {usernames[chatwindow]}
+                            {usermetadata[chatwindow].userName}
                             {chattype == "g" && (
                               <>
                                 {" "}
@@ -1162,6 +1176,13 @@ const Home = () => {
                                   alt={chatwindow}
                                 />{" "}
                                 {chatwindow}
+                              </>
+                            )}
+                            {chattype == "p" && (
+                              <>
+                                {formatLastSeen(
+                                  usermetadata[chatwindow].lastseen
+                                )}
                               </>
                             )}
                           </div>
@@ -1407,9 +1428,9 @@ const Home = () => {
                                 <div className="e bg-purple-400 p-2 rounded-xl">
                                   <div className="flex">
                                     {/* {console.log(pfps[message.sender])} */}
-                                    {pfps[message.sender] && (
+                                    {usermetadata[message.sender] && (
                                       <Image
-                                        src={pfps[message.sender]}
+                                        src={usermetadata[message.sender].pfp}
                                         className="rounded-full h-5 w-5 mr-1"
                                         alt="Profile Pic"
                                         height={50}
@@ -1596,18 +1617,18 @@ const Home = () => {
                     <div className="pfp ml-2 cursor-pointer">
                       <Image
                         className="h-10 w-10 rounded-full"
-                        src={pfps[chatwindow]}
+                        src={usermetadata[chatwindow].pfp}
                         height={50}
                         width={50}
                         alt={chatwindow}
                       ></Image>
                     </div>
                     <div className="username text-2xl mt-2 ml-2">
-                      {usernames[chatwindow]}
+                      {usermetadata[chatwindow].userName}
                     </div>
                     {!chprevchat ? (
                       <button onClick={startchat}>
-                        Start Chat with {usernames[chatwindow]}
+                        Start Chat with {usermetadata[chatwindow].userName}
                       </button>
                     ) : (
                       <></>

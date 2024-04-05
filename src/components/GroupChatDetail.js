@@ -251,7 +251,7 @@ const GroupChatDetail = ({ onClose, roomdata, usernames, db }) => {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <span className="text-gray-800">{usernames[participant]}</span>
+                  <span className="text-gray-800">{usernames[participant].userName}</span>
                   <motion.button
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
@@ -340,7 +340,7 @@ const GroupChatDetail = ({ onClose, roomdata, usernames, db }) => {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.3, delay: 0.2 }}
                     >
-                      <span className="text-opacity-65">{usernames[participant]}</span>
+                      <span className="text-opacity-65">{usernames[participant].userName}</span>
                     </motion.div>
                   ))}
                 </div>

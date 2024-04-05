@@ -5,7 +5,7 @@ import { Toaster } from 'react-hot-toast';
 import { getAuth } from 'firebase/auth';
 import app from '@/lib/firebase/firebaseConfig';
 import { collection, addDoc, updateDoc, query, getDocs } from 'firebase/firestore';
-import { where, getDoc ,doc} from 'firebase/firestore';
+import { where, getDoc, doc } from 'firebase/firestore';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
