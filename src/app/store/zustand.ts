@@ -53,7 +53,7 @@ export const useSidebarStore = create<SidebarStore>(
     const updateInterval = setInterval(updateMetadata, 60000); // 1 minute
 
     return {
-      isOpen: true,
+      isOpen: false,
       chatopen: false,
       initialLoad: true,
       usermetadata,

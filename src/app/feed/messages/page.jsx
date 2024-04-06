@@ -219,6 +219,11 @@ const Home = () => {
             roomData.messages.length > 0
               ? roomData.messages[roomData.messages.length - 1]
               : null;
+          const lastmessage = await getDoc(doc(db, "messages", lastMessageId));
+          if (lastmessage.exists()) {
+            roomData.lastMessage = lastmessage.data();
+          }
+
           if (lastMessageId) {
             const messageData = await getDoc(
               doc(db, "messages", lastMessageId)
@@ -862,6 +867,58 @@ const Home = () => {
       }
     }
   }
+  function getUsernameAndPostIdFromUrl(url) {
+    // Check if the URL matches the expected pattern
+    const regex = /\/feed\/profile\/([^\/]+)\?postid=([^\/]+)/;
+    const match = url.match(regex);
+
+    if (match) {
+      // Extract username and postid from the matched groups
+      const username = match[1];
+      const postId = match[2];
+      return { username, postId };
+    } else {
+      // Return null or handle invalid URL case
+      return null;
+    }
+  }
+  const fetchpost = async (postId) => {
+    const postref = doc(db, "posts", postId);
+    const postdata = await getDoc(postref);
+    if (postdata.exists()) {
+      return postdata.data();
+    }
+  };
+
+  const ShortMusePost = ({ message }) => {
+    const text = message.text;
+    const { username, postId } = getUsernameAndPostIdFromUrl(text);
+    const [posttt, setPosttt] = useState({});
+
+    useEffect(() => {
+      const fetchData = async () => {
+        const postData = await fetchpost(postId);
+        setPosttt(postData);
+      };
+
+      fetchData();
+    }, []); // Run this effect whenever postId changes
+
+    return (
+      <div className="sdfsdf " onClick={() => router.push(text)}>
+        <div className="relative">{username}</div>
+        {posttt.mediaFiles && (
+          <Image
+            src={posttt.mediaFiles[0]}
+            height={150}
+            width={150}
+            alt=""
+            className="rounded-lg"
+          />
+        )}
+      </div>
+    );
+  };
   return (
     <div className="lg:ml-5 w-full h-full overflow-hidden">
       <Toaster />
@@ -1088,10 +1145,17 @@ const Home = () => {
                             )}
                           </div>
 
-                          <div className="username font-bold text-xl">
+                          <div className="username font-bold text-xl ">
                             {chat.participants[0] == userdata.uid
                               ? usermetadata[chat.participants[1]].userName
                               : usermetadata[chat.participants[0]].userName}
+                            <div className="ds font-light opacity-75 text-sm">
+                              {chat.lastMessage.type === "text"
+                                ? chat.lastMessage.text.substr(0, 40)
+                                : chat.lastMessage.type === "media"
+                                ? "Media"
+                                : "Gif"}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -1164,7 +1228,7 @@ const Home = () => {
                                 alt={chatwindow}
                               ></Image>
                             )}
-                            {usermetadata[chatwindow].userName}
+                            {chattype=="p" && usermetadata[chatwindow].userName}
                             {chattype == "g" && (
                               <>
                                 {" "}
@@ -1179,11 +1243,11 @@ const Home = () => {
                               </>
                             )}
                             {chattype == "p" && (
-                              <>
+                              <div className="ml-5 text-opacity-45">
                                 {formatLastSeen(
                                   usermetadata[chatwindow].lastseen
                                 )}
-                              </>
+                              </div>
                             )}
                           </div>
                           <div className="sa"></div>
@@ -1291,6 +1355,7 @@ const Home = () => {
                                         ))}
                                       </div>
                                     )}
+
                                     {message.type == "text" &&
                                       (message.text ? (
                                         <span className="fg text-lg md:text-xl text-wrap">
@@ -1306,6 +1371,16 @@ const Home = () => {
                                                   >
                                                     <strong>{part}</strong>
                                                   </a>
+                                                );
+                                              } else if (
+                                                part.includes("muse.nofilter")
+                                              ) {
+                                                // If it's a Muse post, create a link
+                                                return (
+                                                  <ShortMusePost
+                                                    message={message}
+                                                    key={index}
+                                                  />
                                                 );
                                               } else if (
                                                 part.startsWith("http")

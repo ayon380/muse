@@ -54,6 +54,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
       setismobile(true);
     }
     else {
+      useSidebarStore.getState().isOpen = true;
       setismobile(false);
     }
   }, []);

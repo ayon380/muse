@@ -100,7 +100,7 @@ const ShareMenu = ({ userdata, postdata, userName, setSharemenu, usermetadata, e
       const msgdata = {
         sender: userdata.uid,
         text: `https://muse.nofilter.cloud/feed/profile/${userName}?postid=${postdata?.id}`,
-        type: "text",
+        type: "musepost",
         timestamp: Date.now(),
         readstatus: false,
         roomid: chat.roomid,
@@ -121,7 +121,7 @@ const ShareMenu = ({ userdata, postdata, userName, setSharemenu, usermetadata, e
         chattype: chat.type,
         sender: userdata.uid,
         text: `https://muse.nofilter.cloud/feed/profile/${userName}?postid=${postdata?.id}`,
-        messagetype: "text",
+        messagetype: "musepost",
         roomid: chat.roomid,
         receiver: chat.type === "p" ? chat.participants[0] === userdata.uid ? chat.participants[1] : chat.participants[0] : chat.title,
         timestamp: Date.now(),

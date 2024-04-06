@@ -23,8 +23,9 @@ module.exports = withPWA({
       }
     ]
   },
-  compiler:{
+  compiler: {
     // removeConsole:true
+    removeConsole: process.env.NODE_ENV === "production"
   }
 });
 // const nextConfig = {
