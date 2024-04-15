@@ -838,13 +838,14 @@ const Home = () => {
     setMessagetext(`@${usermetadata[message.sender].userName} ${message.text}`);
   };
   function formatLastSeen(timestamp) {
+    console.log(timestamp);
     const now = new Date();
     const lastSeen = new Date(timestamp);
 
     const diff = now.getTime() - lastSeen.getTime();
     const seconds = Math.floor(diff / 1000);
 
-    if (seconds <= 60) {
+    if (seconds <= 120) {
       // 2 minutes = 120 seconds
       return "Active";
     } else {
@@ -1127,21 +1128,51 @@ const Home = () => {
                         <div className="flex my-4 ">
                           <div className="pfp mr-2">
                             {chat.participants[0] == userdata.uid ? (
-                              <Image
-                                className="h-10 w-10 rounded-full"
-                                src={usermetadata[chat.participants[1]].pfp}
-                                height={50}
-                                width={50}
-                                alt={chat.participants[1]}
-                              ></Image>
+                              <>
+                                <div className="relative">
+                                  <Image
+                                    className="h-10 w-10 rounded-full"
+                                    src={usermetadata[chat.participants[1]].pfp}
+                                    height={50}
+                                    width={50}
+                                    alt={chat.participants[1]}
+                                  />
+                                  {
+                                    <div
+                                      className={`absolute bottom-0 right-0 w-3 h-3 rounded-full ${
+                                        formatLastSeen(
+                                          usermetadata[chat.participants[1]]
+                                            .lastseen
+                                        ) != "Active"
+                                          ? "bg-gray-300"
+                                          : "bg-green-500"
+                                      }`}
+                                    />
+                                  }
+                                </div>
+                              </>
                             ) : (
-                              <Image
-                                className="h-10 w-10 rounded-full"
-                                src={usermetadata[chat.participants[0]].pfp}
-                                height={50}
-                                width={50}
-                                alt={chat.participants[0]}
-                              ></Image>
+                              <div className="relative">
+                                <Image
+                                  className="h-10 w-10 rounded-full"
+                                  src={usermetadata[chat.participants[0]].pfp}
+                                  height={50}
+                                  width={50}
+                                  alt={chat.participants[0]}
+                                />
+                                {
+                                  <div
+                                    className={`absolute bottom-0 right-0 w-3 h-3 rounded-full ${
+                                      formatLastSeen(
+                                        usermetadata[chat.participants[0]]
+                                          .lastseen
+                                      ) != "Active"
+                                        ? "bg-gray-300"
+                                        : "bg-green-500"
+                                    }`}
+                                  />
+                                }
+                              </div>
                             )}
                           </div>
 
@@ -1228,7 +1259,8 @@ const Home = () => {
                                 alt={chatwindow}
                               ></Image>
                             )}
-                            {chattype=="p" && usermetadata[chatwindow].userName}
+                            {chattype == "p" &&
+                              usermetadata[chatwindow].userName}
                             {chattype == "g" && (
                               <>
                                 {" "}

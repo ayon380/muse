@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 
+
 import type { Viewport } from "next";
 import { Analytics } from "@vercel/analytics/react";
 import Head from "next/head";

@@ -150,8 +150,10 @@ const Page = ({ params }) => {
       console.log("getuserdata running...");
       if (docSnap.exists()) {
         // console.log("Document data:", docSnap.data());
-        if (num == 1) setUserData(docSnap.data());
-        else setCurrentUserData(docSnap.data());
+        if (num == 1) {
+          setUserData(docSnap.data());
+          enqueueUserMetadata(docSnap.data().uid);
+        } else setCurrentUserData(docSnap.data());
       } else {
         console.log("No such document!");
         // Handle the case where user data doesn't exist
@@ -190,7 +192,7 @@ const Page = ({ params }) => {
     try {
       const userRef = doc(db, "users", userdata.email);
       const currentuserRef = doc(db, "users", user.email);
-
+      const user1ref = doc(db, "username", userdata.uid);
       const f = !q; // Calculate f based on the previous state
 
       if (f) {
@@ -198,6 +200,9 @@ const Page = ({ params }) => {
         await updateDoc(userRef, {
           followers: arrayUnion(currentuserdata.uid),
           followerscount: increment(1),
+        });
+        await updateDoc(user1ref, {
+          score: increment(5),
         });
         await updateDoc(currentuserRef, {
           following: arrayUnion(userdata.uid),
@@ -514,7 +519,17 @@ const Page = ({ params }) => {
                               </div>
                             </div>
                           </div>
-
+                          <div className="following text-center w-16">
+                            <div className="flex">
+                              <div className="text-4xl font-bold">
+                                {usermetadata[userdata.uid] &&
+                                  usermetadata[userdata.uid].score}
+                              </div>
+                              <div className="text-sm opacity-80 mt-4">
+                                ZScore
+                              </div>
+                            </div>
+                          </div>
                           <div className=" posts">
                             <div className="flex">
                               <div className="text-4xl font-bold ">

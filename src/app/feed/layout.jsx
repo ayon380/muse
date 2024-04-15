@@ -1,4 +1,5 @@
 // Layout.js
+"use client"
 import React from "react";
 import "../styles/gradients.css";
 import "../styles/feed.css";
