@@ -23,6 +23,9 @@ module.exports = withPWA({
       }
     ]
   },
+  experimental: {
+    missingSuspenseWithCSRBailout: false,
+  },
   compiler: {
     // removeConsole:true
     removeConsole: process.env.NODE_ENV === "production"
