@@ -19,7 +19,7 @@ import {
   where,
   orderBy,
 } from "firebase/firestore";
-import { getStorage, deleteObject } from "firebase/storage";
+import { getStorage } from "firebase/storage";
 import Image from "next/image";
 import { getFirestore, getDoc, doc } from "firebase/firestore";
 import { useSidebarStore } from "../store/zustand";
@@ -27,10 +27,10 @@ import dynamic from "next/dynamic";
 import FeedPost from "@/components/FeedPost";
 const MainLoading = dynamic(() => import("@/components/MainLoading"));
 const ShareMenu = dynamic(() => import("@/components/ShareMenu"));
+const PostComment = dynamic(() => import("@/components/PostComment"));
 const Home = () => {
   const auth = getAuth(app);
   const [user, setUser] = useState(auth.currentUser);
-  const storage = getStorage(app);
   const [createpostmenu, setcreatepostmenu] = useState(false);
   const router = useRouter();
   const [userdata, setUserData] = useState(null);
@@ -39,11 +39,18 @@ const Home = () => {
   const [postloading, setPostLoading] = useState(true);
   const [searchResults, setSearchResults] = useState([]);
   const [searchtext, setSearchtext] = useState("");
-  // const [usermetadata, setUsermetadata] = useState({});
   const [sharemenu, setSharemenu] = useState(false);
   const [sharepostdata, setSharepostdata] = useState(null);
-  const userMetadataQueue = [];
-  const { isOpen, toggle, initialLoad, toggleload,usermetadata,enqueueUserMetadata } = useSidebarStore();
+  const [commentpostdata, setCommentpostdata] = useState(null);
+  const [showComments, setShowComments] = useState(false);
+  const {
+    isOpen,
+    toggle,
+    initialLoad,
+    toggleload,
+    usermetadata,
+    enqueueUserMetadata,
+  } = useSidebarStore();
   async function gettoken() {
     if (user) {
       try {
@@ -166,18 +173,30 @@ const Home = () => {
       toggleload();
     }
   }, [postloading]);
-  const [liked, setLiked] = useState(false);
   return (
     <div className=" lg:ml-5 w-full h-full">
       {sharemenu && (
         <ShareMenu
           userdata={userdata}
-          postdata={sharepostdata} 
+          postdata={sharepostdata}
           usermetadata={usermetadata}
           enqueueUserMetadata={enqueueUserMetadata}
           userName={usermetadata[sharepostdata?.uid]?.userName}
           setSharemenu={setSharemenu}
         />
+      )}
+      {showComments && (
+        <div className="">
+          <PostComment
+            postdata={commentpostdata}
+            userdata={userdata}
+            db={db}
+            uid={userdata.uid}
+            usermetadata={usermetadata}
+            enqueueUserMetadata={enqueueUserMetadata}
+            setShowComments={setShowComments}
+          />
+        </div>
       )}
       {postloading && initialLoad && <MainLoading />}
       {postloading && !initialLoad && (
@@ -237,6 +256,9 @@ const Home = () => {
                       enqueueUserMetadata={enqueueUserMetadata}
                       usermetadata={usermetadata}
                       db={db}
+                      showComments={showComments}
+                      setCommentpostdata={setCommentpostdata}
+                      setShowComments={setShowComments}
                     />
                   ))
                 ) : (

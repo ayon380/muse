@@ -50,7 +50,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
   const [ismobile, setismobile] = useState(false);
   useEffect(() => {
     if (window.innerWidth <= 768) {
-      useSidebarStore.getState().isOpen = false;
+      // useSidebarStore.getState().isOpen = false;
       setismobile(true);
     }
     else {

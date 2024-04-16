@@ -16,7 +16,9 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { get } from "http";
-const FeedPost = dynamic(() => import("@/components/FeedPost"), { ssr: false });
+const ProfilePost = dynamic(() => import("@/components/ProfilePost"), {
+  ssr: false,
+});
 const Follower = dynamic(() => import("@/components/Follower"), { ssr: false });
 const Following = dynamic(() => import("@/components/Follwing"));
 const Page = ({ params }) => {
@@ -346,7 +348,7 @@ const Page = ({ params }) => {
                 }
               }}
             >
-              <FeedPost
+              <ProfilePost
                 db={db}
                 userdata={userdata}
                 post={
@@ -612,8 +614,8 @@ const Page = ({ params }) => {
                                     <Image
                                       src={post.mediaFiles[0]}
                                       alt=""
-                                      width={100}
-                                      height={100}
+                                      width={300}
+                                      height={300}
                                       className="w-full rounded-md md:rounded-lg h-full object-cover"
                                     />
                                   </>

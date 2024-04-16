@@ -239,7 +239,7 @@ const FeedPost = ({
   return (
     <>
       <motion.div
-        className="z-10 justify-center relative w-full py-4 lg:px-64 md:px-24 max-h-3/5 dark:bg-black"
+        className=" justify-center relative max-w-4/5  py-4 lg:px-64 md:px-24  dark:bg-black"
         key={postdata.id}
         initial="hidden"
         animate="visible"
@@ -268,7 +268,9 @@ const FeedPost = ({
             content="Are you sure you want to delete this post?"
           />
         )}
-        <div className="df bg-white dark:bg-black bg-opacity-40 rounded-2xl px-2 py-2 m-2">
+        
+        <div className="df bg-white dark:bg-black bg-opacity-40 md:ml-96 rounded-2xl px-2 py-2 m-2">
+        <button onClick={() => onclose()}>Close</button>
           {usermetadata && usermetadata[postdata.uid] && (
             <div className="header flex justify-between">
               <Link
@@ -295,7 +297,7 @@ const FeedPost = ({
             </div>
           )}
           <div className="gf rounded-xl pt-6 z-20 w-full">
-            <Carousel showThumbs={false}>
+            <Carousel showThumbs={false} >
               {postdata?.mediaFiles.map((media) => (
                 <>
                   {isVideoFile(media) ? (
@@ -314,7 +316,7 @@ const FeedPost = ({
                         height="500"
                         width="500"
                         alt=""
-                        className="rounded-xl object-center"
+                        className="rounded-xl object-cover max-h-96"
                       />
                     </>
                   )}
