@@ -204,7 +204,7 @@ const GroupChatDetail = ({ onClose, roomdata, usernames, db }) => {
     visible: { opacity: 1, y: 0 },
   };
   return (
-    <div className="relative bg-gray-900">
+    <div className="relative bg-gray-900 z-30" >
       <Toaster />
       <motion.div
         className={`fixed inset-0 z-50 flex items-center justify-center transition-all duration-500 ${showModal ? 'opacity-100' : 'opacity-0 pointer-events-none'

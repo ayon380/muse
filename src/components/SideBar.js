@@ -45,8 +45,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
   const [notifications, setnotificationOpen] = useState([]);
   const [follow, setFollow] = React.useState(false);
   const db = getFirestore(app);
-  const [usermetadata, setUsermetadata] = useState({});
-  const { isOpen, toggle } = useSidebarStore();
+  const { isOpen, toggle,usermetadata,enqueueUserMetadata } = useSidebarStore();
   const [ismobile, setismobile] = useState(false);
   useEffect(() => {
     if (window.innerWidth <= 768) {
@@ -66,21 +65,6 @@ const SideBar = ({ usage, data, currentuserdata }) => {
     setAudio(new Audio("/sounds/inbox.mp3"));
     // only run once on the first render on the client
   }, []);
-  const getusermetadata = async (uid) => {
-    try {
-      if (usermetadata.uid === undefined) {
-        const userRef = doc(db, "username", uid);
-        const docSnap = await getDoc(userRef);
-        console.log(docSnap.data());
-        if (docSnap.exists()) {
-          setUsermetadata({ ...usermetadata, [uid]: docSnap.data() });
-        }
-      }
-    } catch (error) {
-      console.log("Error getting user metadata:", error);
-      // Handle error
-    }
-  };
   const checkfollow = () => {
     if (userdata && data && userdata.followers.includes(profileData.uid)) {
       console.log("checkfollow running..." + true);
@@ -230,7 +214,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
         snapshot.docChanges().forEach(async (change) => {
           if (change.type === "added") {
             const q = change.doc.data();
-            await getusermetadata(q.sender);
+            enqueueUserMetadata(q.sender);
             if (Date.now() - q.timestamp < 20000) {
               toast.success("New Notification: ");
               playSound();
@@ -388,12 +372,16 @@ const SideBar = ({ usage, data, currentuserdata }) => {
             <CreatePost
               onClose={() => setcreatepostOpen(!createpostopen)}
               userdata={userdata}
+              usermetadata={usermetadata}
+              enqueueUserMetadata={enqueueUserMetadata}
             />
           )}
           {createreelopen && (
             <CreateReel
               onClose={() => setcreatereelOpen(!createreelopen)}
               userdata={userdata}
+              usermetadata={usermetadata}
+              enqueueUserMetadata={enqueueUserMetadata}
             />
           )}
           {userdata && (

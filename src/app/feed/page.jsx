@@ -28,6 +28,7 @@ import FeedPost from "@/components/FeedPost";
 const MainLoading = dynamic(() => import("@/components/MainLoading"));
 const ShareMenu = dynamic(() => import("@/components/ShareMenu"));
 const PostComment = dynamic(() => import("@/components/PostComment"));
+const TaggedUser = dynamic(() => import("@/components/TaggedUser"));
 const Home = () => {
   const auth = getAuth(app);
   const [user, setUser] = useState(auth.currentUser);
@@ -40,6 +41,7 @@ const Home = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [searchtext, setSearchtext] = useState("");
   const [sharemenu, setSharemenu] = useState(false);
+  const [taggedusermenu, setTaggedusermenu] = useState(false);
   const [sharepostdata, setSharepostdata] = useState(null);
   const [commentpostdata, setCommentpostdata] = useState(null);
   const [showComments, setShowComments] = useState(false);
@@ -185,6 +187,15 @@ const Home = () => {
           setSharemenu={setSharemenu}
         />
       )}
+      {taggedusermenu && (
+        <TaggedUser
+          postdata={commentpostdata}
+          usermetadata={usermetadata}
+          enqueueUserMetadata={enqueueUserMetadata}
+          close={() => setTaggedusermenu(false)}
+        />
+      )}
+
       {showComments && (
         <div className="">
           <PostComment
@@ -255,6 +266,7 @@ const Home = () => {
                       setSharepostdata={setSharepostdata}
                       enqueueUserMetadata={enqueueUserMetadata}
                       usermetadata={usermetadata}
+                      setTaggedusermenu={setTaggedusermenu}
                       db={db}
                       showComments={showComments}
                       setCommentpostdata={setCommentpostdata}

@@ -78,6 +78,7 @@ const FeedPost = ({
   userdata,
   usermetadata,
   onclose,
+  setTaggedusermenu,
   currentuserdata,
   showComments,
   setShowComments,
@@ -360,7 +361,13 @@ const FeedPost = ({
                       height={100}
                     />
                   </div>
-                  <div className="tagged h-7 w-7 flex mr-2">
+                  <div
+                    className="tagged h-7 w-7 flex mr-2"
+                    onClick={() => {
+                      setCommentpostdata(postdata);
+                      setTaggedusermenu(true);
+                    }}
+                  >
                     <Image
                       src="/icons/supermarket.png"
                       width={50}

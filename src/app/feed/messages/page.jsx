@@ -121,6 +121,10 @@ const Home = () => {
     };
     func();
   }, [roomid]);
+  const refetchroomdata = async () => {
+    const data = await getroomdata(roomid);
+    setroomdata(data);
+  };
 
   const handleFileChange = (e) => {
     const files = e.target.files;
@@ -967,6 +971,9 @@ const Home = () => {
                   chatuserdata={chatuserdata}
                   onClose={() => setchatdetailopen(false)}
                   roomdata={roomdata}
+                  usermetadata={usermetadata}
+                  refetchroomdata={refetchroomdata}
+                  db={db}
                 />
               ) : (
                 <GroupChatDetail
@@ -1223,7 +1230,15 @@ const Home = () => {
             {checkchat() && (
               <div
                 className={`chatwindow w-full lg
-              :w-2/3 border-2 bg-violet-200 dark:bg-black md:dark:bg-gray-700  bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-10 shadow-2xl border-none  md:rounded-2xl h-full relative`}
+              :w-2/3 border-2 ${
+                roomdata.theme == "love"
+                  ? "bg-[url('/chatbg/love.jpeg')]"
+                  : roomdata.theme == "space"
+                  ? "bg-[url('/chatbg/space.jpg')]"
+                  : roomdata.theme == "heaven"
+                  ? "bg-[url('/chatbg/heaven.jpeg')]"
+                  : "bg-purple-200"
+              } dark:bg-black md:dark:bg-gray-700  bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-10 shadow-2xl border-none  md:rounded-2xl h-full relative`}
               >
                 {roomid != "" && (
                   <>
