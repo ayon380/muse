@@ -14,7 +14,7 @@ import {
 import app from "@/lib/firebase/firebaseConfig";
 const ShareMenu = ({
   userdata,
-  postdata,
+  postid,
   userName,
   setSharemenu,
   usermetadata,
@@ -23,6 +23,22 @@ const ShareMenu = ({
   const [chats, setChats] = useState([]);
   const db = getFirestore(app);
   const [sharing, setSharing] = useState({});
+  const [postdata, setPostdata] = useState(null);
+  const fetchPost = async () => {
+    try {
+      const postRef = doc(db, "posts", postid);
+      const postSnapshot = await getDoc(postRef);
+      if (postSnapshot.exists()) {
+        setPostdata(postSnapshot.data());
+      }
+    } catch (error) {
+      console.error("Error getting documents: ", error);
+    }
+  };
+  useEffect(() => {
+    fetchPost();
+  }, []);
+
   const fetchChatRoom = async (roomId) => {
     const roomSnapshot = await getDoc(doc(db, "messagerooms", roomId));
     if (roomSnapshot.exists()) {

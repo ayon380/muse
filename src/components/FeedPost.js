@@ -10,6 +10,7 @@ import Image from "next/image";
 import { collection, getDoc, query, setDoc } from "firebase/firestore";
 import Link from "next/link";
 import toast, { Toaster } from "react-hot-toast";
+import { useSidebarStore } from "@/app/store/zustand";
 import {
   getFirestore,
   updateDoc,
@@ -86,7 +87,15 @@ const FeedPost = ({
   enqueueUserMetadata,
 }) => {
   const [liked, setLiked] = React.useState(false);
-  console.log(post + "post");
+  const { postupdatedata, setpostdataupdate } = useSidebarStore();
+  useEffect(() => {
+    console.log(postupdatedata + "postupdatedata");
+    if (postupdatedata == post.id) {
+      refetchPost();
+      setpostdataupdate("");
+    }
+  }, [postupdatedata]);
+  // console.log(post + "post");
   const [postdata, setPostdata] = useState(post);
   const [uid, setUid] = useState("");
   const [showedit, setShowedit] = useState(false);
@@ -126,6 +135,7 @@ const FeedPost = ({
     }
   };
   const refetchPost = async () => {
+    console.log("refetching post");
     const postRef = doc(db, "posts", postdata.id);
     const docSnap = await getDoc(postRef);
     if (docSnap.exists()) {
@@ -276,15 +286,15 @@ const FeedPost = ({
                 href={`/feed/profile/${usermetadata[postdata.uid].userName}`}
               >
                 <div className="flex items-center">
-                  <div className="profile-pic bg-gradient-to-r from-purple-500 to-blue-500 h-10 w-10 rounded-full p-2 md:h-20 md:w-20">
-                    <Image
-                      className="rounded-full h-8 w-8 md:h-16 md:w-16 object-cover "
-                      src={usermetadata[postdata.uid].pfp}
-                      width={100}
-                      height={100}
-                      alt="Profile Picture"
-                    />
-                  </div>
+                  {/* <div className="profile-pic bg-gradient-to-r from-purple-500 to-blue-500 h-10 w-10 rounded-full p-2 md:h-20 md:w-20"> */}
+                  <Image
+                    className="rounded-full h-8 w-8  md:h-16 md:w-16 object-cover "
+                    src={usermetadata[postdata.uid].pfp}
+                    width={100}
+                    height={100}
+                    alt="Profile Picture"
+                  />
+                  {/* </div> */}
                   <div className="username ml-2 text-xl md:text-3xl">
                     {usermetadata[postdata.uid].userName}
                   </div>

@@ -24,7 +24,7 @@ const PostComment = ({
   setShowComments,
   db,
   userdata,
-  postdata,
+  postid,
   usermetadata,
   enqueueUserMetadata,
   uid,
@@ -39,7 +39,7 @@ const PostComment = ({
   const [comment, setComment] = useState("");
   const limit = 50;
   const { setpostdataupdate } = useSidebarStore();
-
+  console.log(postid);
   function formatTimestamp(firebaseTimestamp) {
     if (
       !firebaseTimestamp ||
@@ -84,7 +84,7 @@ const PostComment = ({
   const getComments = async () => {
     try {
       setCommentsloading(true);
-      const q = await getDoc(doc(db, "posts", postdata.id));
+      const q = await getDoc(doc(db, "posts", postid));
       const ncom = q.data().comments;
 
       const newComments = await Promise.all(
@@ -273,7 +273,7 @@ const PostComment = ({
         timestamp: new Date(),
       };
       const q = await addDoc(commentRef, commentData);
-      const postRef = doc(db, "posts", postdata.id);
+      const postRef = doc(db, "posts", postdid);
       await updateDoc(postRef, {
         commentcount: increment(1),
         comments: arrayUnion(q.id),
@@ -284,7 +284,7 @@ const PostComment = ({
       commentData.timestamp = formatTimestamp(commentData.timestamp);
       setCommentList((prevState) => [...prevState, commentData]);
       setComment("");
-      setpostdataupdate(postdata.id);
+      setpostdataupdate(postdid);
       toast.success("Comment posted successfully");
     } catch (error) {
       toast.error("Error posting comment: " + error.message);

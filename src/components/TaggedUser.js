@@ -8,7 +8,7 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import toast, { Toaster } from "react-hot-toast";
-import  { useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 const Follower = ({
   currentuserdata,
   userdata,
@@ -51,6 +51,9 @@ const Follower = ({
           </button>
         </div>
         <Toaster />
+        {postdata.taggedUsers.length === 0 && (
+          <p className="text-gray-500 text-center ">No tagged users Yet</p>
+        )}
         {postdata.taggedUsers.map((follower) => {
           if (usermetadata[follower]) {
             return (

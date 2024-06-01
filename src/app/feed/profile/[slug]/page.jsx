@@ -15,11 +15,20 @@ import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import dynamic from "next/dynamic";
-import { get } from "http";
 const ProfilePost = dynamic(() => import("@/components/ProfilePost"), {
   ssr: false,
 });
+const PostCommentProfile = dynamic(
+  () => import("@/components/PostCommentProfile"),
+  {
+    ssr: false,
+  }
+);
+const ShareMenuProfile = dynamic(() => import("@/components/ShareMenuProfile"));
 const Follower = dynamic(() => import("@/components/Follower"), { ssr: false });
+const TaggedUserProfile = dynamic(() =>
+  import("@/components/TaggedUserProfile")
+);
 const Following = dynamic(() => import("@/components/Follwing"));
 const Page = ({ params }) => {
   const { slug } = params;
@@ -29,6 +38,7 @@ const Page = ({ params }) => {
   console.log(slug);
   const [searchtext, setSearchtext] = React.useState("");
   const [userdata, setUserData] = React.useState(null);
+  const [taggeduseropen, setTaggeduseropen] = React.useState(false);
   const [showDropdown, setShowDropdown] = React.useState(false);
   const [currentuserdata, setCurrentUserData] = React.useState(null);
   const [reels, setReels] = React.useState([]);
@@ -36,11 +46,13 @@ const Page = ({ params }) => {
   const [userdataloading, setUserDataLoading] = React.useState(true);
   const [pagestate, setPageState] = React.useState(0);
   const [restrictchecking, setRestrictChecking] = React.useState(true);
+  const [showComments, setShowComments] = React.useState(false);
   const [taggedPosts, setTaggedPosts] = React.useState([]);
   const [savedPosts, setSavedPosts] = React.useState([]);
   const [globalrestrict, setGlobalRestrict] = React.useState(false);
   const [followersbox, setFollowersbox] = React.useState();
   const [followingbox, setfollowingbox] = React.useState();
+  const [sharemenuopen, setSharemenuopen] = React.useState(false);
   const { usermetadata, enqueueUserMetadata } = useSidebarStore();
   const checkfollow = () => {
     console.log(userdata.followers);
@@ -339,6 +351,38 @@ const Page = ({ params }) => {
               enqueueUserMetadata={enqueueUserMetadata}
             />
           )}
+          {showComments && (
+            <div className="">
+              <PostCommentProfile
+                postid={postid}
+                userdata={userdata}
+                db={db}
+                uid={userdata.uid}
+                usermetadata={usermetadata}
+                enqueueUserMetadata={enqueueUserMetadata}
+                setShowComments={setShowComments}
+              />
+            </div>
+          )}
+          {sharemenuopen && (
+            <ShareMenuProfile
+              userdata={userdata}
+              postid={postid}
+              userName={userdata.userName}
+              setSharemenu={setSharemenuopen}
+              usermetadata={usermetadata}
+              enqueueUserMetadata={enqueueUserMetadata}
+            />
+          )}
+          {taggeduseropen && (
+            <TaggedUserProfile
+              usermetadata={usermetadata}
+              postid={postid}
+              db={db}
+              enwueueUserMetadata={enqueueUserMetadata}
+              close={() => setTaggeduseropen(false)}
+            />
+          )}
           {postid !== -1 && showPost && posts[0] && (
             <div
               className="lop h-screen w-screen fixed top-0 left-0 flex justify-center items-center z-10 backdrop-filter backdrop-blur-3xl"
@@ -360,13 +404,15 @@ const Page = ({ params }) => {
                 }
                 onclose={onclose}
                 type="profile"
+                setShowComments={setShowComments}
                 usermetadata={usermetadata}
+                setSharemenu={setSharemenuopen}
                 enqueueUserMetadata={enqueueUserMetadata}
                 currentuserdata={currentuserdata}
+                setTaggeduseropen={setTaggeduseropen}
               />
             </div>
           )}
-
           <div className="main2 grid md:rounded-2xl bg-white dark:bg-black md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 p-2 App  border-black w-full h-full">
             {userdataloading && (
               <div className="text-2xl m-4 flex justify-center w-full h-full align-middle text-middle">
@@ -642,10 +688,12 @@ const Page = ({ params }) => {
                                 }}
                                 className="relative aspect-w-16 aspect-h-9"
                               >
-                                <video
-                                  src={reel.mediaFiles}
-                                  className="w-full h-full rounded-md lg:rounded-lg object-cover"
-                                ></video>
+                                <Image
+                                  src={reel.thumbnail}
+                                  alt={reel.caption}
+                                  height={800}
+                                  width={400}
+                                />
                               </div>
                             ))}
                           </div>

@@ -36,6 +36,7 @@ const CreatePost = ({ onClose, userdata }) => {
   const [mediaFiles, setMediaFiles] = useState([]);
   const [searchtext, setSearchtext] = useState("");
   const [searchResults, setSearchResults] = useState([]);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [usernames, setUsernames] = useState([]);
   const [taggedUsers, setTaggedUsers] = useState([]); // [user1, user2, user3
@@ -337,7 +338,8 @@ const CreatePost = ({ onClose, userdata }) => {
           <button
             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
             onClick={handleSubmit}
-            disabled={submitting}
+            disabled={mediaFiles.length === 0 || submitting|| caption.length === 0}
+            // disabled={submitting}
           >
             {submitting ? "Posting..." : "Post"}
           </button>

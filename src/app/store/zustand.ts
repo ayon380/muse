@@ -7,7 +7,9 @@ type SidebarStore = {
   isOpen: boolean;
   chatopen: boolean;
   initialLoad: boolean;
+  postdataupdate: string;
   usermetadata: Record<string, any>;
+  setpostdataupdate: (data: string) => void;
   setUserMetadata: (data: Record<string, any>) => void;
   toggleload: () => void;
   setchatopen: () => void;
@@ -56,7 +58,9 @@ export const useSidebarStore = create<SidebarStore>(
       isOpen: false,
       chatopen: false,
       initialLoad: true,
+      postdataupdate:"",
       usermetadata,
+      setpostdataupdate: (data) => set((state) => ({ postdataupdate: data })),
       setUserMetadata: (data) =>
         set((state) => ({ usermetadata: { ...state.usermetadata, ...data } })),
       toggleload: ()=>set((state) => ({ initialLoad: (state.initialLoad = false) })),

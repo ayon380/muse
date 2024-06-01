@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { getAuth } from "firebase/auth";
 import app from "@/lib/firebase/firebaseConfig";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import Masonry, { ResponsiveMasonry } from "react-responsive-masonry";
 import { useSidebarStore } from "@/app/store/zustand";
@@ -14,6 +15,7 @@ const Explore = () => {
   const [userdata, setUserData] = useState(null);
   const auth = getAuth(app);
   const [user, setUser] = useState(auth.currentUser);
+  const router = useRouter();
   const [posts, setPosts] = useState([]);
   const [reels, setReels] = useState([]);
   const { initialLoad, toggleload } = useSidebarStore();
@@ -121,6 +123,7 @@ const Explore = () => {
           </div>
         </>
       )}
+      
       {userdata && !loading && (
         <div>
           <div className="main2 md:rounded-2xl dark:bg-black bg-white md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 border-black md:p-10 overflow-y-auto">
@@ -141,12 +144,31 @@ const Explore = () => {
                         className="md:rounded-2xl rounded-lg w-full"
                       />
                     ) : (
-                      <>
-                        <video
-                          src={post.mediaFiles}
-                          className="md:rounded-xl rounded-lg"
-                        />
-                      </>
+                      <div
+                        onClick={() => {
+                          router.push(`/feed/reels?reelid=${post.id}`);
+                        }}
+                      >
+                        {post.thumbnail ? (
+                          <Image
+                            src={post.thumbnail}
+                            alt=""
+                            width={300}
+                            height={300}
+                            className="md:rounded-2xl rounded-lg w-full"
+                          />
+                        ) : (
+                          <>
+                            <Image
+                              src="/thumbnail.png"
+                              alt=""
+                              width={300}
+                              height={300}
+                              className="md:rounded-2xl rounded-lg w-full"
+                            />{" "}
+                          </>
+                        )}
+                      </div>
                     )}
                   </div>
                 ))}

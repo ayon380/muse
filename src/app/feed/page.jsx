@@ -91,7 +91,6 @@ const Home = () => {
       }
     }
   }
-
   useEffect(() => {
     fetchData();
   }, [user]);

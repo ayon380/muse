@@ -67,8 +67,6 @@ import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 const Modal = dynamic(() => import("./Modal"));
 const EditPost = dynamic(() => import("./EditPost"));
-const ShareMenu = dynamic(() => import("@/components/ShareMenu"));
-const PostComment = dynamic(() => import("@/components/PostComment"));
 const FeedPost = ({
   db,
   type,
@@ -78,6 +76,7 @@ const FeedPost = ({
   userdata,
   usermetadata,
   onclose,
+  setTaggeduseropen,
   currentuserdata,
   showComments,
   setShowComments,
@@ -268,9 +267,9 @@ const FeedPost = ({
             content="Are you sure you want to delete this post?"
           />
         )}
-        
+
         <div className="df bg-white dark:bg-black bg-opacity-40 md:ml-96 rounded-2xl px-2 py-2 m-2">
-        <button onClick={() => onclose()}>Close</button>
+          <button onClick={() => onclose()}>Close</button>
           {usermetadata && usermetadata[postdata.uid] && (
             <div className="header flex justify-between">
               <Link
@@ -297,7 +296,7 @@ const FeedPost = ({
             </div>
           )}
           <div className="gf rounded-xl pt-6 z-20 w-full">
-            <Carousel showThumbs={false} >
+            <Carousel showThumbs={false}>
               {postdata?.mediaFiles.map((media) => (
                 <>
                   {isVideoFile(media) ? (
@@ -350,7 +349,7 @@ const FeedPost = ({
                   <div
                     className="share cursor-pointer "
                     onClick={() => {
-                      setSharepostdata(postdata);
+                      // setSharepostdata(postdata);
                       setSharemenu(true);
                     }}
                   >
@@ -362,7 +361,10 @@ const FeedPost = ({
                       height={100}
                     />
                   </div>
-                  <div className="tagged h-7 w-7 flex mr-2">
+                  <div
+                    className="tagged h-7 w-7 flex mr-2"
+                    onClick={() => setTaggeduseropen(true)}
+                  >
                     <Image
                       src="/icons/supermarket.png"
                       width={50}
@@ -407,7 +409,7 @@ const FeedPost = ({
                   className="om flex"
                   onClick={() => {
                     setShowComments(true);
-                    setCommentpostdata(postdata);
+                    // setCommentpostdata(postdata);
                   }}
                 >
                   <button>
