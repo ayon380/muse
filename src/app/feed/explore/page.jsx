@@ -11,16 +11,32 @@ import { useSidebarStore } from "@/app/store/zustand";
 import { onAuthStateChanged } from "firebase/auth";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 const MainLoading = dynamic(() => import("../../../components/MainLoading"));
+const ProfilePost = dynamic(() => import("../../../components/ProfilePost"));
+const PostCommentProfile = dynamic(
+  () => import("@/components/PostCommentProfile"),
+  {
+    ssr: false,
+  }
+);
+const ShareMenuProfile = dynamic(() => import("@/components/ShareMenuProfile"));
+const TaggedUserProfile = dynamic(() =>
+  import("@/components/TaggedUserProfile")
+);
 const Explore = () => {
   const [userdata, setUserData] = useState(null);
   const auth = getAuth(app);
   const [user, setUser] = useState(auth.currentUser);
   const router = useRouter();
+  const [postid, setPostId] = useState(-1);
   const [posts, setPosts] = useState([]);
   const [reels, setReels] = useState([]);
   const { initialLoad, toggleload } = useSidebarStore();
   const [loading, setloading] = useState(true);
   const [feed, setfeed] = useState([]);
+  const { usermetadata, enqueueUserMetadata } = useSidebarStore();
+  const [showComments, setShowComments] = React.useState(false);
+  const [sharemenuopen, setSharemenuopen] = React.useState(false);
+  const [taggeduseropen, setTaggeduseropen] = React.useState(false);
   const db = getFirestore(app);
   const getuserdata = async (currentUser) => {
     const userRef = doc(db, "users", currentUser.email);
@@ -45,6 +61,17 @@ const Explore = () => {
     }
     return null;
   }
+  useEffect(() => {
+    if (postid != "-1" && posts.length > 0) {
+      const post = posts.find((post) => {
+        return post.id === postid;
+      });
+      const uid = post.uid;
+      console.log(uid);
+      enqueueUserMetadata(uid);
+    }
+  }, [postid]);
+
   useEffect(() => {
     const fetchexplore = async () => {
       if (user) {
@@ -123,9 +150,70 @@ const Explore = () => {
           </div>
         </>
       )}
-      
+
       {userdata && !loading && (
         <div>
+          {showComments && (
+            <div className="">
+              <PostCommentProfile
+                postid={postid}
+                userdata={userdata}
+                db={db}
+                uid={userdata.uid}
+                usermetadata={usermetadata}
+                enqueueUserMetadata={enqueueUserMetadata}
+                setShowComments={setShowComments}
+              />
+            </div>
+          )}
+          {sharemenuopen && (
+            <ShareMenuProfile
+              userdata={userdata}
+              postid={postid}
+              userName={userdata.userName}
+              setSharemenu={setSharemenuopen}
+              usermetadata={usermetadata}
+              enqueueUserMetadata={enqueueUserMetadata}
+            />
+          )}
+          {taggeduseropen && (
+            <TaggedUserProfile
+              usermetadata={usermetadata}
+              postid={postid}
+              db={db}
+              enwueueUserMetadata={enqueueUserMetadata}
+              close={() => setTaggeduseropen(false)}
+            />
+          )}
+          {postid !== -1 && posts[0] && (
+            <div
+              className="lop h-screen w-screen fixed top-0 left-0 flex justify-center items-center z-10 backdrop-filter backdrop-blur-3xl"
+              onClick={(e) => {
+                if (e.target.classList.contains("lop")) {
+                  onclose();
+                }
+              }}
+            >
+              <ProfilePost
+                db={db}
+                userdata={userdata}
+                post={posts.find((post) => {
+                  return post.id === postid;
+                })}
+                onclose={() => {
+                  setPostId(-1);
+                  // setShowPost(false);
+                }}
+                type="explore"
+                setShowComments={setShowComments}
+                usermetadata={usermetadata}
+                setSharemenu={setSharemenuopen}
+                enqueueUserMetadata={enqueueUserMetadata}
+                currentuserdata={userdata}
+                setTaggeduseropen={setTaggeduseropen}
+              />
+            </div>
+          )}
           <div className="main2 md:rounded-2xl dark:bg-black bg-white md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 border-black md:p-10 overflow-y-auto">
             <div className="header flex">
               <div className="lk text-3xl  ">Explore</div>
@@ -137,6 +225,9 @@ const Explore = () => {
                   <div key={post.id} className="m-0.5 md:m-2">
                     {post.type == "post" ? (
                       <Image
+                        onClick={() => {
+                          setPostId(post.id);
+                        }}
                         src={post.mediaFiles[0]}
                         alt=""
                         width={300}

@@ -30,7 +30,7 @@
     "nextjs-progressbar": "^0.0.16",
     "nodemailer": "^6.9.13",
     "peer": "^1.0.2",
-    "peerjs": "^1.5.2",
+    "peerjs": "^1.5.4",
     "react": "^18",
     "react-alice-carousel": "^2.8.0",
     "react-animation-on-scroll": "^5.1.0",
@@ -48,10 +48,12 @@
     "react-responsive-carousel": "^3.2.23",
     "react-responsive-masonry": "^2.2.0",
     "react-slick": "^0.30.2",
+    "simple-peer": "^9.11.1",
     "tailwind-merge": "^2.2.2",
     "three": "^0.163.0",
     "three-globe": "^2.31.0",
     "vercel": "^33.6.2",
+    "ws": "^8.17.0",
     "zustand": "^4.5.2"
   },
   "devDependencies": {

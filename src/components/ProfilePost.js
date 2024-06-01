@@ -425,7 +425,7 @@ const FeedPost = ({
                     {postdata ? postdata.commentcount : 0} comments
                   </div>
                 </div>
-                {currentuserdata && currentuserdata.uid === userdata.uid && (
+                {currentuserdata && currentuserdata.uid === userdata.uid && type=="profile" && (
                   <div className="flex">
                     <Image
                       className="dark:invert h-7 w-7"
