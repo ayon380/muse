@@ -25,101 +25,19 @@ const Reel = ({
   isGlobalMuted,
   idx,
   setCurrentReel,
+  setSharemenu,
   usermetadata,
+  setShowComments,
   enqueueUserMetadata,
+  setselectedReelid,
 }) => {
   const reelRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [showComments, setShowComments] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  const [comment, setComment] = useState("");
-  const [commentList, setCommentList] = useState([]);
   const db = getFirestore(app);
   const [reeldata, setReeldata] = useState(reel);
   const router = useRouter();
-  const [commentsloading, setCommentsloading] = useState(false);
   const [liked, setLiked] = useState(false);
-  const [commentlikes, setCommentlikes] = useState({});
-  const [replies, setReplies] = useState({});
-  const [commentreply, setCommentreply] = useState({});
-  const [reply, setReply] = useState("");
-  const limit = 5;
-  // const [isFullScreen, setIsFullScreen] = useState(false);
-  const handleShowComments = () => {
-    setShowComments((prevState) => !prevState);
-  };
-  // Create a promise queue
-
-  const getComments = async () => {
-    try {
-      setCommentsloading(true);
-      let newcomments = [];
-      let i = 0;
-      reeldata.comments.map(async (comment) => {
-        if (i <= limit) {
-          const commentRef = doc(db, "comments", comment);
-          const docSnap = await getDoc(commentRef);
-          if (docSnap.exists()) {
-            // if(!commentList.includes(docSnap.data()))
-            const q = docSnap.data();
-            await enqueueUserMetadata(q.uid);
-            setCommentlikes((prevCommentlikes) => ({
-              ...prevCommentlikes,
-              [q.id]: q.likes.includes(userdata.uid),
-            }));
-            const r = formatFirebaseTimestamp(q.timestamp.toDate());
-            q.timestamp = r;
-            newcomments.push(q);
-          }
-        }
-      });
-      console.log(newcomments, "newcomments");
-      setCommentList(newcomments);
-      setCommentsloading(false);
-    } catch (error) {
-      console.error("Error fetching comments:", error);
-    }
-  };
-  const getReplies = async (comment) => {
-    try {
-      console.log(comment.content);
-      console.log("Replies loading");
-      let newreplies = [];
-      console.log(comment.replies, "comment.replies");
-
-      // Use Promise.all to await all asynchronous operations inside map
-      await Promise.all(
-        comment.replies.map(async (reply) => {
-          const replyRef = doc(db, "replies", reply);
-          const docSnap = await getDoc(replyRef);
-          if (docSnap.exists()) {
-            const q = docSnap.data();
-            await enqueueUserMetadata(q.uid); // Assuming getusermetadata is an async function
-            const r = formatFirebaseTimestamp(q.timestamp.toDate());
-            q.timestamp = r;
-            if (!newreplies.includes(q))
-              // Check if the reply is not already in newreplies
-              newreplies.push(q);
-          }
-        })
-      );
-
-      console.log(newreplies, "newreplies");
-      setReplies((prevReplies) => ({
-        ...prevReplies,
-        [comment.id]: newreplies,
-      }));
-    } catch (error) {
-      console.error("Error fetching comments:", error);
-    }
-  };
-
-  useEffect(() => {
-    console.log(commentList);
-  }, [commentList]);
-  useEffect(() => {
-    if (showComments) getComments();
-  }, [showComments]);
   const checkIfLiked = async () => {
     if (userdata) {
       const postRef = doc(db, "reels", reeldata.id);
@@ -258,53 +176,20 @@ const Reel = ({
     setIsMuted(newState);
   };
   const Reportposttt = async () => {
-    router.push(`/report?username=${usermetadata[reeldata.uid].userName}&reelId=${reeldata.id}`);
+    router.push(
+      `/report?username=${usermetadata[reeldata.uid].userName}&reelId=${
+        reeldata.id
+      }`
+    );
   };
   useEffect(() => {
     handleMuteToggle();
   }, [isGlobalMuted]);
   const Shareposttt = async () => {
-    const url = `${window.location.origin}/feed/reels/${reeldata.id}`;
-    navigator.share({
-      title: "Reel - Muse",
-      text: reeldata.caption,
-      url: url,
-    });
+    setSharemenu(true);
+    setselectedReelid(reeldata.id);
   };
 
-  const handleCommentSubmit = async () => {
-    try {
-      if (comment.trim() === "") {
-        return;
-      }
-      const commentRef = collection(db, "comments");
-      const commentData = {
-        content: comment,
-        likecount: 0,
-        uid: userdata.uid,
-        likes: [],
-        replies: [],
-        timestamp: new Date(),
-      };
-      const q = await addDoc(commentRef, commentData);
-      const postRef = doc(db, "reels", reeldata.id);
-      await updateDoc(postRef, {
-        commentcount: increment(1),
-        comments: arrayUnion(q.id), // Pass the DocumentReference directly
-      });
-      await updateDoc(doc(commentRef, q.id), {
-        id: q.id,
-      });
-      const r = formatFirebaseTimestamp(commentData.timestamp);
-      commentData.timestamp = r;
-      setCommentList((prevState) => [...prevState, commentData]);
-      refetchReel();
-      setComment("");
-      toast.success("Comment posted successfully");
-    } catch (error) {
-      toast.error("Error posting comment: " + error.message);
-    }
-  };
   useEffect(() => {
     const func = async () => {
       if (userdata) {
@@ -388,83 +273,7 @@ const Reel = ({
       toast.error("Error posting comment: " + error.message);
     }
   };
-  const handleReplySubmit = async (comment) => {
-    try {
-      if (reply.trim() === "") {
-        return;
-      }
-      const commentId = comment.id;
-      const replyRef = collection(db, "replies");
-      const replyData = {
-        content: reply,
-        likecount: 0,
-        uid: userdata.uid,
-        timestamp: new Date(),
-      };
-      const q = await addDoc(replyRef, replyData);
-      const commentRef = doc(db, "comments", commentId);
-      await updateDoc(commentRef, {
-        replies: arrayUnion(q.id), // Pass the DocumentReference directly
-      });
-      await updateDoc(doc(replyRef, q.id), {
-        id: q.id,
-      });
-      const r = formatFirebaseTimestamp(replyData.timestamp);
-      replyData.timestamp = r;
-      setReplies((prevReplies) => {
-        const updatedReplies = {
-          ...prevReplies,
-          [commentId]: Array.isArray(prevReplies[commentId])
-            ? [...prevReplies[commentId], replyData]
-            : [replyData],
-        };
-        return updatedReplies;
-      });
-      setReply("");
-      setCommentList((prevCommentList) => {
-        const updatedCommentList = prevCommentList.map((c) => {
-          if (c.id === commentId) {
-            return {
-              ...c,
-              replies: Array.isArray(c.replies) ? [...c.replies, q.id] : [q.id],
-            };
-          }
-          return c;
-        });
-        return updatedCommentList;
-      });
-      // getReplies(comment);
-      toast.success("Reply posted successfully");
-    } catch (error) {
-      toast.error("Error posting reply: " + error.message);
-    }
-  };
-  const handleCommentLike = async (commentId) => {
-    if (userdata && commentId) {
-      setCommentlikes((prevCommentlikes) => ({
-        ...prevCommentlikes,
-        [commentId]: !prevCommentlikes[commentId],
-      }));
-      const commentRef = doc(db, "comments", commentId);
-      const docSnap = await getDoc(commentRef);
-      if (docSnap.exists()) {
-        const comment = docSnap.data();
-        const isLiked = comment.likes.includes(userdata.uid);
-        const newLikeCount = isLiked
-          ? comment.likecount - 1
-          : comment.likecount + 1;
-        const newLikes = isLiked
-          ? comment.likes.filter((uid) => uid !== userdata.uid)
-          : [...comment.likes, userdata.uid];
 
-        await updateDoc(commentRef, {
-          likes: newLikes,
-          likecount: newLikeCount,
-        });
-      }
-      toast.success("Comment liked successfully");
-    }
-  };
   return (
     <div className="text-white" style={{ position: "relative" }}>
       <video
@@ -505,7 +314,9 @@ const Reel = ({
             <div
               className="flex mb-2 cursor-pointer font-bold"
               onClick={() =>
-                router.push(`/feed/profile/${usermetadata[reeldata.uid].userName}`)
+                router.push(
+                  `/feed/profile/${usermetadata[reeldata.uid].userName}`
+                )
               }
             >
               <Image
@@ -554,13 +365,19 @@ const Reel = ({
           </div>
           <div className="caption opacity-75">{reeldata.caption}</div>
 
-          <button className="show-comments-button" onClick={handleShowComments}>
+          <button
+            className="show-comments-button"
+            onClick={() => {
+              setShowComments(true);
+              setselectedReelid(reeldata.id);
+            }}
+          >
             {" "}
             {reeldata.commentcount} Comments
           </button>
         </div>
 
-        {showComments && (
+        {/* {showComments && (
           <div
             className="comments-menu rounded-t-xl bg-white bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-20 shadow-2xl border-1 border-black w-full  z-10  overflow-y-auto "
             style={{
@@ -768,7 +585,7 @@ const Reel = ({
               </button>
             </div>
           </div>
-        )}
+        )} */}
       </div>
       <Toaster />
     </div>

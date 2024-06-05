@@ -872,58 +872,121 @@ const Home = () => {
       }
     }
   }
-  function getUsernameAndPostIdFromUrl(url) {
-    // Check if the URL matches the expected pattern
-    const regex = /\/feed\/profile\/([^\/]+)\?postid=([^\/]+)/;
-    const match = url.match(regex);
 
-    if (match) {
-      // Extract username and postid from the matched groups
-      const username = match[1];
-      const postId = match[2];
-      return { username, postId };
-    } else {
-      // Return null or handle invalid URL case
+  function getUsernameAndPostIdFromUrl(url) {
+    try {
+      const regex = /\/feed\/profile\/([^\/]+)\?postid=([^\/]+)/;
+      const match = url.match(regex);
+
+      if (match) {
+        const username = match[1];
+        const postId = match[2];
+        return { username, postId };
+      } else {
+        return null;
+      }
+    } catch (e) {
       return null;
     }
   }
+
   const fetchpost = async (postId) => {
-    const postref = doc(db, "posts", postId);
-    const postdata = await getDoc(postref);
-    if (postdata.exists()) {
-      return postdata.data();
+    try {
+      const postref = doc(db, "posts", postId);
+      const postdata = await getDoc(postref);
+      if (postdata.exists()) {
+        return postdata.data();
+      }
+      return null;
+    } catch (error) {
+      console.error("Error fetching post data:", error);
+      return null;
     }
   };
 
-  const ShortMusePost = ({ message }) => {
-    const text = message.text;
-    const { username, postId } = getUsernameAndPostIdFromUrl(text);
-    const [posttt, setPosttt] = useState({});
-
-    useEffect(() => {
-      const fetchData = async () => {
-        const postData = await fetchpost(postId);
-        setPosttt(postData);
-      };
-
-      fetchData();
-    }, []); // Run this effect whenever postId changes
-
-    return (
-      <div className="sdfsdf " onClick={() => router.push(text)}>
-        <div className="relative">{username}</div>
-        {posttt.mediaFiles && (
-          <Image
-            src={posttt.mediaFiles[0]}
-            height={150}
-            width={150}
-            alt=""
-            className="rounded-lg"
-          />
-        )}
-      </div>
-    );
+  const fetchreel = async (reelId) => {
+    try {
+      const postref = doc(db, "reels", reelId);
+      const postdata = await getDoc(postref);
+      if (postdata.exists()) {
+        return postdata.data();
+      }
+      return null;
+    } catch (error) {
+      console.error("Error fetching reel data:", error);
+      return null;
+    }
   };
+
+  
+const ShortMusePost = ({ message }) => {
+  const router = useRouter();
+  const text = message.text;
+  const [username, setUsername] = useState("");
+  const [reel, setReel] = useState({});
+  const [posttt, setPosttt] = useState({});
+
+  useEffect(() => {
+    if (text.includes("reels")) {
+      const regex = /reelid=([^&]+)/;
+      const match = text.match(regex);
+      if (match) {
+        const reelid = match[1];
+        console.log(`Reel ID: ${reelid}`);
+
+        const fetchReelData = async () => {
+          const reelData = await fetchreel(reelid);
+          if (reelData) {
+            setReel(reelData);
+          }
+        };
+        fetchReelData();
+      } else {
+        console.log("Reel ID not found.");
+      }
+    } else {
+      const result = getUsernameAndPostIdFromUrl(text);
+      if (result) {
+        const { username, postId } = result;
+        setUsername(username);
+
+        const fetchPostData = async () => {
+          const postData = await fetchpost(postId);
+          if (postData) {
+            setPosttt(postData);
+          }
+        };
+        fetchPostData();
+      } else {
+        console.log("Post ID not found.");
+      }
+    }
+  }, [text]);
+
+  return (
+    <div className="sdfsdf" onClick={() => router.push(text)}>
+      {username && <div className="relative">{username}</div>}
+      {posttt.mediaFiles && (
+        <Image
+          src={posttt.mediaFiles[0]}
+          height={150}
+          width={150}
+          alt=""
+          className="rounded-lg"
+        />
+      )}
+      {reel.thumbnail && (
+        <Image
+          src={reel.thumbnail}
+          height={150}
+          width={150}
+          alt="Reel Thumbnail"
+          className="rounded-lg"
+        />
+      )}
+    </div>
+  );
+};
   return (
     <div className="lg:ml-5 w-full h-full overflow-hidden">
       <Toaster />
@@ -1428,6 +1491,7 @@ const Home = () => {
                                                     message={message}
                                                     key={index}
                                                   />
+                                                  // <>{message.text}</>
                                                 );
                                               } else if (
                                                 part.startsWith("http")
@@ -1619,46 +1683,57 @@ const Home = () => {
                                       ))}
                                     </div>
                                   )}
-                                  {message.type == "text" &&
-                                    (message.text ? (
-                                      <span className="fg text-lg md:text-xl">
-                                        {message.text
-                                          .split(/(@\S+|https?:\/\/\S+)/)
-                                          .map((part, index) => {
-                                            if (part.startsWith("@")) {
-                                              // If it's a mention, create a link
-                                              return (
-                                                <a
-                                                  href={`/${part.slice(1)}`}
-                                                  key={index}
-                                                >
-                                                  <strong>{part}</strong>
-                                                </a>
-                                              );
-                                            } else if (
-                                              part.startsWith("http")
-                                            ) {
-                                              // If it's a website link, create a link
-                                              return (
-                                                <a href={part} key={index}>
-                                                  <strong>{part}</strong>
-                                                </a>
-                                              );
-                                            } else {
-                                              // Otherwise, render it as plain text
-                                              return (
-                                                <React.Fragment key={index}>
-                                                  {part}
-                                                </React.Fragment>
-                                              );
-                                            }
-                                          })}
-                                      </span>
-                                    ) : (
-                                      <div className="fg text-xl">
-                                        {message.text}
-                                      </div>
-                                    ))}
+                                 {message.type == "text" &&
+                                      (message.text ? (
+                                        <span className="fg text-lg md:text-xl text-wrap">
+                                          {message.text
+                                            .split(/(@\S+|https?:\/\/\S+)/)
+                                            .map((part, index) => {
+                                              if (part.startsWith("@")) {
+                                                // If it's a mention, create a link
+                                                return (
+                                                  <a
+                                                    href={`/${part.slice(1)}`}
+                                                    key={index}
+                                                  >
+                                                    <strong>{part}</strong>
+                                                  </a>
+                                                );
+                                              } else if (
+                                                part.includes("muse.nofilter")
+                                              ) {
+                                                // If it's a Muse post, create a link
+                                                return (
+                                                  <ShortMusePost
+                                                    message={message}
+                                                    key={index}
+                                                  />
+                                                  // <>{message.text}</>
+                                                );
+                                              } else if (
+                                                part.startsWith("http")
+                                              ) {
+                                                // If it's a website link, create a link
+                                                return (
+                                                  <a href={part} key={index}>
+                                                    <strong>{part}</strong>
+                                                  </a>
+                                                );
+                                              } else {
+                                                // Otherwise, render it as plain text
+                                                return (
+                                                  <React.Fragment key={index}>
+                                                    {part}
+                                                  </React.Fragment>
+                                                );
+                                              }
+                                            })}
+                                        </span>
+                                      ) : (
+                                        <div className="fg text-xl">
+                                          {message.text}
+                                        </div>
+                                      ))}
                                 </div>
                               </div>
                             </>

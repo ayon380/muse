@@ -10,6 +10,8 @@ import { useSidebarStore } from "../../store/zustand";
 import { usePathname, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 const MainLoading = dynamic(() => import("@/components/MainLoading"));
+const ReelComment = dynamic(() => import("@/components/ReelComment"));
+const ShareMenuReel = dynamic(() => import("@/components/ShareMenuReel"));
 const Reels = () => {
   // console.log("Sidebaropen", Sidebaropen);
   const [userdata, setUserData] = useState(null);
@@ -19,8 +21,11 @@ const Reels = () => {
   const db = getFirestore(app);
   const [currentPage, setCurrentPage] = useState(0); // Set the current page to 1 by default
   const [totalPages, setTotalPages] = useState(0); // Initialize the total pages to 0
+  const [shraremenu, setSharemenu] = useState(false);
   const [isGlobalMuted, setIsGlobalMuted] = useState(false);
   const SearchParams = useSearchParams();
+  const [showComments, setShowComments] = useState(false);
+  const [selectedreelid, setselectedReelid] = useState(null);
   const id = SearchParams.get("reelid") || null;
   const [reelid, setReelid] = useState(id);
   // State to hold the next page cursor
@@ -169,6 +174,34 @@ const Reels = () => {
           </div>
         </>
       )}
+      {showComments && (
+        <ReelComment
+          // showComments={showComments}
+          setShowComments={setShowComments}
+          db={db}
+          userdata={userdata}
+          usermetadata={usermetadata}
+          enqueueUserMetadata={enqueueUserMetadata}
+          selectedreelid={selectedreelid}
+          postid={selectedreelid}
+          uid={userdata.uid}
+          setselectedReelid={setselectedReelid}
+        />
+      )}
+      {shraremenu && (
+        <ShareMenuReel
+          setSharemenu={setSharemenu}
+          // db={db}
+          userdata={userdata}
+          userName={userdata.username}
+          usermetadata={usermetadata}
+          enqueueUserMetadata={enqueueUserMetadata}
+          selectedreelid={selectedreelid}
+          postid={selectedreelid}
+          uid={userdata.uid}
+          setselectedReelid={setselectedReelid}
+        />
+      )}
       {userdata && !reelsloading && (
         <div>
           <div className="main2 grid md:rounded-2xl bg-white dark:bg-black md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 p-1 lg:p-8 App  border-black w-full h-full">
@@ -219,7 +252,10 @@ const Reels = () => {
                   <div className="pk " play={reel.id} key={reel.id + idx}>
                     <Video
                       reel={reel}
+                      setSharemenu={setSharemenu}
                       idx={idx}
+                      setselectedReelid={setselectedReelid}
+                      setShowComments={setShowComments}
                       usermetadata={usermetadata}
                       enqueueUserMetadata={enqueueUserMetadata}
                       currentreel={currentreel}

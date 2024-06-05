@@ -14,8 +14,7 @@ import {
 import app from "@/lib/firebase/firebaseConfig";
 const ShareMenu = ({
   userdata,
-  postdata,
-  userName,
+  postid,
   setSharemenu,
   usermetadata,
   enqueueUserMetadata,
@@ -23,6 +22,25 @@ const ShareMenu = ({
   const [chats, setChats] = useState([]);
   const db = getFirestore(app);
   const [sharing, setSharing] = useState({});
+  let userName=""
+  const [postdata, setPostdata] = useState(null);
+  const fetchPost = async () => {
+    try {
+      const postRef = doc(db, "reels", postid);
+      const postSnapshot = await getDoc(postRef);
+      if (postSnapshot.exists()) {
+        setPostdata(postSnapshot.data());
+        await enqueueUserMetadata(postSnapshot.data().uid);
+        userName = usermetadata[postSnapshot.data().uid].userName
+      }
+    } catch (error) {
+      console.error("Error getting documents: ", error);
+    }
+  };
+  useEffect(() => {
+    fetchPost();
+  }, []);
+
   const fetchChatRoom = async (roomId) => {
     const roomSnapshot = await getDoc(doc(db, "messagerooms", roomId));
     if (roomSnapshot.exists()) {
@@ -113,7 +131,7 @@ const ShareMenu = ({
       const msgref = collection(db, "messages");
       const msgdata = {
         sender: userdata.uid,
-        text: `https://muse.nofilter.cloud/feed/profile/${userName}?postid=${postdata?.id}`,
+        text: `https://muse.nofilter.cloud/feed/reels?reelid=${postdata?.id}`,
         type: "text",
         timestamp: Date.now(),
         readstatus: false,
@@ -136,8 +154,8 @@ const ShareMenu = ({
           type: "message",
           chattype: chat.type,
           sender: userdata.uid,
-          text: `https://muse.nofilter.cloud/feed/profile/${userName}?postid=${postdata?.id}`,
-          messagetype: "text",
+          text: `https://muse.nofilter.cloud/feed/reels?reelid=${postdata?.id}`,
+          messagetype: "musepost",
           roomid: chat.roomid,
           receiver:
             chat.type === "p"
@@ -161,7 +179,7 @@ const ShareMenu = ({
         await navigator.share({
           title: postdata?.title,
           text: postdata?.description,
-          url: `https://muse.nofilter.cloud/feed/profile/${userName}?postid=${postdata?.id}`,
+          url: `https://muse.nofilter.cloud/feed/reels?reelid=${postdata?.id}`,
         });
       } catch (error) {
         console.error("Error sharing:", error);
