@@ -918,75 +918,83 @@ const Home = () => {
     }
   };
 
+  const ShortMusePost = React.memo(({ message }) => {
+    const router = useRouter();
+    const text = message.text;
+    const [username, setUsername] = useState("");
+    const [reel, setReel] = useState({});
+    const [posttt, setPosttt] = useState({});
+    const initialized = useRef(false);  // To keep track of initialization
   
-const ShortMusePost = ({ message }) => {
-  const router = useRouter();
-  const text = message.text;
-  const [username, setUsername] = useState("");
-  const [reel, setReel] = useState({});
-  const [posttt, setPosttt] = useState({});
-
-  useEffect(() => {
-    if (text.includes("reels")) {
-      const regex = /reelid=([^&]+)/;
-      const match = text.match(regex);
-      if (match) {
-        const reelid = match[1];
-        console.log(`Reel ID: ${reelid}`);
-
-        const fetchReelData = async () => {
-          const reelData = await fetchreel(reelid);
-          if (reelData) {
-            setReel(reelData);
-          }
-        };
-        fetchReelData();
+    useEffect(() => {
+      if (initialized.current) return;  // If already initialized, skip
+  
+      const fetchReelData = async (reelid) => {
+        const reelData = await fetchreel(reelid);
+        if (reelData) {
+          setReel(reelData);
+        }
+      };
+  
+      const fetchPostData = async (postId) => {
+        const postData = await fetchpost(postId);
+        if (postData) {
+          setPosttt(postData);
+        }
+      };
+  
+      if (text.includes('reels')) {
+        const regex = /reelid=([^&]+)/;
+        const match = text.match(regex);
+        if (match) {
+          const reelid = match[1];
+          console.log(`Reel ID: ${reelid}`);
+          fetchReelData(reelid);
+        } else {
+          console.log("Reel ID not found.");
+        }
       } else {
-        console.log("Reel ID not found.");
+        const result = getUsernameAndPostIdFromUrl(text);
+        if (result) {
+          const { username, postId } = result;
+          setUsername(username);
+          fetchPostData(postId);
+        } else {
+          console.log("Post ID not found.");
+        }
       }
-    } else {
-      const result = getUsernameAndPostIdFromUrl(text);
-      if (result) {
-        const { username, postId } = result;
-        setUsername(username);
+  
+      initialized.current = true;  // Mark as initialized
+    }, [text]);  // Dependency array ensures it considers `text` changes only
+  
+    return (
+      <div className="sdfsdf" onClick={() => router.push(text)}>
+        {username && <div className="relative">{username}</div>}
+        {posttt.mediaFiles && (
+          <Image
+            src={posttt.mediaFiles[0]}
+            height={150}
+            width={150}
+            alt=""
+            className="rounded-lg"
+          />
+        )}
+        {reel.thumbnail && (
+          <Image
+            src={reel.thumbnail}
+            height={150}
+            width={150}
+            alt="Reel Thumbnail"
+            className="rounded-lg"
+          />
+        )}
+      </div>
+    );
+  });
+  
 
-        const fetchPostData = async () => {
-          const postData = await fetchpost(postId);
-          if (postData) {
-            setPosttt(postData);
-          }
-        };
-        fetchPostData();
-      } else {
-        console.log("Post ID not found.");
-      }
-    }
-  }, [text]);
+  ShortMusePost.displayName = "ShortMusePost"; // Add display name
 
-  return (
-    <div className="sdfsdf" onClick={() => router.push(text)}>
-      {username && <div className="relative">{username}</div>}
-      {posttt.mediaFiles && (
-        <Image
-          src={posttt.mediaFiles[0]}
-          height={150}
-          width={150}
-          alt=""
-          className="rounded-lg"
-        />
-      )}
-      {reel.thumbnail && (
-        <Image
-          src={reel.thumbnail}
-          height={150}
-          width={150}
-          alt="Reel Thumbnail"
-          className="rounded-lg"
-        />
-      )}
-    </div>
-  );
-};
   return (
     <div className="lg:ml-5 w-full h-full overflow-hidden">
       <Toaster />
@@ -1389,7 +1397,7 @@ const ShortMusePost = ({ message }) => {
                         >
                           {message.sender == userdata.uid ? (
                             <div className="ko flex justify-end my-5 ml-28">
-                              <div className="e  text-right bg-purple-400 p-2 lg:p-3 rounded-xl">
+                              <div className="e  text-right shadow-xl  bg-purple-400 p-2 lg:p-5 rounded-3xl rounded-tr-none">
                                 <div
                                   className="lp"
                                   onClick={() => handledropdown(message)}
@@ -1556,8 +1564,8 @@ const ShortMusePost = ({ message }) => {
                                           {""}
                                           <Image
                                             className="w-5 h-5 
-                                            filter invert-89 sepia-25 saturate-3907 hue-rotate-358 brightness-101 contrast-103"
-                                            src="/icons/read.png"
+                                            "
+                                            src="/icons/readt.png"
                                             height={100}
                                             width={100}
                                             alt="delete"
@@ -1611,7 +1619,7 @@ const ShortMusePost = ({ message }) => {
                           ) : (
                             <>
                               <div className="ko  flex right-0 my-5">
-                                <div className="e bg-purple-400 p-2 rounded-xl">
+                                <div className="e bg-purple-400 p-2 lg:p-5 shadow-xl  rounded-3xl rounded-tl-none">
                                   <div className="flex">
                                     {/* {console.log(pfps[message.sender])} */}
                                     {usermetadata[message.sender] && (
@@ -1683,57 +1691,57 @@ const ShortMusePost = ({ message }) => {
                                       ))}
                                     </div>
                                   )}
-                                 {message.type == "text" &&
-                                      (message.text ? (
-                                        <span className="fg text-lg md:text-xl text-wrap">
-                                          {message.text
-                                            .split(/(@\S+|https?:\/\/\S+)/)
-                                            .map((part, index) => {
-                                              if (part.startsWith("@")) {
-                                                // If it's a mention, create a link
-                                                return (
-                                                  <a
-                                                    href={`/${part.slice(1)}`}
-                                                    key={index}
-                                                  >
-                                                    <strong>{part}</strong>
-                                                  </a>
-                                                );
-                                              } else if (
-                                                part.includes("muse.nofilter")
-                                              ) {
-                                                // If it's a Muse post, create a link
-                                                return (
-                                                  <ShortMusePost
-                                                    message={message}
-                                                    key={index}
-                                                  />
-                                                  // <>{message.text}</>
-                                                );
-                                              } else if (
-                                                part.startsWith("http")
-                                              ) {
-                                                // If it's a website link, create a link
-                                                return (
-                                                  <a href={part} key={index}>
-                                                    <strong>{part}</strong>
-                                                  </a>
-                                                );
-                                              } else {
-                                                // Otherwise, render it as plain text
-                                                return (
-                                                  <React.Fragment key={index}>
-                                                    {part}
-                                                  </React.Fragment>
-                                                );
-                                              }
-                                            })}
-                                        </span>
-                                      ) : (
-                                        <div className="fg text-xl">
-                                          {message.text}
-                                        </div>
-                                      ))}
+                                  {message.type == "text" &&
+                                    (message.text ? (
+                                      <span className="fg text-lg md:text-xl text-wrap">
+                                        {message.text
+                                          .split(/(@\S+|https?:\/\/\S+)/)
+                                          .map((part, index) => {
+                                            if (part.startsWith("@")) {
+                                              // If it's a mention, create a link
+                                              return (
+                                                <a
+                                                  href={`/${part.slice(1)}`}
+                                                  key={index}
+                                                >
+                                                  <strong>{part}</strong>
+                                                </a>
+                                              );
+                                            } else if (
+                                              part.includes("muse.nofilter")
+                                            ) {
+                                              // If it's a Muse post, create a link
+                                              return (
+                                                <ShortMusePost
+                                                  message={message}
+                                                  key={index}
+                                                />
+                                                // <>{message.text}</>
+                                              );
+                                            } else if (
+                                              part.startsWith("http")
+                                            ) {
+                                              // If it's a website link, create a link
+                                              return (
+                                                <a href={part} key={index}>
+                                                  <strong>{part}</strong>
+                                                </a>
+                                              );
+                                            } else {
+                                              // Otherwise, render it as plain text
+                                              return (
+                                                <React.Fragment key={index}>
+                                                  {part}
+                                                </React.Fragment>
+                                              );
+                                            }
+                                          })}
+                                      </span>
+                                    ) : (
+                                      <div className="fg text-xl">
+                                        {message.text}
+                                      </div>
+                                    ))}
                                 </div>
                               </div>
                             </>
@@ -1742,11 +1750,11 @@ const ShortMusePost = ({ message }) => {
                       ))}
 
                       <div ref={messagesEndRef} />
-                      <div className="textbox absolute flex bottom-0 md:bottom-0 rounded-xl pb-4  p-2 backdrop-filter backdrop-blur-xl w-full ">
+                      <div className="textbox absolute flex bottom-0 md:bottom-0 rounded-xl pb-4 p-2 backdrop-filter backdrop-blur-xl w-full">
                         <input
                           type="text"
                           placeholder="Type a message..."
-                          className="placeholder-italic w-full h-10 text-lg px-1  rounded-xl text-black border-black transition-all duration-300 outline-none shadow-2xl hover:shadow-3xl focus:shadow-3xl  "
+                          className="placeholder-italic w-full h-10 text-lg px-1 rounded-xl text-black border-black transition-all duration-300 outline-none shadow-2xl hover:shadow-3xl focus:shadow-3xl"
                           value={messagetext}
                           onChange={(e) => setMessagetext(e.target.value)}
                           onKeyDown={(e) => {
@@ -1754,50 +1762,52 @@ const ShortMusePost = ({ message }) => {
                               sendMesage();
                             }
                           }}
-                        ></input>
-                        <button
-                          className="m-1"
-                          onClick={() => {
-                            setgifopen(!gifopen);
-                            setshowaddfiles(false);
-                          }}
-                        >
-                          <Image
-                            className="h-8 w-10 dark:invert"
-                            src="/icons/gif.png"
-                            height={50}
-                            width={50}
-                            alt="Gif"
-                          />
-                        </button>
-                        <button
-                          className="m-1"
-                          onClick={() => {
-                            setgifopen(false);
-                            setshowaddfiles(!showaddfiles);
-                          }}
-                        >
-                          <Image
-                            className=" h-6 w-6 mr-1 dark:invert"
-                            src="/icons/attach.png"
-                            height={50}
-                            width={50}
-                            alt="Attach"
-                          />
-                        </button>
-                        <button
-                          onClick={sendMesage}
-                          disabled={messagetext.length === 0}
-                          className=" disabled:cursor-not-allowed disabled:text-gray-300"
-                        >
-                          <Image
-                            className="h-6 w-6 m-1 dark:invert"
-                            src="/icons/send.png"
-                            height={50}
-                            width={50}
-                            alt="Send"
-                          />
-                        </button>
+                        />
+                        <div className="flex items-center">
+                          <button
+                            className="m-1"
+                            onClick={() => {
+                              setgifopen(!gifopen);
+                              setshowaddfiles(false);
+                            }}
+                          >
+                            <Image
+                              className="h-8 w-10 dark:invert"
+                              src="/icons/gif.png"
+                              height={50}
+                              width={50}
+                              alt="Gif"
+                            />
+                          </button>
+                          <button
+                            className="m-1"
+                            onClick={() => {
+                              setgifopen(false);
+                              setshowaddfiles(!showaddfiles);
+                            }}
+                          >
+                            <Image
+                              className="h-6 w-6 mr-1 dark:invert"
+                              src="/icons/attach.png"
+                              height={50}
+                              width={50}
+                              alt="Attach"
+                            />
+                          </button>
+                          <button
+                            onClick={sendMesage}
+                            disabled={messagetext.length === 0}
+                            className="disabled:cursor-not-allowed disabled:text-gray-300"
+                          >
+                            <Image
+                              className="h-6 w-6 m-1 dark:invert"
+                              src="/icons/send.png"
+                              height={50}
+                              width={50}
+                              alt="Send"
+                            />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </>
