@@ -31,7 +31,7 @@ module.exports = withPWA({
   },
   compiler: {
     // removeConsole:true
-    // removeConsole: process.env.NODE_ENV === "production"
+    removeConsole: process.env.NODE_ENV === "production"
   }
 });
 // const nextConfig = {
