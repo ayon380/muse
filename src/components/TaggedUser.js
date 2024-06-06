@@ -15,6 +15,7 @@ const Follower = ({
   usermetadata,
   postdata,
   enqueueUserMetadata,
+  
   close,
 }) => {
   const [isOpen, setIsOpen] = React.useState(false);

@@ -30,6 +30,7 @@ import { getFirestore, getDoc } from "firebase/firestore";
 import dynamic from "next/dynamic";
 import { useSidebarStore } from "@/app/store/zustand";
 import imageCompression from "browser-image-compression";
+const MediaViewer = dynamic(() => import("@/components/MediaViewer"));
 const SearchChat = dynamic(() => import("@/components/SearchChat"));
 const GroupChat = dynamic(() => import("@/components/GroupChat"));
 const MainLoading = dynamic(() => import("@/components/MainLoading"));
@@ -81,6 +82,8 @@ const Home = () => {
   const [roomdata, setroomdata] = useState({});
   const [mainloading, setmainloading] = useState(true);
   const [pfps, setPfps] = useState({});
+  const [mediaViewerOpen, setMediaViewerOpen] = useState(false);
+  const [mediaviewerfiles, setmediaviewerfiles] = useState([]);
   const {
     chatopen,
     setchatopen,
@@ -660,15 +663,7 @@ const Home = () => {
       const minute = messageDate.getMinutes().toString().padStart(2, "0"); // Format the minute to ensure it's always two digits
       return `Yesterday at ${hour}:${minute}`;
     } else {
-      const days = [
-        "Sunday",
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday",
-      ];
+      const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
       const day = days[messageDate.getDay()];
       const formattedDate = messageDate.toLocaleDateString("en-US", {
         month: "short",
@@ -889,7 +884,6 @@ const Home = () => {
       return null;
     }
   }
-
   const fetchpost = async (postId) => {
     try {
       const postref = doc(db, "posts", postId);
@@ -924,26 +918,26 @@ const Home = () => {
     const [username, setUsername] = useState("");
     const [reel, setReel] = useState({});
     const [posttt, setPosttt] = useState({});
-    const initialized = useRef(false);  // To keep track of initialization
-  
+    const initialized = useRef(false); // To keep track of initialization
+
     useEffect(() => {
-      if (initialized.current) return;  // If already initialized, skip
-  
+      if (initialized.current) return; // If already initialized, skip
+
       const fetchReelData = async (reelid) => {
         const reelData = await fetchreel(reelid);
         if (reelData) {
           setReel(reelData);
         }
       };
-  
+
       const fetchPostData = async (postId) => {
         const postData = await fetchpost(postId);
         if (postData) {
           setPosttt(postData);
         }
       };
-  
-      if (text.includes('reels')) {
+
+      if (text.includes("reels")) {
         const regex = /reelid=([^&]+)/;
         const match = text.match(regex);
         if (match) {
@@ -963,10 +957,10 @@ const Home = () => {
           console.log("Post ID not found.");
         }
       }
-  
-      initialized.current = true;  // Mark as initialized
-    }, [text]);  // Dependency array ensures it considers `text` changes only
-  
+
+      initialized.current = true; // Mark as initialized
+    }, [text]); // Dependency array ensures it considers `text` changes only
+
     return (
       <div className="sdfsdf" onClick={() => router.push(text)}>
         {username && <div className="relative">{username}</div>}
@@ -991,14 +985,29 @@ const Home = () => {
       </div>
     );
   });
-  
 
   ShortMusePost.displayName = "ShortMusePost"; // Add display name
-
+  const preventDefault = (e) => {
+    e.preventDefault();
+  };
+  // useEffect(() => {
+  //   console.log("mediaFiles:", mediaviewerfiles);
+  // }, [mediaviewerfiles]);
+  const handleMediaViewerClose = () => {
+    setMediaViewerOpen(false);
+    setmediaviewerfiles([]);
+  };
   return (
     <div className="lg:ml-5 w-full h-full overflow-hidden">
       <Toaster />
       {mainloading && initialLoad && <MainLoading />}
+      {mediaViewerOpen && mediaviewerfiles && (
+        <MediaViewer
+          mediaviewerfiles={mediaviewerfiles}
+          setMediaViewerOpen={setMediaViewerOpen}
+          close={handleMediaViewerClose}
+        />
+      )}
       {mainloading && !initialLoad && (
         <>
           <div className="main2 md:rounded-2xl bg-white dark:bg-black md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 border-black h-full overflow-y-auto">
@@ -1397,11 +1406,11 @@ const Home = () => {
                         >
                           {message.sender == userdata.uid ? (
                             <div className="ko flex justify-end my-5 ml-28">
-                              <div className="e  text-right shadow-xl  bg-purple-400 p-2 lg:p-5 rounded-3xl rounded-tr-none">
-                                <div
-                                  className="lp"
-                                  onClick={() => handledropdown(message)}
-                                >
+                              <div
+                                className="e  text-right shadow-xl  bg-purple-400 p-2 lg:p-5 rounded-3xl rounded-tr-none cursor-pointer"
+                                onClick={() => handledropdown(message)}
+                              >
+                                <div className="lp">
                                   <div className="flex justify-end">
                                     <div className="time text-xs opacity-50 mr-2 mt-1">
                                       {convertToChatTime(message.timestamp)}
@@ -1431,7 +1440,13 @@ const Home = () => {
                                       </>
                                     )}
                                     {message.type == "media" && (
-                                      <div className="flex">
+                                      <div
+                                        className="flex"
+                                        onClick={() => {
+                                          setMediaViewerOpen(true);
+                                          setmediaviewerfiles(message.text);
+                                        }}
+                                      >
                                         {message.text.map((media, index) => (
                                           <div key={index}>
                                             {media.startsWith(
@@ -1447,9 +1462,6 @@ const Home = () => {
                                                   alt=""
                                                   controls
                                                   className="rounded-xl h-36 w-36 m-2 object-cover"
-                                                  onClick={() => {
-                                                    window.open(media);
-                                                  }}
                                                 />
                                               )}
                                             {media.startsWith(
@@ -1464,9 +1476,9 @@ const Home = () => {
                                                   height={100}
                                                   width={100}
                                                   className="rounded-xl h-36 w-36 m-2 object-cover"
-                                                  onClick={() => {
-                                                    window.open(media);
-                                                  }}
+                                                  onContextMenu={preventDefault} // Prevent right-click context menu
+                                                  onMouseDown={preventDefault} // Prevent drag start
+                                                  onDragStart={preventDefault} // Prevent drag
                                                 />
                                               )}
                                           </div>
@@ -1649,7 +1661,13 @@ const Home = () => {
                                     </>
                                   )}
                                   {message.type == "media" && (
-                                    <div className="flex">
+                                    <div
+                                      className="flex"
+                                      onClick={() => {
+                                        setmediaviewerfiles(message.text);
+                                        setMediaViewerOpen(true);
+                                      }}
+                                    >
                                       {message.text.map((media, index) => (
                                         <div key={index}>
                                           {media.startsWith(
@@ -1665,9 +1683,6 @@ const Home = () => {
                                                 alt=""
                                                 controls
                                                 className="rounded-xl h-36 w-36 m-2 object-cover"
-                                                onClick={() => {
-                                                  window.open(media);
-                                                }}
                                               />
                                             )}
                                           {media.startsWith(
@@ -1682,9 +1697,6 @@ const Home = () => {
                                                 height={100}
                                                 width={100}
                                                 className="rounded-xl h-36 w-36 m-2 object-cover"
-                                                onClick={() => {
-                                                  window.open(media);
-                                                }}
                                               />
                                             )}
                                         </div>
@@ -1750,11 +1762,11 @@ const Home = () => {
                       ))}
 
                       <div ref={messagesEndRef} />
-                      <div className="textbox absolute flex bottom-0 md:bottom-0 rounded-xl pb-4 p-2 backdrop-filter backdrop-blur-xl w-full">
+                      <div className="textbox absolute flex bottom-0 bg-purple-300 md:bottom-0 rounded-xl p-2 backdrop-filter backdrop-blur-xl w-full transition-all duration-300 ease-in-out">
                         <input
                           type="text"
                           placeholder="Type a message..."
-                          className="placeholder-italic w-full h-10 text-lg px-1 rounded-xl text-black border-black transition-all duration-300 outline-none shadow-2xl hover:shadow-3xl focus:shadow-3xl"
+                          className="placeholder-italic w-full h-10 bg-purple-300 text-lg px-1 rounded-xl text-black border-black transition-all duration-300 outline-none shadow-2xl hover:shadow-3xl focus:shadow-3xl"
                           value={messagetext}
                           onChange={(e) => setMessagetext(e.target.value)}
                           onKeyDown={(e) => {
@@ -1763,9 +1775,9 @@ const Home = () => {
                             }
                           }}
                         />
-                        <div className="flex items-center">
+                        <div className="flex items-center transition-all duration-300 ease-in-out">
                           <button
-                            className="m-1"
+                            className="m-1 transform transition-transform duration-300 ease-in-out hover:scale-110"
                             onClick={() => {
                               setgifopen(!gifopen);
                               setshowaddfiles(false);
@@ -1774,13 +1786,13 @@ const Home = () => {
                             <Image
                               className="h-8 w-10 dark:invert"
                               src="/icons/gif.png"
-                              height={50}
-                              width={50}
+                              height={100}
+                              width={100}
                               alt="Gif"
                             />
                           </button>
                           <button
-                            className="m-1"
+                            className="m-1 transform transition-transform duration-300 ease-in-out hover:scale-110"
                             onClick={() => {
                               setgifopen(false);
                               setshowaddfiles(!showaddfiles);
@@ -1789,21 +1801,21 @@ const Home = () => {
                             <Image
                               className="h-6 w-6 mr-1 dark:invert"
                               src="/icons/attach.png"
-                              height={50}
-                              width={50}
+                              height={100}
+                              width={100}
                               alt="Attach"
                             />
                           </button>
                           <button
                             onClick={sendMesage}
                             disabled={messagetext.length === 0}
-                            className="disabled:cursor-not-allowed disabled:text-gray-300"
+                            className="m-1 transform transition-transform duration-300 ease-in-out hover:scale-110 disabled:cursor-not-allowed disabled:text-gray-300"
                           >
                             <Image
-                              className="h-6 w-6 m-1 dark:invert"
+                              className="h-6 w-6 dark:invert"
                               src="/icons/send.png"
-                              height={50}
-                              width={50}
+                              height={100}
+                              width={100}
                               alt="Send"
                             />
                           </button>

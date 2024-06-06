@@ -3,8 +3,28 @@ import React from "react";
 const ReleaseNotes = () => {
   const releaseNotes = [
     {
+      version: "v0.81",
+      descriptions: [
+        "Added Media Viewer Component",
+        "Added Download option for Media Files",
+        "Fixed Chat UI Bugs",
+      ],
+      commit: "TBD",
+      date: "2024-06-06",
+    },
+    {
+      version: "v0.78",
+      descriptions: [
+        " Added Reels Comment",
+        "Reels Share Menu",
+        "Mesage Post Bug Fixed",
+      ],
+      commit: "7c14820",
+      date: "2024-06-05",
+    },
+    {
       version: "v0.76",
-      descriptions: ["Added Tagged Users in Posts","Added Chat Themes"],
+      descriptions: ["Added Tagged Users in Posts", "Added Chat Themes"],
       commit: "e3cdd58",
       date: "2024-04-17",
     },
