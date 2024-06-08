@@ -12,6 +12,9 @@ module.exports = {
         lucy: ["var(--font-lucy)"],
         rethink: ["var(--font-rethink)"],
       },
+      colors: {
+        feedheader: 'rgba(31,31,31,255)',
+      },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
         "gradient-conic":

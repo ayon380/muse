@@ -1,0 +1,13 @@
+// lib/generateMetadata.js
+import useSystemTheme from '../../hooks/useSystemTheme';
+
+const GenerateMetadata = () => {
+  const theme = useSystemTheme();
+  const themeColor = theme === 'dark' ? '#000000' : '#ffffff';
+
+  return {
+    themeColor: themeColor,
+  };
+};
+
+export default GenerateMetadata;

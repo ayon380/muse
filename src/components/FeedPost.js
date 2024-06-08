@@ -279,7 +279,7 @@ const FeedPost = ({
             content="Are you sure you want to delete this post?"
           />
         )}
-        <div className="df bg-white dark:bg-black bg-opacity-40 rounded-2xl px-2 py-2 m-2">
+        <div className="df bg-white dark:bg-neutral-800 bg-opacity-40 rounded-2xl px-2 py-2 m-2">
           {usermetadata && usermetadata[postdata.uid] && (
             <div className="header flex justify-between">
               <Link
@@ -288,7 +288,7 @@ const FeedPost = ({
                 <div className="flex items-center">
                   {/* <div className="profile-pic bg-gradient-to-r from-purple-500 to-blue-500 h-10 w-10 rounded-full p-2 md:h-20 md:w-20"> */}
                   <Image
-                    className="rounded-full h-8 w-8  md:h-16 md:w-16 object-cover "
+                    className="rounded-full h-12 w-12  md:h-16 md:w-16 object-cover "
                     src={usermetadata[postdata.uid].pfp}
                     width={100}
                     height={100}
@@ -300,7 +300,7 @@ const FeedPost = ({
                   </div>
                 </div>
               </Link>
-              <div className="time mt-2 opacity-50 md:mt-4">
+              <div className="time mt-5  text-xs opacity-50 md:mt-4">
                 {formatFirebaseTimestamp(postdata.timestamp)}
               </div>
             </div>
@@ -364,7 +364,7 @@ const FeedPost = ({
                     }}
                   >
                     <Image
-                      src="/icons/send.png"
+                      src="/icons/feedsend.png"
                       alt="Share"
                       className="dark:invert w-7 h-7 mr-1"
                       width={100}
@@ -428,7 +428,7 @@ const FeedPost = ({
                   <button>
                     <Image
                       src="/icons/comment.png"
-                      className="dark:invert h-7 w-7"
+                      className=" h-7 w-7"
                       width={100}
                       height={100}
                       alt="Comment"

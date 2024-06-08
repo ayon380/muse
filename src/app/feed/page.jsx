@@ -25,6 +25,7 @@ import { getFirestore, getDoc, doc } from "firebase/firestore";
 import { useSidebarStore } from "../store/zustand";
 import dynamic from "next/dynamic";
 import FeedPost from "@/components/FeedPost";
+import SparklesText from "@/components/SparkleText";
 const MainLoading = dynamic(() => import("@/components/MainLoading"));
 const ShareMenu = dynamic(() => import("@/components/ShareMenu"));
 const PostComment = dynamic(() => import("@/components/PostComment"));
@@ -235,15 +236,14 @@ const Home = () => {
       {userdata && !postloading && (
         <div>
           <div className="main2 md:rounded-2xl bg-white dark:bg-black md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 border-black h-full overflow-y-auto">
-            <div className="flex justify-between mt-5 mx-2">
-              <div className="fg font-lucy text-4xl">Muse</div>
-
+            <div className="flex justify-between pt-3 px-2 pb-3 bg-white rounded-b-3xl dark:bg-feedheader shadow-2xl shadow-fuchsia-300 dark:shadow-none  sticky top-0 z-20 ">
+              <SparklesText text="Muse" />
               <button onClick={toggle}>
                 <Image
-                  src="/icons/sidebar.png"
+                  src="/icons/menu.png"
                   height={50}
                   width={50}
-                  className="dark:invert w-7 h-7"
+                  className="  w-7 h-7 mr-4"
                   alt="Sidebar"
                 />
               </button>
@@ -255,6 +255,7 @@ const Home = () => {
             )}
             <div className="pol font-rethink ">
               <div className="feed w-full h-full overflow-y-auto">
+                <div className="buf h-10"></div>
                 {posts && posts.length > 0 ? (
                   posts.map((post) => (
                     <FeedPost

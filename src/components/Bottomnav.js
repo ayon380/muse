@@ -18,8 +18,8 @@ const Bottomnav = () => {
   const router = useRouter();
   return (
     <div className="b">
-      <div className={`flex ${isMobile ? "absolute" : "hidden"}   bottomnav rounded-t-lg bottom-0 bg-opacity-30 backdrop-filter backdrop-blur-2xl bg-white dark:bg-black z-40 w-full`}>
-        <div className="options flex my-3  justify-evenly items-center flex-auto">
+      <div className={`flex ${isMobile ? "absolute" : "hidden"}   bottomnav rounded-t-2xl bottom-0 bg-opacity-30 backdrop-filter backdrop-blur-2xl bg-white dark:bg-feedheader z-40 w-full`}>
+        <div className="options flex my-5   justify-evenly items-center flex-auto">
           <div className="explore">
             <div
               className="text-2xl text-left dark:invert font-bold transform-gpu hover:scale-110 cursor-pointer"
