@@ -3,6 +3,15 @@ import React from "react";
 const ReleaseNotes = () => {
   const releaseNotes = [
     {
+      version: "v0.83",
+      descriptions: [
+        "-> All new UI Design",
+        "New Android Options Menu in Share (Beta)",
+      ],
+      commit: "TBD",
+      date: "2024-06-09",
+    },
+    {
       version: "v0.81",
       descriptions: [
         "Added Media Viewer Component",

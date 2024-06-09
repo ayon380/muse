@@ -9,6 +9,7 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import Link from "next/navigation";
 import GifPicker from "gif-picker-react";
 import "../../styles/feed.css";
+import SparklesText from "@/components/SparkleText";
 import {
   collection,
   getDocs,
@@ -1146,13 +1147,11 @@ const Home = () => {
             )}
             {!checkchat("Q") && (
               <div
-                className="followingusers w-full lg:w-1/3 m-6 overflow-y-auto"
+                className="followingusers bg-slate-100 w-full lg:w-1/3 md:m-6 overflow-y-auto"
                 key={roomid}
               >
-                <div className="flex w-full justify-between">
-                  <div className="messages text-3xl lg:text-3xl   ">
-                    Messages
-                  </div>
+                <div className="flex w-full rounded-b-3xl shadow-xl shadow-fuchsia-100 dark:shadow-none bg-white p-4 justify-between">
+                 <SparklesText text="Messages" textSize="text-4xl" />
                   <div className="flex justify-end ">
                     <button
                       className="createchat cursor-pointer h-auto  p-3 rounded-2xl   "
@@ -1198,7 +1197,7 @@ const Home = () => {
                   chats.map((chat, index) =>
                     chat.type == "p" ? (
                       <div
-                        className="key cursor-pointer"
+                        className="key mx-6 cursor-pointer"
                         key={index}
                         onClick={() => {
                           router.push(

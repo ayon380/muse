@@ -1,6 +1,6 @@
 import { getDoc } from "firebase/firestore";
 import React, { useEffect } from "react";
-import { useState } from "react";
+import { useState,useRef } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import {
@@ -11,7 +11,9 @@ import {
   arrayUnion,
   updateDoc,
 } from "firebase/firestore";
+import { AnimatePresence } from "framer-motion";
 import app from "@/lib/firebase/firebaseConfig";
+const DRAG_CLOSE_THRESHOLD = 100;
 const ShareMenu = ({
   userdata,
   postdata,
@@ -21,8 +23,10 @@ const ShareMenu = ({
   enqueueUserMetadata,
 }) => {
   const [chats, setChats] = useState([]);
+  const [isOpen, setIsOpen] = React.useState(false);
   const db = getFirestore(app);
   const [sharing, setSharing] = useState({});
+  console.log("loading share menu");
   const fetchChatRoom = async (roomId) => {
     const roomSnapshot = await getDoc(doc(db, "messagerooms", roomId));
     if (roomSnapshot.exists()) {
@@ -33,6 +37,7 @@ const ShareMenu = ({
     }
     return null;
   };
+ 
   const getChats = async () => {
     try {
       const docSnapshot = await getDoc(doc(db, "chats", userdata.uid));
@@ -170,132 +175,112 @@ const ShareMenu = ({
   };
   useEffect(() => {
     // getuserdata();
+    setIsOpen(true);
     getChats();
   }, []);
+  const modalRef = useRef(null);
+  // const db = getFirestore(app);
+
+  const handleDragEnd = (event, info) => {
+    if (info.offset.y > DRAG_CLOSE_THRESHOLD) {
+      closeModal();
+    }
+  };
+
+  const closeModal = () => {
+    setIsOpen(false);
+    setTimeout(() => {
+      setSharemenu(false);
+    }, 500);
+  };
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.3 }}
-      onClick={() => setSharemenu(false)}
-      className="fixed inset-0 z-50 flex items-center justify-center h-screen w-screen"
-    >
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 0.5 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.3, delay: 0.1 }}
-        className="absolute inset-0 bg-black bg-opacity-50"
-      />
-      <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.8, opacity: 0 }}
-        transition={{ duration: 0.3, delay: 0.2 }}
-        className="bg-white dark:bg-gray-800 rounded-lg p-6 mx-4 z-10 max-w-2xl"
-      >
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Share Options</h2>
-          <button
-            onClick={() => setSharemenu(false)}
-            className="text-gray-500 hover:text-gray-700 focus:outline-none"
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          className="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-end justify-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) closeModal();
+          }}
+        >
+          <motion.div
+            ref={modalRef}
+            className="bg-white dark:bg-gray-800 w-full max-w-2xl rounded-t-3xl p-4 pb-8 max-h-[80vh] overflow-y-auto"
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+            drag="y"
+            dragConstraints={{ top: 0 }}
+            onDragEnd={handleDragEnd}
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
-          </button>
-        </div>
-        <div className="flex flex-col items-center">
-          <p className="text-center mb-4">
-            Share <strong>{postdata?.caption}</strong> by{" "}
-            <strong>{userName}</strong>
-          </p>
-          <motion.button
-            onClick={handlesystemshare}
-            className="bg-blue-500 text-white px-6 py-3 rounded-md hover:bg-blue-600 focus:outline-none mb-4 flex items-center justify-center"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ duration: 0.2 }}
-          >
-            <span>Share System</span>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6 ml-2"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
-              />
-            </svg>
-          </motion.button>
-          <div className="flex flex-col max-h-96 overflow-y-auto w-full">
-            <div className="grid grid-cols-3 gap-4">
-              {chats &&
-                chats.map((chat) => (
+            <div className="pill-container flex justify-center mb-4">
+              <div className="pill w-12 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full" />
+            </div>
+
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Share Options</h2>
+              <button
+                onClick={closeModal}
+                className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="flex flex-col items-center">
+              <p className="text-center mb-4 text-gray-700 dark:text-gray-300">
+                Share <strong className="text-gray-900 dark:text-gray-100">{postdata?.caption}</strong> by{" "}
+                <strong className="text-gray-900 dark:text-gray-100">{userName}</strong>
+              </p>
+
+              <motion.button
+                onClick={handlesystemshare}
+                className="bg-blue-500  text-white px-6 py-3 rounded-full shadow-md hover:bg-blue-600 focus:outline-none mb-6 flex items-center justify-center"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <span>Share to System</span>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                </svg>
+              </motion.button>
+
+              <div className="grid grid-cols-3 gap-4 w-full">
+                {chats?.map((chat) => (
                   <motion.button
                     key={chat.roomid}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    transition={{ duration: 0.2 }}
                     disabled={sharing[chat.roomid]}
                     onClick={() => handlechatshare(chat)}
-                    className={`bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 px-4 py-3 rounded-md hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none flex flex-col items-center ${
-                      sharing[chat.roomid]
-                        ? "opacity-50 cursor-not-allowed"
-                        : ""
+                    className={`bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 p-4 rounded-xl shadow-md hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none flex flex-col items-center ${
+                      sharing[chat.roomid] ? "opacity-50 cursor-not-allowed" : ""
                     }`}
                   >
-                    <div className="flex justify-center">
-                      <Image
-                        src={
-                          chat.type === "p"
-                            ? chat.participants[0] === userdata.uid
-                              ? usermetadata[chat.participants[1]] &&
-                                usermetadata[chat.participants[1]].pfp
-                              : usermetadata[chat.participants[0]] &&
-                                usermetadata[chat.participants[0]].pfp
-                            : chat.pfp
-                        }
-                        height={100}
-                        width={100}
-                        className="rounded-full h-16  w-16 object-cover"
-                        alt="Profile"
-                      />
-                    </div>
-                    <span className="mt-2 text-center">
-                      {sharing[chat.roomid] ? "Sharing..." : "Share"} to{" "}
-                      {chat.type === "p"
-                        ? chat.participants[0] === userdata.uid
-                          ? usermetadata[chat.participants[1]] &&
-                            usermetadata[chat.participants[1]].userName
-                          : usermetadata[chat.participants[0]] &&
-                            usermetadata[chat.participants[0]].userName
-                        : chat.title}
+                    <Image
+                      src={chat.type === "p" ? (chat.participants[0] === userdata.uid ? usermetadata[chat.participants[1]]?.pfp : usermetadata[chat.participants[0]]?.pfp) : chat.pfp}
+                      height={80}
+                      width={80}
+                      className="rounded-full h-20 w-20 object-cover mb-3"
+                      alt="Profile"
+                    />
+                    <span className="text-sm text-center">
+                      {sharing[chat.roomid] ? "Sharing.." : "Share to"} {chat.type === "p" ? (chat.participants[0] === userdata.uid ? usermetadata[chat.participants[1]]?.userName : usermetadata[chat.participants[0]]?.userName) : chat.title}
                     </span>
                   </motion.button>
                 ))}
+                
+              </div>
             </div>
-          </div>
-        </div>
-      </motion.div>
-    </motion.div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 

@@ -6,6 +6,7 @@ import { TiHeartFullOutline } from "react-icons/ti";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { collection, getDoc, query, setDoc } from "firebase/firestore";
+import { CoolMode } from "./Coolmode";
 import toast, { Toaster } from "react-hot-toast";
 import {
   getFirestore,
@@ -275,9 +276,12 @@ const Reel = ({
   };
 
   return (
-    <div className="text-white" style={{ position: "relative" }}>
+    <div
+      className="text-white bg-black rounded-3xl   b"
+      style={{ position: "relative" }}
+    >
       <video
-        className="reel snap-center text-white"
+        className="reel snap-center rounded-3xl bg-black text-white"
         ref={reelRef}
         src={reeldata.mediaFiles}
         loop
@@ -303,7 +307,7 @@ const Reel = ({
         {isPlaying ? "Pause" : "Play"}
       </button>
       <div
-        className="footer absolute mt-10 -mb-4 pb-4 pt-20 bottom-4 w-full"
+        className="footer rounded-3xl absolute mt-10 -mb-4 pb-4 pt-20 bottom-4 w-full"
         style={{
           backgroundImage:
             "linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent)",
@@ -332,13 +336,34 @@ const Reel = ({
           <div className="flex justify-between">
             <div className="lp flex ">
               <div className="btnl text-4xl h-10 w-10 " onClick={handleLike}>
-                {!liked ? (
-                  <div className="lp text-3xl">
-                    <FaRegHeart />
-                  </div>
-                ) : (
-                  <TiHeartFullOutline style={{ color: "red" }} />
-                )}
+                <CoolMode
+                  options={{
+                    size: 30,
+                    particleCount: 50,
+                    speedHorz: 5,
+                    speedUp: 10,
+                  }}
+                >
+                  <button>
+                    {!liked ? (
+                      <Image
+                        src="/icons/notliked.png"
+                        alt="Not Liked"
+                        className="h-7 w-7"
+                        height={50}
+                        width={50}
+                      />
+                    ) : (
+                      <Image
+                        src="/icons/liked.png"
+                        alt="Liked"
+                        className="h-7 w-7"
+                        height={50}
+                        width={50}
+                      />
+                    )}
+                  </button>
+                </CoolMode>
                 <div />
               </div>
               <div

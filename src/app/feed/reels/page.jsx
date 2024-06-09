@@ -12,6 +12,7 @@ import dynamic from "next/dynamic";
 const MainLoading = dynamic(() => import("@/components/MainLoading"));
 const ReelComment = dynamic(() => import("@/components/ReelComment"));
 const ShareMenuReel = dynamic(() => import("@/components/ShareMenuReel"));
+import SparklesText from "@/components/SparkleText";
 const Reels = () => {
   // console.log("Sidebaropen", Sidebaropen);
   const [userdata, setUserData] = useState(null);
@@ -152,7 +153,7 @@ const Reels = () => {
       {reelsloading && initialLoad && <MainLoading />}
       {reelsloading && !initialLoad && (
         <>
-          <div className="main2 md:rounded-2xl bg-white dark:bg-black md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 border-black h-full overflow-y-auto">
+          <div className="main2 md:rounded-2xl bg-slate-100 dark:bg-black md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 border-black h-full overflow-y-auto">
             <div className="flex justify-center items-center h-full">
               <div className="edwdw ">
                 {" "}
@@ -204,11 +205,9 @@ const Reels = () => {
       )}
       {userdata && !reelsloading && (
         <div>
-          <div className="main2 grid md:rounded-2xl bg-white dark:bg-black md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 p-1 lg:p-8 App  border-black w-full h-full">
-            <div className="flex">
-              <div className="h1 text-3xl pt-2 lg:text-5xl w-full text-left">
-                Reels
-              </div>
+          <div className="main2 grid md:rounded-2xl bg-slate-100 dark:bg-black md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 p-1 lg:p-8 App  border-black w-full h-full">
+            <div className="flex justify-between bg-white rounded-b-3xl shadow-2xl shadow-fuchsia-100 px-4 py-2 ">
+              <SparklesText text="Reels" textSize="text-4xl" />
               <div className="flex">
                 <div className="">
                   {/* <p>Sidebar is {isOpen ? "open" : "closed"}</p> */}
@@ -222,7 +221,7 @@ const Reels = () => {
                     />
                   </button>
                 </div>
-                <button onClick={toggleGlobalMute} className="-mt-4">
+                <button onClick={toggleGlobalMute} className="">
                   {isGlobalMuted ? (
                     <Image
                       src="/icons/soundon.png"
@@ -245,11 +244,11 @@ const Reels = () => {
             </div>
             <div className="fl flex justify-center">
               <div
-                className=" video-container rounded-xl bg-black w-auto  relative "
+                className=" video-container rounded-xl w-auto  relative "
                 id="video-container "
               >
                 {reels.map((reel, idx) => (
-                  <div className="pk " play={reel.id} key={reel.id + idx}>
+                  <div className="pk mb-5 " play={reel.id} key={reel.id + idx}>
                     <Video
                       reel={reel}
                       setSharemenu={setSharemenu}

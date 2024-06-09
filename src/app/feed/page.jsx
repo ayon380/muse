@@ -235,12 +235,12 @@ const Home = () => {
       )}
       {userdata && !postloading && (
         <div>
-          <div className="main2 md:rounded-2xl bg-white dark:bg-black md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 border-black h-full overflow-y-auto">
-            <div className="flex justify-between pt-3 px-2 pb-3 bg-white rounded-b-3xl dark:bg-feedheader shadow-2xl shadow-fuchsia-300 dark:shadow-none  sticky top-0 z-20 ">
-              <SparklesText text="Muse" />
+          <div className="main2 md:rounded-2xl bg-gray-200 dark:bg-black md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 border-black h-full overflow-y-auto">
+            <div className="flex justify-between pt-3 px-2 pb-3 bg-white rounded-b-3xl dark:bg-feedheader shadow-xl shadow-fuchsia-200 dark:shadow-none  sticky top-0 z-20 ">
+              <SparklesText text="Muse" textSize="text-4xl"/>
               <button onClick={toggle}>
                 <Image
-                  src="/icons/menu.png"
+                  src="/icons/sidebar.png"
                   height={50}
                   width={50}
                   className="  w-7 h-7 mr-4"
@@ -255,7 +255,7 @@ const Home = () => {
             )}
             <div className="pol font-rethink ">
               <div className="feed w-full h-full overflow-y-auto">
-                <div className="buf h-10"></div>
+                <div className="buf h-5 bg-gray-200"></div>
                 {posts && posts.length > 0 ? (
                   posts.map((post) => (
                     <FeedPost

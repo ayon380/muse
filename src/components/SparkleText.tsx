@@ -1,5 +1,3 @@
-"use client";
-
 import { cn } from "@/utils/cn";
 import { motion } from "framer-motion";
 import { CSSProperties, ReactElement, useEffect, useState } from "react";
@@ -15,48 +13,15 @@ interface Sparkle {
 }
 
 interface SparklesTextProps {
-  /**
-   * @default <div />
-   * @type ReactElement
-   * @description
-   * The component to be rendered as the text
-   * */
   as?: ReactElement;
-
-  /**
-   * @default ""
-   * @type string
-   * @description
-   * The className of the text
-   */
   className?: string;
-
-  /**
-   * @required
-   * @type string
-   * @description
-   * The text to be displayed
-   * */
   text: string;
-
-  /**
-   * @default 10
-   * @type number
-   * @description
-   * The count of sparkles
-   * */
   sparklesCount?: number;
-
-  /**
-   * @default "{first: '#A07CFE', second: '#FE8FB5'}"
-   * @type string
-   * @description
-   * The colors of the sparkles
-   * */
   colors?: {
     first: string;
     second: string;
   };
+  textSize?: string; // New prop for Tailwind CSS text size
 }
 
 const SparklesText: React.FC<SparklesTextProps> = ({
@@ -64,6 +29,7 @@ const SparklesText: React.FC<SparklesTextProps> = ({
   colors = { first: "#A07CFE", second: "#FE8FB5" },
   className,
   sparklesCount = 10,
+  textSize = "text-6xl", // Default to "text-6xl" if not provided
   ...props
 }) => {
   const [sparkles, setSparkles] = useState<Sparkle[]>([]);
@@ -105,7 +71,7 @@ const SparklesText: React.FC<SparklesTextProps> = ({
 
   return (
     <div
-      className={cn("text-6xl font-bold", className)}
+      className={cn(textSize, "font-bold", className)} // Apply dynamic text size class
       {...props}
       style={
         {
@@ -115,10 +81,12 @@ const SparklesText: React.FC<SparklesTextProps> = ({
       }
     >
       <span className="relative inline-block">
+        {/* Sparkle components rendering */}
         {sparkles.map((sparkle) => (
           <Sparkle key={sparkle.id} {...sparkle} />
         ))}
-        <strong className="bg-gradient-to-r text-5xl font-lucy from-[var(--sparkles-first-color)] to-[var(--sparkles-second-color)] bg-clip-text text-transparent">
+        {/* Text with gradient */}
+        <strong className={`bg-gradient-to-r ${textSize} font-lucy from-[var(--sparkles-first-color)] to-[var(--sparkles-second-color)] bg-clip-text text-transparent`}>
           {text}
         </strong>
       </span>

@@ -1,8 +1,6 @@
 import React from "react";
 import { useState, useEffect } from "react";
-import { FaRegHeart, FaComments, FaShare } from "react-icons/fa";
-import { TiHeartFullOutline } from "react-icons/ti";
-import { MdOutlineReportGmailerrorred } from "react-icons/md";
+
 import { motion } from "framer-motion";
 import { Carousel } from "react-responsive-carousel";
 import "react-responsive-carousel/lib/styles/carousel.min.css";
@@ -68,8 +66,8 @@ import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 const Modal = dynamic(() => import("./Modal"));
 const EditPost = dynamic(() => import("./EditPost"));
-const ShareMenu = dynamic(() => import("@/components/ShareMenu"));
-const PostComment = dynamic(() => import("@/components/PostComment"));
+import { CoolMode } from "@/components/Coolmode";
+const SimpleVideoPlayer = dynamic(() => import("./SimpleVideoPlayer"));
 const FeedPost = ({
   db,
   type,
@@ -124,11 +122,13 @@ const FeedPost = ({
   }
 
   const checkIfLiked = async () => {
-    if (userdata) {
+    if (userdata && postdata) {
+      console.log("checking if liked");
       const postRef = doc(db, "posts", postdata.id);
       const docSnap = await getDoc(postRef);
       if (docSnap.exists()) {
         if (docSnap.data().likes.includes(uid)) {
+          console.log("liked");
           setLiked(true);
         }
       }
@@ -143,9 +143,14 @@ const FeedPost = ({
     }
   };
   useEffect(() => {
-    checkIfLiked();
-  }, [userdata]);
-  const sendNotification = async (postdata) => {
+    if (uid && postdata) {
+      checkIfLiked();
+    }
+  }, [uid, postdata]);
+  useEffect(() => {
+    console.log(liked+"liked");
+  }, [liked]);
+    const sendNotification = async (postdata) => {
     try {
       const notificationData = {
         id: "",
@@ -250,7 +255,7 @@ const FeedPost = ({
   return (
     <>
       <motion.div
-        className="z-10 justify-center relative w-full py-4 lg:px-64 md:px-24 max-h-3/5 dark:bg-black"
+        className="z-10 justify-center bg-gray-200 relative w-full py-2 lg:px-64 md:px-24 max-h-3/5 dark:bg-black"
         key={postdata.id}
         initial="hidden"
         animate="visible"
@@ -279,9 +284,9 @@ const FeedPost = ({
             content="Are you sure you want to delete this post?"
           />
         )}
-        <div className="df bg-white dark:bg-neutral-800 bg-opacity-40 rounded-2xl px-2 py-2 m-2">
+        <div className="df bg-white dark:bg-neutral-800 shadow-sm bg-opacity-40 rounded-2xl px-2 py-2 m-2">
           {usermetadata && usermetadata[postdata.uid] && (
-            <div className="header flex justify-between">
+            <div className="header flex justify-between pt-2 px-1">
               <Link
                 href={`/feed/profile/${usermetadata[postdata.uid].userName}`}
               >
@@ -305,18 +310,19 @@ const FeedPost = ({
               </div>
             </div>
           )}
-          <div className="gf rounded-xl pt-6 z-20 w-full">
-            <Carousel showThumbs={false}>
+          <div className="gf rounded-xl pt-4 z-20 w-full">
+            <Carousel showThumbs={false} showStatus={false}  autoPlay dynamicHeight useKeyboardArrows swipeable={false}>
               {postdata?.mediaFiles.map((media) => (
                 <>
                   {isVideoFile(media) ? (
                     <>
-                      <video
+                      {/* <video
                         className="max-h-96 w-full bg-transparent bg-opacity-80 rounded-xl"
                         src={media}
                         controls
                         style={{ maxHeight: "500px" }}
-                      />
+                      /> */}
+                      <SimpleVideoPlayer src={media} />
                     </>
                   ) : (
                     <>
@@ -332,7 +338,7 @@ const FeedPost = ({
                 </>
               ))}
             </Carousel>
-            <div className="footer mt-3">
+            <div className="footer mt-3 mx-1">
               <div className="flex justify-between">
                 <div className="like flex">
                   <motion.div
@@ -341,18 +347,49 @@ const FeedPost = ({
                     whileHover="hover"
                     variants={scaleUpVariants}
                   >
-                    {!liked ? (
-                      <FaRegHeart />
-                    ) : (
-                      <TiHeartFullOutline style={{ color: "red" }} />
-                    )}
-                    <div />
+                    <CoolMode
+                      options={{
+                        size: 30,
+                        particleCount: 50,
+                        speedHorz: 5,
+                        speedUp: 10,
+                      }}
+                    >
+                      <button>
+                        {!liked ? (
+                          <Image
+                            src="/icons/notliked.png"
+                            alt="Not Liked"
+                            className="h-7 w-7"
+                            height={50}
+                            width={50}
+                          />
+                        ) : (
+                          <Image
+                            src="/icons/liked.png"
+                            alt="Liked"
+                            className="h-7 w-7"
+                            height={50}
+                            width={50}
+                          />
+                        )}
+                      </button>
+                    </CoolMode>
+                    {/* <CoolMode options={{
+                      particleCount: 50,
+                      speedHorz: 5,
+                      speedUp: 10,
+                    }}>
+                      
+                      <button>Click</button>
+                      <div />
+                    </CoolMode> */}
                   </motion.div>
-                  <div className="flex">
-                    <div className="count text-xl font-bold mr-1">
+                  <div className="flex  ml-2 ">
+                    <div className="count text-2xl font-bold mr-1">
                       {postdata.likecount ? postdata.likecount : 0}
                     </div>
-                    <div className="likes text-xl opacity-85">likes</div>
+                    <div className="likes text-sm mt-2 opacity-75 ">likes</div>
                   </div>
                 </div>
                 <div className="l12 flex text-3xl">
@@ -414,10 +451,12 @@ const FeedPost = ({
               </div>
 
               {postdata.caption && (
-                <div className="caption m-1 w-full">{postdata.caption}</div>
+                <div className="caption mt-1 mb-2 w-full opacity-80">
+                  {postdata.caption}
+                </div>
               )}
 
-              <div className="comments flex justify-between m-1">
+              <div className="comments flex justify-between mb-1">
                 <div
                   className="om flex"
                   onClick={() => {
@@ -434,7 +473,7 @@ const FeedPost = ({
                       alt="Comment"
                     />
                   </button>
-                  <div className="k mt-0.5">
+                  <div className="k mt-0.5 ml-3">
                     {postdata ? postdata.commentcount : 0} comments
                   </div>
                 </div>
