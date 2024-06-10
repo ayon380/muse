@@ -207,7 +207,7 @@ const Reels = () => {
         <div>
           <div className="main2 grid md:rounded-2xl bg-slate-100 dark:bg-black md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 p-1 lg:p-8 App  border-black w-full h-full">
             <div className="flex justify-between bg-white rounded-b-3xl shadow-2xl shadow-fuchsia-100 px-4 py-2 ">
-              <SparklesText text="Reels" textSize="text-4xl" />
+            <h1 class="bg-gradient-to-r from-purple-500 via-fuchsia-400 to-pink-400 text-4xl inline-block text-transparent bg-clip-text">Reels</h1>
               <div className="flex">
                 <div className="">
                   {/* <p>Sidebar is {isOpen ? "open" : "closed"}</p> */}

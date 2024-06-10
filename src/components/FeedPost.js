@@ -311,7 +311,7 @@ const FeedPost = ({
             </div>
           )}
           <div className="gf rounded-xl pt-4 z-20 w-full">
-            <Carousel showThumbs={false} showStatus={false}  autoPlay dynamicHeight useKeyboardArrows swipeable={false}>
+            <Carousel showThumbs={false} showStatus={false}   dynamicHeight useKeyboardArrows swipeable={false}>
               {postdata?.mediaFiles.map((media) => (
                 <>
                   {isVideoFile(media) ? (

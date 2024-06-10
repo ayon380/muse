@@ -70,6 +70,7 @@ const Home = () => {
   const [messages, setMessages] = useState([{}]);
   const [chats, setChats] = useState([]);
   const [opengrpchatcreate, setopengrpchatcreate] = useState(false);
+  const [checkchattype, setcheckchattype] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false); // State to track dropdown visibility
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [chatwindow, setChatwindow] = useState(chatw);
@@ -834,6 +835,7 @@ const Home = () => {
       return true;
     }
   };
+
   const handlemessagereply = (message) => {
     setMessagetext(`@${usermetadata[message.sender].userName} ${message.text}`);
   };
@@ -1150,8 +1152,10 @@ const Home = () => {
                 className="followingusers bg-slate-100 w-full lg:w-1/3 md:m-6 overflow-y-auto"
                 key={roomid}
               >
-                <div className="flex w-full rounded-b-3xl shadow-xl shadow-fuchsia-100 dark:shadow-none bg-white p-4 justify-between">
-                 <SparklesText text="Messages" textSize="text-4xl" />
+                <div className="flex w-full rounded-b-3xl shadow-xl shadow-fuchsia-100 dark:shadow-none bg-white p-3 justify-between">
+                  <h1 class="bg-gradient-to-r from-purple-500 via-fuchsia-400 to-pink-400 text-4xl inline-block text-transparent bg-clip-text">
+                    Messages
+                  </h1>
                   <div className="flex justify-end ">
                     <button
                       className="createchat cursor-pointer h-auto  p-3 rounded-2xl   "
@@ -1316,67 +1320,83 @@ const Home = () => {
                   ? "bg-[url('/chatbg/space.jpg')]"
                   : roomdata.theme == "heaven"
                   ? "bg-[url('/chatbg/heaven.jpeg')]"
-                  : "bg-purple-200"
+                  : "bg-fuchsia-100"
               } dark:bg-black md:dark:bg-gray-700  bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-10 shadow-2xl border-none  md:rounded-2xl h-full relative`}
               >
                 {roomid != "" && (
                   <>
-                    <div className="overflow-y-auto h-full pb-16 pt-10 w-full">
-                      <div className="g fixed top-0 rounded-b-xl md:rounded-2xl h-10 pt-2 w-full text-center  backdrop-filter backdrop-blur-3xl  shadow-2xl  border-none">
-                        <div className="flex justify-between mx-2">
-                          <button
-                            onClick={() => {
-                              router.push("/feed/messages");
-                              // setchatopen(false);
-                              // setRoomid("");
-                              // setChatwindow("");
-                            }}
-                          >
-                            <Image
-                              className=" h-4  w-4 dark:invert"
-                              src="/icons/arrow.png"
-                              height={50}
-                              width={50}
-                              alt=""
-                            />
-                          </button>
-                          <div
-                            className="lpa flex"
-                            onClick={() => setchatdetailopen(true)}
-                          >
-                            {chattype == "p" && (
-                              <Image
-                                className="h-7 w-7 rounded-full mr-2"
-                                src={usermetadata[chatwindow].pfp}
-                                height={50}
-                                width={50}
-                                alt={chatwindow}
-                              ></Image>
-                            )}
-                            {chattype == "p" &&
-                              usermetadata[chatwindow].userName}
-                            {chattype == "g" && (
-                              <>
-                                {" "}
-                                <Image
-                                  className="h-7 w-7 rounded-full mr-2"
-                                  src={roomdata.pfp}
-                                  height={50}
-                                  width={50}
-                                  alt={chatwindow}
-                                />{" "}
-                                {chatwindow}
-                              </>
-                            )}
-                            {chattype == "p" && (
-                              <div className="ml-5 text-opacity-45">
-                                {formatLastSeen(
-                                  usermetadata[chatwindow].lastseen
-                                )}
-                              </div>
-                            )}
+                    <div className="overflow-y-auto h-full pb-20  pt-10 w-full">
+                      <div className="fixed top-0 left-0 right-0 rounded-b-3xl z-50 bg-white dark:bg-gray-900 shadow-lg transition-all duration-300 ease-in-out">
+                        <div className="container mx-auto px-4 py-3">
+                          <div className="flex items-center justify-between">
+                            <button
+                              onClick={() => {
+                                router.push("/feed/messages");
+                                // Additional actions if needed
+                              }}
+                              className="p-2 -ml-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition duration-200 focus:outline-none"
+                              aria-label="Back to messages"
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-6 w-6"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M15 19l-7-7 7-7"
+                                />
+                              </svg>
+                            </button>
+
+                            <div
+                              className="flex items-center flex-grow ml-4 cursor-pointer"
+                              onClick={() => setchatdetailopen(true)}
+                            >
+                              {chattype === "p" ? (
+                                <>
+                                  <Image
+                                    src={usermetadata[chatwindow].pfp}
+                                    alt={usermetadata[chatwindow].userName}
+                                    height={100}
+                                    width={100}
+                                    className="w-10 h-10 rounded-full object-cover mr-3 shadow-sm"
+                                  />
+                                  <div className="flex flex-col">
+                                    <span className="text-lg font-semibold text-gray-800 dark:text-white">
+                                      {usermetadata[chatwindow].userName}
+                                    </span>
+                                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                                      {formatLastSeen(
+                                        usermetadata[chatwindow].lastseen
+                                      )}
+                                    </span>
+                                  </div>
+                                </>
+                              ) : (
+                                <>
+                                  <Image
+                                    src={roomdata.pfp}
+                                    height={100}
+                                    width={100}
+                                    alt={chatwindow}
+                                    className="w-9 h-9 rounded-full object-cover mr-3 shadow-sm"
+                                  />
+                                  <span className="text-lg font-semibold text-gray-800 dark:text-white">
+                                    {chatwindow}
+                                  </span>
+                                </>
+                              )}
+                            </div>
+
+                            <div className="flex items-center space-x-2">
+                              {/* Add more action buttons here if needed */}
+                            </div>
                           </div>
-                          <div className="sa"></div>
                         </div>
                       </div>
                       <div className="flex justify-center">
@@ -1395,7 +1415,11 @@ const Home = () => {
 
                       {messages.map((message) => (
                         <motion.div
-                          className="px-6 "
+                          onClick={() => {
+                            setshowaddfiles(false);
+                            setgifopen(false);
+                          }}
+                          className="px-3 md:px-6 "
                           key={
                             message.timestamp + message.sender + message.text
                           }
@@ -1406,7 +1430,7 @@ const Home = () => {
                           {message.sender == userdata.uid ? (
                             <div className="ko flex justify-end my-5 ml-28">
                               <div
-                                className="e  text-right shadow-xl  bg-purple-400 p-2 lg:p-5 rounded-3xl rounded-tr-none cursor-pointer"
+                                className="e  text-right shadow-xl  bg-fuchsia-300 p-2 lg:p-5 rounded-2xl md:rounded-3xl rounded-tr-none cursor-pointer"
                                 onClick={() => handledropdown(message)}
                               >
                                 <div className="lp">
@@ -1506,10 +1530,7 @@ const Home = () => {
                                               ) {
                                                 // If it's a Muse post, create a link
                                                 return (
-                                                  <ShortMusePost
-                                                    message={message}
-                                                    key={index}
-                                                  />
+                                                  <>Muse Post</>
                                                   // <>{message.text}</>
                                                 );
                                               } else if (
@@ -1630,7 +1651,7 @@ const Home = () => {
                           ) : (
                             <>
                               <div className="ko  flex right-0 my-5">
-                                <div className="e bg-purple-400 p-2 lg:p-5 shadow-xl  rounded-3xl rounded-tl-none">
+                                <div className="e bg-purple-300 p-2 lg:p-5 shadow-xl rounded-2xl  md:rounded-3xl rounded-tl-none">
                                   <div className="flex">
                                     {/* {console.log(pfps[message.sender])} */}
                                     {usermetadata[message.sender] && (
@@ -1723,11 +1744,11 @@ const Home = () => {
                                             ) {
                                               // If it's a Muse post, create a link
                                               return (
-                                                <ShortMusePost
-                                                  message={message}
-                                                  key={index}
-                                                />
-                                                // <>{message.text}</>
+                                                // <ShortMusePost
+                                                //   message={message}
+                                                //   key={index}
+                                                // />
+                                                <>Muse Post</>
                                               );
                                             } else if (
                                               part.startsWith("http")
@@ -1761,63 +1782,100 @@ const Home = () => {
                       ))}
 
                       <div ref={messagesEndRef} />
-                      <div className="textbox absolute flex bottom-0 bg-purple-300 md:bottom-0 rounded-xl p-2 backdrop-filter backdrop-blur-xl w-full transition-all duration-300 ease-in-out">
-                        <input
-                          type="text"
-                          placeholder="Type a message..."
-                          className="placeholder-italic w-full h-10 bg-purple-300 text-lg px-1 rounded-xl text-black border-black transition-all duration-300 outline-none shadow-2xl hover:shadow-3xl focus:shadow-3xl"
-                          value={messagetext}
-                          onChange={(e) => setMessagetext(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              sendMesage();
-                            }
-                          }}
-                        />
-                        <div className="flex items-center transition-all duration-300 ease-in-out">
-                          <button
-                            className="m-1 transform transition-transform duration-300 ease-in-out hover:scale-110"
-                            onClick={() => {
-                              setgifopen(!gifopen);
-                              setshowaddfiles(false);
-                            }}
-                          >
-                            <Image
-                              className="h-8 w-10 dark:invert"
-                              src="/icons/gif.png"
-                              height={100}
-                              width={100}
-                              alt="Gif"
-                            />
-                          </button>
-                          <button
-                            className="m-1 transform transition-transform duration-300 ease-in-out hover:scale-110"
-                            onClick={() => {
-                              setgifopen(false);
-                              setshowaddfiles(!showaddfiles);
-                            }}
-                          >
-                            <Image
-                              className="h-6 w-6 mr-1 dark:invert"
-                              src="/icons/attach.png"
-                              height={100}
-                              width={100}
-                              alt="Attach"
-                            />
-                          </button>
-                          <button
-                            onClick={sendMesage}
-                            disabled={messagetext.length === 0}
-                            className="m-1 transform transition-transform duration-300 ease-in-out hover:scale-110 disabled:cursor-not-allowed disabled:text-gray-300"
-                          >
-                            <Image
-                              className="h-6 w-6 dark:invert"
-                              src="/icons/send.png"
-                              height={100}
-                              width={100}
-                              alt="Send"
-                            />
-                          </button>
+                      <div className="fixed bottom-0 left-0 right-0 rounded-t-3xl bg-white dark:bg-gray-800 shadow-lg p-4 transition-all duration-300 ease-in-out">
+                        <div className="container mx-auto">
+                          <div className="flex items-center space-x-2">
+                            <div className="flex-grow">
+                              <div className="relative">
+                                <input
+                                  type="text"
+                                  placeholder="Type a message..."
+                                  className="w-full py-3 px-4 pr-12 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-3xl outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition duration-200"
+                                  value={messagetext}
+                                  onChange={(e) => {
+                                    e.preventDefault();
+                                    setMessagetext(e.target.value);
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                      sendMesage();
+                                    }
+                                  }}
+                                />
+                                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                                  <button
+                                    onClick={sendMesage}
+                                    disabled={messagetext.trim().length === 0}
+                                    className="p-2 bg-blue-500 text-white rounded-full shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 transition duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                    aria-label="Send message"
+                                  >
+                                    <svg
+                                      xmlns="http://www.w3.org/2000/svg"
+                                      className="h-4 w-4"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                      stroke="currentColor"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                                      />
+                                    </svg>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+
+                            <button
+                              className="p-3 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-500 transition duration-200"
+                              onClick={() => {
+                                setgifopen(!gifopen);
+                                setshowaddfiles(false);
+                              }}
+                              aria-label="Add GIF"
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-6 w-6"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                />
+                              </svg>
+                            </button>
+
+                            <button
+                              className="p-3 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-500 transition duration-200"
+                              onClick={() => {
+                                setgifopen(false);
+                                setshowaddfiles(!showaddfiles);
+                              }}
+                              aria-label="Attach file"
+                            >
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-6 w-6"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
+                                />
+                              </svg>
+                            </button>
+                          </div>
                         </div>
                       </div>
                     </div>

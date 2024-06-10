@@ -1,7 +1,7 @@
 "use client"
 import React from 'react';
 import { CoolMode } from '@/components/Coolmode';
-
+import BottomSheet from '../../components/BottomSheet';
 const App = () => {
     const options = {
         particleCount: 50,
@@ -10,11 +10,20 @@ const App = () => {
     };
 
     return (
-        <CoolMode options={options}>
-            <div style={{ height: '100vh', background: '#f0f0f0' }}>
-                Hover or click to see the particles!
-            </div>
-        </CoolMode>
+        <div className="flex flex-col items-center justify-center min-h-screen py-2">
+        <h1 className="text-4xl font-bold mb-8">Bottom Sheet Example</h1>
+        <BottomSheet>
+          <h2 className="text-2xl font-semibold mb-4">Bottom Sheet Content</h2>
+          <p className="text-gray-700 mb-4">
+            This is a native-like bottom sheet with a pill-shaped handle. You can drag it down to close or tap outside the sheet.
+          </p>
+          <ul className="list-disc pl-6 text-gray-700">
+            {[...Array(20)].map((_, i) => (
+              <li key={i}>List item {i + 1}</li>
+            ))}
+          </ul>
+        </BottomSheet>
+      </div>
     );
 };
 

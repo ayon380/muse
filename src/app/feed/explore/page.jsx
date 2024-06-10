@@ -216,8 +216,8 @@ const Explore = () => {
             </div>
           )}
           <div className="main2 md:rounded-2xl dark:bg-black bg-white md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 border-black md:p-10 overflow-y-auto">
-            <div className="flex justify-between pt-3 px-2 pb-3 bg-white rounded-b-3xl dark:bg-feedheader shadow-xl  dark:shadow-none  sticky top-0 z-20 ">
-              <SparklesText text="Explore" textSize="text-4xl" />
+            <div className="flex justify-between pt-3 px-2 pb-4 bg-white rounded-b-3xl dark:bg-feedheader shadow-xl  dark:shadow-none  sticky top-0 z-20 ">
+            <h1 class="bg-gradient-to-r from-purple-500 via-fuchsia-400 to-pink-400 text-4xl inline-block text-transparent bg-clip-text">Explore</h1>
               <button onClick={toggle}>
                 <Image
                   src="/icons/sidebar.png"
