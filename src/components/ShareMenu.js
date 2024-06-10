@@ -294,7 +294,7 @@ const ShareMenu = ({
       <div className="aa">
         <div
           ref={sheetRef}
-          className="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-lg z-50 transition-transform duration-300 ease-out"
+          className="fixed bottom-0 left-0 right-0 bg-white dark:bg-black border-t-4 border-feedheader rounded-t-3xl shadow-lg z-50 transition-transform duration-300 ease-out"
           style={{
             transform: isOpen ? "translateY(0)" : "translateY(100%)",
           }}

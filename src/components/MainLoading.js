@@ -10,11 +10,13 @@ const MainLoading = () => {
       </div>
       <div className="fixed bottom-4 text-black dark:text-white text md:text-base opacity-80">
         NoFilter LLC{" "}
-        <span className="opacity-75 font-bold">v{process.env.NEXT_PUBLIC_VERSION} </span>
+        <span className="opacity-75 font-bold">
+          v{process.env.NEXT_PUBLIC_VERSION}{" "}
+        </span>
       </div>
-      <h1 class="bg-gradient-to-r from-purple-500 via-fuchsia-400 to-pink-400 text-xl inline-block text-transparent bg-clip-text">
-                    Beta Release
-                  </h1>
+      <h1 className="bg-gradient-to-r from-purple-500 via-fuchsia-400 to-pink-400 text-xl inline-block text-transparent bg-clip-text">
+        Beta Release
+      </h1>
     </div>
   );
 };

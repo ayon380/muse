@@ -255,7 +255,7 @@ const Home = () => {
             )}
             <div className="pol font-rethink ">
               <div className="feed w-full h-full overflow-y-auto">
-                <div className="buf h-5 bg-gray-200"></div>
+                <div className="buf h-5 bg-gray-200 dark:bg-black"></div>
                 {posts && posts.length > 0 ? (
                   posts.map((post) => (
                     <FeedPost
