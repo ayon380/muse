@@ -56,6 +56,7 @@ const Home = () => {
   const [user, setUser] = useState(auth.currentUser);
   const [createpostmenu, setcreatepostmenu] = useState(false);
   const router = useRouter();
+  const inputref = useRef(null);
   const [userdata, setUserData] = useState(null);
   const [currentmsglength, setcurrentmsglength] = useState(50);
   const messagesEndRef = React.useRef(null);
@@ -64,7 +65,7 @@ const Home = () => {
   const db = getFirestore(app);
   const [searchResults, setSearchResults] = useState([]);
   const [roomid, setRoomid] = useState(room);
-  const [messagetext, setMessagetext] = useState("");
+  // const [messagetext, setMessagetext] = useState("");
   const [gif, setgif] = useState(null);
   const [chattype, setChattype] = useState(chatt);
   const [messages, setMessages] = useState([{}]);
@@ -603,10 +604,13 @@ const Home = () => {
     try {
       if (userdata) {
         if (roomid !== "") {
+          if (!inputref.current.value.trim(" ").length > 0) return;
+          // setMessagetext(inputref.current.value);
+          let mt = inputref.current.value;
           const msgref = collection(db, "messages");
           const msgdata = {
             sender: userdata.uid,
-            text: messagetext,
+            text: mt,
             type: "text",
             timestamp: Date.now(),
             readstatus: false,
@@ -622,17 +626,18 @@ const Home = () => {
             id: q.id,
           });
           await updateDoc(msgroomref, msgroomdata);
-          setMessagetext("");
+          // setMessagetext("");
           sendNotification(q.id, {
             type: "message",
             chattype: chattype,
             sender: userdata.uid,
-            text: messagetext,
+            text: mt,
             messagetype: "text",
             roomid: roomid,
             receiver: chatwindow,
             timestamp: Date.now(),
           });
+          inputref.current.value = "";
           console.log("Message sent");
         } else {
           toast.error("No chat selected");
@@ -740,7 +745,7 @@ const Home = () => {
             id: q.id,
           });
           await updateDoc(msgroomref, msgroomdata);
-          setMessagetext("");
+          inputref.current.value = "";
           sendNotification(q.id, {
             type: "message",
             chattype: chattype,
@@ -801,7 +806,8 @@ const Home = () => {
             id: q.id,
           });
           await updateDoc(msgroomref, msgroomdata);
-          setMessagetext("");
+          // setMessagetext("");
+          inputref.current.value = "";
           sendNotification(q.id, {
             type: "message",
             chattype: chattype,
@@ -837,7 +843,9 @@ const Home = () => {
   };
 
   const handlemessagereply = (message) => {
-    setMessagetext(`@${usermetadata[message.sender].userName} ${message.text}`);
+    inputref.current.value = `@${usermetadata[message.sender].userName} ${
+      message.text
+    }`;
   };
   function formatLastSeen(timestamp) {
     console.log(timestamp);
@@ -965,8 +973,10 @@ const Home = () => {
     }, [text]); // Dependency array ensures it considers `text` changes only
 
     return (
-      <div className="sdfsdf" onClick={() => router.push(text)}>
-        {username && <div className="relative">{username}</div>}
+      <div className="sdfsdf p-1" onClick={() => router.push(text)}>
+        {username && (
+          <div className="relative text-purple-700">@{username}</div>
+        )}
         {posttt.mediaFiles && (
           <Image
             src={posttt.mediaFiles[0]}
@@ -1149,10 +1159,10 @@ const Home = () => {
             )}
             {!checkchat("Q") && (
               <div
-                className="followingusers bg-slate-100 w-full lg:w-1/3 md:m-6 overflow-y-auto"
+                className="followingusers bg-slate-100 dark:bg-black w-full lg:w-1/3 md:m-6 overflow-y-auto"
                 key={roomid}
               >
-                <div className="flex w-full rounded-b-3xl shadow-xl shadow-fuchsia-100 dark:shadow-none bg-white p-3 justify-between">
+                <div className="flex w-full rounded-b-3xl shadow-xl shadow-fuchsia-100 dark:bg-feedheader dark:shadow-none bg-white p-3 justify-between">
                   <h1 class="bg-gradient-to-r from-purple-500 via-fuchsia-400 to-pink-400 text-4xl inline-block text-transparent bg-clip-text">
                     Messages
                   </h1>
@@ -1169,22 +1179,23 @@ const Home = () => {
                         alt="Create Group Chat"
                       />
                     </button>
-                    <button onClick={toggle}>
-                      <Image
-                        className="h-7 w-7 mr-2 dark:invert"
-                        src="/icons/sidebar.png"
-                        width={50}
-                        alt="Sidebar"
-                        height={50}
-                      />
-                    </button>
+
                     <button onClick={() => setsearchopen(true)}>
                       <Image
-                        className="h-6 w-6 dark:invert"
+                        className="h-6 w-6 mr-2 dark:invert"
                         src="/icons/search.png"
                         width={50}
                         height={50}
                         alt="Search"
+                      />
+                    </button>
+                    <button onClick={toggle}>
+                      <Image
+                        className="h-7 w-7  "
+                        src="/icons/sidebar.png"
+                        width={50}
+                        alt="Sidebar"
+                        height={50}
                       />
                     </button>
                   </div>
@@ -1326,7 +1337,7 @@ const Home = () => {
                 {roomid != "" && (
                   <>
                     <div className="overflow-y-auto h-full pb-20  pt-10 w-full">
-                      <div className="fixed top-0 left-0 right-0 rounded-b-3xl z-50 bg-white dark:bg-gray-900 shadow-lg transition-all duration-300 ease-in-out">
+                      <div className="fixed top-0 left-0 right-0 rounded-b-3xl z-50 bg-white dark:bg-feedheader shadow-lg transition-all duration-300 ease-in-out">
                         <div className="container mx-auto px-4 py-3">
                           <div className="flex items-center justify-between">
                             <button
@@ -1430,7 +1441,7 @@ const Home = () => {
                           {message.sender == userdata.uid ? (
                             <div className="ko flex justify-end my-5 ml-28">
                               <div
-                                className="e  text-right shadow-xl  bg-fuchsia-300 p-2 lg:p-5 rounded-2xl md:rounded-3xl rounded-tr-none cursor-pointer"
+                                className="e  text-right shadow-xl  bg-fuchsia-300 dark:bg-fuchsia-500 p-2 lg:p-5 rounded-2xl md:rounded-3xl rounded-tr-none cursor-pointer"
                                 onClick={() => handledropdown(message)}
                               >
                                 <div className="lp">
@@ -1530,7 +1541,10 @@ const Home = () => {
                                               ) {
                                                 // If it's a Muse post, create a link
                                                 return (
-                                                  <>Muse Post</>
+                                                  <ShortMusePost
+                                                    message={message}
+                                                    key={index}
+                                                  />
                                                   // <>{message.text}</>
                                                 );
                                               } else if (
@@ -1651,7 +1665,7 @@ const Home = () => {
                           ) : (
                             <>
                               <div className="ko  flex right-0 my-5">
-                                <div className="e bg-purple-300 p-2 lg:p-5 shadow-xl rounded-2xl  md:rounded-3xl rounded-tl-none">
+                                <div className="e bg-purple-300 dark:bg-purple-500 p-2 lg:p-5 shadow-xl rounded-2xl  md:rounded-3xl rounded-tl-none">
                                   <div className="flex">
                                     {/* {console.log(pfps[message.sender])} */}
                                     {usermetadata[message.sender] && (
@@ -1744,11 +1758,24 @@ const Home = () => {
                                             ) {
                                               // If it's a Muse post, create a link
                                               return (
-                                                // <ShortMusePost
-                                                //   message={message}
-                                                //   key={index}
-                                                // />
-                                                <>Muse Post</>
+                                                <a href={message.text} key={message.text}>
+                                                  <div className="flex items-center justify-center px-4 py-2 rounded-md bg-gradient-to-r from-purple-500 to-pink-600 text-white font-semibold hover:from-purple-600 hover:to-pink-700 transition duration-300">
+                                                    <span>See Post</span>
+                                                    <svg
+                                                      xmlns="http://www.w3.org/2000/svg"
+                                                      className="h-5 w-5 ml-2"
+                                                      viewBox="0 0 20 20"
+                                                      fill="currentColor"
+                                                    >
+                                                      <path
+                                                        fillRule="evenodd"
+                                                        d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+                                                        clipRule="evenodd"
+                                                      />
+                                                    </svg>
+                                                  </div>
+                                                </ a>
+                                                // <>Muse Post</>
                                               );
                                             } else if (
                                               part.startsWith("http")
@@ -1782,7 +1809,7 @@ const Home = () => {
                       ))}
 
                       <div ref={messagesEndRef} />
-                      <div className="fixed bottom-0 left-0 right-0 rounded-t-3xl bg-white dark:bg-gray-800 shadow-lg p-4 transition-all duration-300 ease-in-out">
+                      <div className="fixed bottom-0 left-0 right-0 rounded-t-3xl bg-white dark:bg-feedheader shadow-lg p-4 transition-all duration-300 ease-in-out">
                         <div className="container mx-auto">
                           <div className="flex items-center space-x-2">
                             <div className="flex-grow">
@@ -1790,23 +1817,22 @@ const Home = () => {
                                 <input
                                   type="text"
                                   placeholder="Type a message..."
-                                  className="w-full py-3 px-4 pr-12 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-3xl outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition duration-200"
-                                  value={messagetext}
-                                  onChange={(e) => {
-                                    e.preventDefault();
-                                    setMessagetext(e.target.value);
-                                  }}
+                                  className="w-full py-3 px-4 pr-12 bg-gray-100 dark:bg-black text-gray-800 dark:text-gray-200 rounded-3xl outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 transition duration-200"
+                                  ref={inputref}
                                   onKeyDown={(e) => {
                                     if (e.key === "Enter") {
-                                      sendMesage();
+                                      if (
+                                        inputref.current.value.trim().length > 0
+                                      )
+                                        sendMesage();
                                     }
                                   }}
                                 />
                                 <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                                   <button
                                     onClick={sendMesage}
-                                    disabled={messagetext.trim().length === 0}
-                                    className="p-2 bg-blue-500 text-white rounded-full shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 transition duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                    // disabled={messagetext.trim().length === 0}
+                                    className="p-2 bg-fuchsia-100 dark:bg-fuchsia-400 text-white rounded-full shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 transition duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed"
                                     aria-label="Send message"
                                   >
                                     <svg
@@ -1829,7 +1855,7 @@ const Home = () => {
                             </div>
 
                             <button
-                              className="p-3 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-500 transition duration-200"
+                              className="p-3 bg-gray-100 dark:bg-black text-gray-600 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-500 transition duration-200"
                               onClick={() => {
                                 setgifopen(!gifopen);
                                 setshowaddfiles(false);
@@ -1853,7 +1879,7 @@ const Home = () => {
                             </button>
 
                             <button
-                              className="p-3 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-500 transition duration-200"
+                              className="p-3 bg-gray-100 dark:bg-black text-gray-600 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-300 dark:focus:ring-gray-500 transition duration-200"
                               onClick={() => {
                                 setgifopen(false);
                                 setshowaddfiles(!showaddfiles);

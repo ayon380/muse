@@ -148,9 +148,9 @@ const FeedPost = ({
     }
   }, [uid, postdata]);
   useEffect(() => {
-    console.log(liked+"liked");
+    console.log(liked + "liked");
   }, [liked]);
-    const sendNotification = async (postdata) => {
+  const sendNotification = async (postdata) => {
     try {
       const notificationData = {
         id: "",
@@ -284,7 +284,7 @@ const FeedPost = ({
             content="Are you sure you want to delete this post?"
           />
         )}
-        <div className="df bg-white dark:bg-feedheader shadow-sm bg-opacity-40 rounded-2xl px-2 py-2 m-2">
+        <div className="df bg-white dark:bg-black shadow-sm bg-opacity-40 rounded-2xl m-2">
           {usermetadata && usermetadata[postdata.uid] && (
             <div className="header flex justify-between pt-2 px-1">
               <Link
@@ -311,7 +311,13 @@ const FeedPost = ({
             </div>
           )}
           <div className="gf rounded-xl pt-4 z-20 w-full">
-            <Carousel showThumbs={false} showStatus={false}   dynamicHeight useKeyboardArrows swipeable={false}>
+            <Carousel
+              showThumbs={false}
+              showStatus={false}
+              dynamicHeight
+              useKeyboardArrows
+              swipeable={false}
+            >
               {postdata?.mediaFiles.map((media) => (
                 <>
                   {isVideoFile(media) ? (

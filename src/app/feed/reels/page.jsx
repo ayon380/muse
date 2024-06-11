@@ -153,7 +153,7 @@ const Reels = () => {
       {reelsloading && initialLoad && <MainLoading />}
       {reelsloading && !initialLoad && (
         <>
-          <div className="main2 md:rounded-2xl bg-slate-100 dark:bg-black md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 border-black h-full overflow-y-auto">
+          <div className="main2 md:rounded-2xl bg-slate-100 dark:bg-black md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl dark:shadow-none border-1 border-black h-full overflow-y-auto">
             <div className="flex justify-center items-center h-full">
               <div className="edwdw ">
                 {" "}
@@ -205,9 +205,11 @@ const Reels = () => {
       )}
       {userdata && !reelsloading && (
         <div>
-          <div className="main2 grid md:rounded-2xl bg-slate-100 dark:bg-black md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 px-1 pb-1 lg:p-8 App  border-black w-full h-full">
-            <div className="flex justify-between bg-white dark:bg-feedheader rounded-b-3xl shadow-2xl shadow-fuchsia-100 px-4 py-2 ">
-            <h1 class="bg-gradient-to-r from-purple-500 via-fuchsia-400 to-pink-400 text-4xl inline-block text-transparent bg-clip-text">Reels</h1>
+          <div className="main2 grid md:rounded-2xl bg-slate-100 dark:bg-black md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1  pb-1 lg:p-8 App  border-black w-full h-full">
+            <div className="flex justify-between bg-white dark:bg-feedheader rounded-b-3xl shadow-2xl shadow-fuchsia-100 dark:shadow-none px-4 py-2 ">
+              <h1 class="bg-gradient-to-r from-purple-500 via-fuchsia-400 to-pink-400 text-4xl inline-block text-transparent bg-clip-text">
+                Reels
+              </h1>
               <div className="flex">
                 <div className="">
                   {/* <p>Sidebar is {isOpen ? "open" : "closed"}</p> */}
@@ -248,7 +250,7 @@ const Reels = () => {
                 id="video-container "
               >
                 {reels.map((reel, idx) => (
-                  <div className="pk mb-5 " play={reel.id} key={reel.id + idx}>
+                  <div className="pk  mb-5 " play={reel.id} key={reel.id + idx}>
                     <Video
                       reel={reel}
                       setSharemenu={setSharemenu}

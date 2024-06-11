@@ -13,7 +13,7 @@ module.exports = {
         rethink: ["var(--font-rethink)"],
       },
       colors: {
-        feedheader: 'rgb(20, 20, 20,255)',
+        feedheader: 'rgb(20,20,20)',
       },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",

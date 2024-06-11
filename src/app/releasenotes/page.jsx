@@ -1,7 +1,18 @@
+import { version } from "os";
 import React from "react";
 
 const ReleaseNotes = () => {
   const releaseNotes = [
+    {
+      version: "v0.85",
+      descriptions: [
+        "Added Dynamic Theming of Meta Tag",
+        "Improved Smoothness",
+        "New UI",
+      ],
+      commit: "TBD",
+      date: "2024-06-11",
+    },
     {
       version: "v0.83",
       descriptions: [

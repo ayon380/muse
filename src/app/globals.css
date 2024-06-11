@@ -45,7 +45,7 @@
   /* make scrollbar transparent */
 }
 
-.horizontal-scroll-wrapper>div {
+.horizontal-scroll-wrapper > div {
   display: block;
   padding: 5px;
   background: #cab;
@@ -199,9 +199,13 @@ body {
 /* Gradient background for desktop */
 @media only screen and (min-width: 768px) {
   body {
-    background: linear-gradient(217deg, rgba(255, 159, 237), rgba(255, 0, 0, 0) 70.71%),
-                linear-gradient(127deg, rgba(118, 164, 255), rgba(0, 255, 0, 0) 65%),
-                linear-gradient(336deg, rgba(255, 191, 138), rgba(0, 0, 255, 0) 70.71%);
+    background: linear-gradient(
+        217deg,
+        rgba(255, 159, 237),
+        rgba(255, 0, 0, 0) 70.71%
+      ),
+      linear-gradient(127deg, rgba(118, 164, 255), rgba(0, 255, 0, 0) 65%),
+      linear-gradient(336deg, rgba(255, 191, 138), rgba(0, 0, 255, 0) 70.71%);
   }
 }
 
@@ -261,7 +265,6 @@ body {
   }
 }
 
-
 @media screen and (min-width: 768px) {
   .hello__svg {
     width: 400px;
@@ -276,13 +279,53 @@ body {
 }
 
 @keyframes gradient {
-	0% {
-		background-position: 0% 50%;
-	}
-	50% {
-		background-position: 100% 50%;
-	}
-	100% {
-		background-position: 0% 50%;
-	}
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+.lds-ring {
+  display: inline-block;
+  position: relative;
+  width: 64px;
+  height: 64px;
+}
+
+.lds-ring div {
+  box-sizing: border-box;
+  display: block;
+  position: absolute;
+  width: 51px;
+  height: 51px;
+  margin: 6px;
+  border: 6px solid #a855f7;
+  border-radius: 50%;
+  animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+  border-color: #a855f7 transparent transparent transparent;
+}
+
+.lds-ring div:nth-child(1) {
+  animation-delay: -0.45s;
+}
+
+.lds-ring div:nth-child(2) {
+  animation-delay: -0.3s;
+}
+
+.lds-ring div:nth-child(3) {
+  animation-delay: -0.15s;
+}
+
+@keyframes lds-ring {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }

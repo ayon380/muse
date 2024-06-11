@@ -10,6 +10,7 @@ import { FileUploader } from "react-drag-drop-files";
 import { motion } from "framer-motion";
 import imageCompression from "browser-image-compression";
 import { getAuth } from "firebase/auth";
+
 import { toast, Toaster } from "react-hot-toast";
 import {
   getFirestore,
@@ -153,7 +154,7 @@ const Home = () => {
   const [showEmoji, setshowemoji] = React.useState(false);
   const fileTypes = ["JPG", "PNG"];
   const [deleting, setdeleting] = React.useState(false);
-  const {initialLoad,toggleload}=useSidebarStore()
+  const { initialLoad, toggleload, toggle } = useSidebarStore();
   const [fileDataURL, setFileDataURL] = React.useState(null);
   const [ismobile, setismobile] = React.useState(false);
   useEffect(() => {
@@ -303,22 +304,41 @@ const Home = () => {
     }
   };
   return (
-    <div className={`${ismobile ? "" : "ml-5"} w-full`}>
+    <div  className={`${ismobile ? "" : "ml-5"} w-full dark:bg-black`}>
       <Toaster />
+      <div className="flex w-full rounded-b-3xl shadow-xl shadow-fuchsia-100 dark:bg-feedheader dark:shadow-none bg-white p-3 justify-between">
+        <h1 class="bg-gradient-to-r from-purple-500 via-fuchsia-400 to-pink-400 text-4xl inline-block text-transparent bg-clip-text">
+          Settings
+        </h1>
+        <div className="flex justify-end ">
+          
+          <button onClick={toggle}>
+            <Image
+              className="h-7 w-7  "
+              src="/icons/sidebar.png"
+              width={50}
+              alt="Sidebar"
+              height={50}
+            />
+          </button>
+        </div>
+      </div>
       <motion.div
-        className={`main2 rounded-2xl overflow-y-auto bg-white ${ismobile ?" dark:bg-black" : "bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-20 shadow-2xl"} border-1 border-black p-6`}
+        className={`main2 rounded-2xl overflow-y-auto bg-white ${
+          ismobile
+            ? " dark:bg-black"
+            : "bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-20 shadow-2xl"
+        } border-1 border-black p-6`}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
       >
-        <div className="heading font-lucy text-5xl">Settings</div>
         {userdata && (
           <div className="body overflow-y-auto">
             <div className="username my-6 font-bold text-xl">
               Welcome {userdata.userName}
             </div>
-            <div className="df">1. Change 
-            username</div>
+            <div className="df">1. Change username</div>
             <div className="flex justify-center">
               <motion.input
                 className="input bg-transparent border-white border-2 dark:text-black dark:border-black p-2 rounded-xl shadow-2xl focus:border-2 dark:focus:border-black focus:outline-none placeholder-white dark:placeholder-black"
@@ -407,8 +427,7 @@ const Home = () => {
               <FileUploader
                 styles={{
                   color: "white",
-                  width:"100px"
-                
+                  width: "100px",
                 }}
                 handleChange={handlePPChange}
                 name="Profile Picture"
@@ -556,7 +575,7 @@ const Home = () => {
               </button>
             </motion.div>
             <motion.button
-            className="mb-20"
+              className="mb-20"
               onClick={deleteaccount}
               disabled={deleting}
               initial={{ opacity: 0 }}
