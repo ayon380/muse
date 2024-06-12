@@ -1159,7 +1159,7 @@ const Home = () => {
             )}
             {!checkchat("Q") && (
               <div
-                className="followingusers bg-slate-100 dark:bg-black w-full lg:w-1/3 md:m-6 overflow-y-auto"
+                className="followingusers bg-white dark:bg-black w-full lg:w-1/3 md:m-6 overflow-y-auto"
                 key={roomid}
               >
                 <div className="flex w-full rounded-b-3xl shadow-xl shadow-fuchsia-100 dark:bg-feedheader dark:shadow-none bg-white p-3 justify-between">

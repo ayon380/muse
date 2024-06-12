@@ -53,7 +53,7 @@ const BottomNav = () => {
     <nav
       className={`${
         isMobile ? "fixed" : "hidden"
-      } bottom-0 left-0 right-0 bg-white dark:bg-feedheader rounded-t-3xl shadow-lg z-40`}
+      } bottom-0 left-0 right-0 bg-white dark:bg-feedheader rounded-t-3xl shadow-lg border-t-2 border-fuchsia-100 dark:border-gray-800 z-40`}
     >
       <div className="max-w-lg mx-auto">
         <div className="flex justify-between items-center px-6 py-3">

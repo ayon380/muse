@@ -32,6 +32,7 @@ const CreatePost = dynamic(() => import("@/components/Createpost"), {
 const CreateReel = dynamic(() => import("@/components/CreateReel"), {
   ssr: false,
 });
+const Notification = dynamic(() => import("@/components/Notification"));
 const SideBar = ({ usage, data, currentuserdata }) => {
   // console.log("Sidebaropen", open);
 
@@ -45,14 +46,14 @@ const SideBar = ({ usage, data, currentuserdata }) => {
   const [notifications, setnotificationOpen] = useState([]);
   const [follow, setFollow] = React.useState(false);
   const db = getFirestore(app);
-  const { isOpen, toggle,usermetadata,enqueueUserMetadata } = useSidebarStore();
+  const { isOpen, toggle, usermetadata, enqueueUserMetadata } =
+    useSidebarStore();
   const [ismobile, setismobile] = useState(false);
   useEffect(() => {
     if (window.innerWidth <= 768) {
       // useSidebarStore.getState().isOpen = false;
       setismobile(true);
-    }
-    else {
+    } else {
       useSidebarStore.getState().isOpen = true;
       setismobile(false);
     }
@@ -347,9 +348,11 @@ const SideBar = ({ usage, data, currentuserdata }) => {
     <>
       {/* {open && ( */}
       <div
-        className={`lp w-screen  h-dvh lg:h-full   lg:w-1/3 z-50 ${ismobile && "absolute"
-          } ${isOpen ? "slide-in-right " : "slide-out-right "} ${!isAnimationComplete && !isOpen && "hidden"
-          }`}
+        className={`lp w-screen  h-dvh lg:h-full   lg:w-1/3 z-50 ${
+          ismobile && "absolute"
+        } ${isOpen ? "slide-in-right " : "slide-out-right "} ${
+          !isAnimationComplete && !isOpen && "hidden"
+        }`}
         onAnimationEnd={handleAnimationEnd}
       >
         <div className="bg-white z-50 pb-24 oveflow-hidden dark:bg-black h-full rounded-xl md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-40 shadow-2xl border-1 border-black lpo">
@@ -554,7 +557,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                       <div className="flex justify-between">
                         {" "}
                         <Image
-                          className="darK:invert ml-2"
+                          className="dark:invert ml-2"
                           src="/icons/notification.png"
                           width={20}
                           height={20}
@@ -566,7 +569,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                             onClick={() => handleclearallnotifications()}
                           >
                             <Image
-                              className="mr-2 darK:invert"
+                              className="mr-2 dark:invert"
                               src="/icons/clear.png"
                               width={20}
                               height={20}
@@ -585,148 +588,207 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                       {notifications.map((notification) => (
                         <div
                           key={notification.id}
-                          className="cursor-pointer backdrop-filter backdrop-blur-2xl bg-opacity-50 shadow-lg justify-between rounded-xl bg-transparent p-5 my-2"
+                          className="cursor-pointer backdrop-filter backdrop-blur-2xl bg-opacity-50 bg-feedheader shadow-lg justify-between rounded-xl bg-transparent p-5 my-2"
                         >
                           {usermetadata[notification.sender] && (
-                            <div className="d flex justify-between">
-                              <>
-                                <div className="flex mb-3">
-                                  <Image
-                                    src={usermetadata[notification.sender].pfp}
-                                    width={50}
-                                    height={50}
-                                    alt="profile"
-                                    className="rounded-full h-5 w-5"
-                                  />
-                                  <div className="text-sm ml-2 mr-2 opacity-80">
-                                    {usermetadata[notification.sender].userName}
+                            <div className="d flex w-full">
+                              <div className="flex justify-between w-full ">
+                                <Image
+                                  src={usermetadata[notification.sender].pfp}
+                                  width={50}
+                                  height={50}
+                                  alt="profile"
+                                  className="rounded-full h-10 w-12"
+                                />
+                                <div className="dfdsf px-5 w-full">
+                                  <div className="flex justify-between w-full">
+                                    <div className="text-sm  font-semibold opacity-75">
+                                      {
+                                        usermetadata[notification.sender]
+                                          .userName
+                                      }
+                                    </div>
+                                    <div className="text-xs text-gray-500">
+                                      {convertToChatTime(
+                                        notification.timestamp
+                                      )}
+                                    </div>
                                   </div>
-                                  <div
-                                    className=" time text-xs opacity-60"
-                                    style={{ marginTop: "3px" }}
-                                  >
-                                    {convertToChatTime(notification.timestamp)}
-                                  </div>
-                                </div>
-                              </>
 
-                              <div className="flex">
-                                <div className="type mr-3">
-                                  {notification.type == "like" && (
-                                    <div className="text-xs">Like</div>
-                                  )}
-                                  {notification.type == "comment" && (
-                                    <div className="text-xs">Comment</div>
-                                  )}
-                                  {notification.type == "follow" && (
-                                    <div className="text-xs">Follow</div>
-                                  )}
-                                  {notification.type == "message" && (
-                                    <div className="text-xs">Message</div>
-                                  )}
-                                  {notification.type == "reellike" && (
-                                    <div className="text-xs">Reel Like</div>
+                                  {usermetadata[notification.sender] && (
+                                    <div>
+                                      {notification.type == "message" &&
+                                        notification.messagetype == "media" && (
+                                          <div
+                                            className=" flex pt-2"
+                                            onClick={() => {
+                                              handlemessagerouting(
+                                                notification
+                                              );
+                                            }}
+                                          >
+                                            <Image
+                                              className="rounded-xl h-10 w-10"
+                                              src={notification.text[0]}
+                                              alt="Media File"
+                                              height={100}
+                                              width={100}
+                                            />
+                                            <div className="text pt-2 ml-4">
+                                              {
+                                                usermetadata[
+                                                  notification.sender
+                                                ].userName
+                                              }{" "}
+                                              sent you a media file
+                                            </div>
+                                          </div>
+                                        )}
+                                      {notification.type == "message" &&
+                                        notification.messagetype == "gif" && (
+                                          <div
+                                            className=" flex pt-2"
+                                            onClick={() => {
+                                              handlemessagerouting(
+                                                notification
+                                              );
+                                            }}
+                                          >
+                                            <Image
+                                              className="rounded-xl h-10 w-10"
+                                              src={notification.text}
+                                              alt="Media File"
+                                              height={100}
+                                              width={100}
+                                            />
+                                            <div className="text pt-2 ml-4">
+                                              {
+                                                usermetadata[
+                                                  notification.sender
+                                                ].userName
+                                              }{" "}
+                                              sent you a media file
+                                            </div>
+                                          </div>
+                                        )}
+                                      {notification.type == "message" && (
+                                        <div
+                                          className="pl"
+                                          onClick={() => {
+                                            handlemessagerouting(notification);
+                                          }}
+                                        >
+                                          {notification.messagetype ==
+                                            "text" && (
+                                            <div className="text">
+                                              {notification.text.length > 100
+                                                ? notification.text.slice(
+                                                    0,
+                                                    100
+                                                  ) + "..."
+                                                : notification.text}
+                                            </div>
+                                          )}
+                                          <div className="text-xs"></div>
+                                        </div>
+                                      )}
+                                      {notification.type == "reellike" && (
+                                        <div
+                                          className="q"
+                                          onClick={() =>
+                                            router.push(
+                                              `/feed/reels?reelid=${notification.reelid}`
+                                            )
+                                          }
+                                        >
+                                          {usermetadata[
+                                            notification.sender
+                                          ] && (
+                                            <>
+                                              <div className="text-sm">
+                                                {
+                                                  usermetadata[
+                                                    notification.sender
+                                                  ].userName
+                                                }{" "}
+                                                liked your Reel
+                                              </div>
+                                              <div className="text-xs"></div>
+                                            </>
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
                                   )}
                                 </div>
-                                <div
-                                  className="sd -mt-1 cursor-pointer"
-                                  onClick={() =>
-                                    handledismissnotification(notification)
-                                  }
-                                >
-                                  X
+                                <div className="">
+                                  <div
+                                    className="sd ml-3 -mt-1 cursor-pointer"
+                                    onClick={() =>
+                                      handledismissnotification(notification)
+                                    }
+                                  >
+                                    X
+                                  </div>
+                                  <div className="type ">
+                                    {notification.type == "like" && (
+                                      <div className="text-xs">
+                                        <Image
+                                          src="/icons/like.png"
+                                          height={50}
+                                          width={50}
+                                          className="dark:invert h-10 w-10"
+                                          alt="Like"
+                                        />
+                                      </div>
+                                    )}
+                                    {notification.type == "comment" && (
+                                      <div className="text-xs">
+                                        <Image
+                                          src="/icons/comment.png"
+                                          alt="Comment"
+                                          height={50}
+                                          className="dark:invert h-10 w-10"
+                                          width={50}
+                                        />
+                                      </div>
+                                    )}
+                                    {notification.type == "follow" && (
+                                      <div className="text-xs">
+                                        <Image
+                                          src="/icons/add.png"
+                                          height={50}
+                                          width={50}
+                                          className="dark:invert h-10 w-10"
+                                          alt="Add"
+                                        />
+                                      </div>
+                                    )}
+                                    {notification.type == "message" && (
+                                      <div className="text-xs">
+                                        <Image
+                                          src="/icons/message.svg"
+                                          height={50}
+                                          className="dark:invert h-10 w-10"
+                                          width={50}
+                                          alt="Message"
+                                        />
+                                      </div>
+                                    )}
+                                    {notification.type == "reellike" && (
+                                      <div className="text-xs">
+                                        <Image
+                                          src="/icons/like.png"
+                                          alt=""
+                                          className="dark:invert h-10 w-10"
+                                          height={50}
+                                          width={50}
+                                        />
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          )}
-                          {usermetadata[notification.sender] && (
-                            <div>
-                              {notification.type == "message" &&
-                                notification.messagetype == "media" && (
-                                  <div
-                                    className=" flex pt-2"
-                                    onClick={() => {
-                                      handlemessagerouting(notification);
-                                    }}
-                                  >
-                                    <Image
-                                      className="rounded-xl h-10 w-10"
-                                      src={notification.text[0]}
-                                      alt="Media File"
-                                      height={100}
-                                      width={100}
-                                    />
-                                    <div className="text pt-2 ml-4">
-                                      {
-                                        usermetadata[notification.sender]
-                                          .userName
-                                      }{" "}
-                                      sent you a media file
-                                    </div>
-                                  </div>
-                                )}
-                              {notification.type == "message" &&
-                                notification.messagetype == "gif" && (
-                                  <div
-                                    className=" flex pt-2"
-                                    onClick={() => {
-                                      handlemessagerouting(notification);
-                                    }}
-                                  >
-                                    <Image
-                                      className="rounded-xl h-10 w-10"
-                                      src={notification.text}
-                                      alt="Media File"
-                                      height={100}
-                                      width={100}
-                                    />
-                                    <div className="text pt-2 ml-4">
-                                      {
-                                        usermetadata[notification.sender]
-                                          .userName
-                                      }{" "}
-                                      sent you a media file
-                                    </div>
-                                  </div>
-                                )}
-                              {notification.type == "message" && (
-                                <div
-                                  className="pl"
-                                  onClick={() => {
-                                    handlemessagerouting(notification);
-                                  }}
-                                >
-                                  {notification.messagetype == "text" && (
-                                    <div className="text-sm">
-                                      {notification.text}
-                                    </div>
-                                  )}
-                                  <div className="text-xs"></div>
-                                </div>
-                              )}
-                              {notification.type == "reellike" && (
-                                <div
-                                  className="q"
-                                  onClick={() =>
-                                    router.push(
-                                      `/feed/reels?reelid=${notification.reelid}`
-                                    )
-                                  }
-                                >
-                                  {usermetadata[notification.sender] && (
-                                    <>
-                                      <div className="text-sm">
-                                        {
-                                          usermetadata[notification.sender]
-                                            .userName
-                                        }{" "}
-                                        liked your Reel
-                                      </div>
-                                      <div className="text-xs"></div>
-                                    </>
-                                  )}
-                                </div>
-                              )}
                             </div>
                           )}
                         </div>
@@ -778,7 +840,8 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                   className="pl text-xs text-center cursor-pointer mb-4"
                   onClick={() => router.push("/releasenotes")}
                 >
-                  Muse v{process.env.NEXT_PUBLIC_VERSION} beta @NoFilter LLC 2024-2025
+                  Muse v{process.env.NEXT_PUBLIC_VERSION} beta @NoFilter LLC
+                  2024-2025
                 </div>
               </div>
             </div>

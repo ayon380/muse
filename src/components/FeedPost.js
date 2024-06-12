@@ -7,8 +7,10 @@ import "react-responsive-carousel/lib/styles/carousel.min.css";
 import Image from "next/image";
 import { collection, getDoc, query, setDoc } from "firebase/firestore";
 import Link from "next/link";
+import { WriteBatch } from "firebase/firestore";
 import toast, { Toaster } from "react-hot-toast";
 import { useSidebarStore } from "@/app/store/zustand";
+import { debounce } from "lodash";
 import {
   getFirestore,
   updateDoc,
@@ -255,7 +257,7 @@ const FeedPost = ({
   return (
     <>
       <motion.div
-        className="z-10 justify-center bg-gray-200 relative w-full py-2 lg:px-64 md:px-24 max-h-3/5 dark:bg-black"
+        className="z-10 justify-center bg-white relative w-full py-2 lg:px-64 md:px-24 max-h-3/5 dark:bg-black"
         key={postdata.id}
         initial="hidden"
         animate="visible"
@@ -284,7 +286,7 @@ const FeedPost = ({
             content="Are you sure you want to delete this post?"
           />
         )}
-        <div className="df bg-white dark:bg-black shadow-sm bg-opacity-40 rounded-2xl m-2">
+        <div className="df bg-white dark:bg-black bg-opacity-40 rounded-2xl m-2">
           {usermetadata && usermetadata[postdata.uid] && (
             <div className="header flex justify-between pt-2 px-1">
               <Link
