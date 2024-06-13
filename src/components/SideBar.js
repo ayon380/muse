@@ -374,7 +374,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
         }`}
         onAnimationEnd={handleAnimationEnd}
       >
-        <div className="bg-white z-50 pb-24 oveflow-hidden dark:bg-black h-full rounded-xl md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-40 shadow-2xl border-1 border-black lpo">
+        <div className="bg-white pt-5 h-dvh z-50 pb-24 oveflow-hidden dark:bg-black rounded-xl md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-40 shadow-2xl border-1 border-black lpo">
           <div className="md:hidden">
             <div className="flex justify-between mt-5 mx-2">
               <div className="fg font-lucy text-4xl">Muse</div>
