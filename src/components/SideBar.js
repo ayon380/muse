@@ -25,6 +25,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import toast from "react-hot-toast";
+const Modal = dynamic(() => import("@/components/Modal"));
 import { useSidebarStore } from "@/app/store/zustand";
 const CreatePost = dynamic(() => import("@/components/Createpost"), {
   ssr: false,
@@ -41,6 +42,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
   console.log("Current UserData", currentuserdata);
   const [userdata, setUserData] = useState(null);
   const router = useRouter();
+  const [logoutmodal, setlogoutmodal] = useState(false);
   const [createreelopen, setcreatereelOpen] = useState(false);
   const [createpostopen, setcreatepostOpen] = useState(false);
   const [notifications, setnotificationOpen] = useState([]);
@@ -334,6 +336,12 @@ const SideBar = ({ usage, data, currentuserdata }) => {
     setIsAnimationComplete(true);
     console.log("Animation complete");
   };
+  const logout = () => {
+    auth.signOut().then(() => {
+      // Sign-out successful.
+      router.push("/login");
+    });
+  };
 
   // When the animation is complete and the sidebar is closed, set isAnimationComplete back to false
   useEffect(() => {
@@ -347,6 +355,17 @@ const SideBar = ({ usage, data, currentuserdata }) => {
   return (
     <>
       {/* {open && ( */}
+      {logoutmodal && (
+        <Modal
+          open={logoutmodal}
+          title={"Logout"}
+          setShowModal={setlogoutmodal}
+          type={"logout"} 
+          handleDelete={logout}
+          content="Are you sure u want to logout ?"
+          onClose={() => setlogoutmodal(false)}
+        />
+      )}
       <div
         className={`lp w-screen  h-dvh lg:h-full   lg:w-1/3 z-50 ${
           ismobile && "absolute"
@@ -359,16 +378,26 @@ const SideBar = ({ usage, data, currentuserdata }) => {
           <div className="md:hidden">
             <div className="flex justify-between mt-5 mx-2">
               <div className="fg font-lucy text-4xl">Muse</div>
-
-              <button onClick={toggle}>
-                <Image
-                  src="/icons/sidebar.png"
-                  height={50}
-                  width={50}
-                  className="dark:invert w-7 h-7"
-                  alt="Sidebar"
-                />
-              </button>
+              <div className="ss ">
+                <button onClick={() => setlogoutmodal(true)}>
+                  <Image
+                    src="/icons/exit.png"
+                    alt="Logout"
+                    className="dark:invert w-7 h-7 mr-2"
+                    height={50}
+                    width={50}
+                  />
+                </button>
+                <button onClick={toggle}>
+                  <Image
+                    src="/icons/sidebar.png"
+                    height={50}
+                    width={50}
+                    className="dark:invert w-7 h-7"
+                    alt="Sidebar"
+                  />
+                </button>
+              </div>
             </div>
           </div>
           {createpostopen && (

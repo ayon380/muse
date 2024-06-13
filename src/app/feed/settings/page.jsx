@@ -10,7 +10,6 @@ import { FileUploader } from "react-drag-drop-files";
 import { motion } from "framer-motion";
 import imageCompression from "browser-image-compression";
 import { getAuth } from "firebase/auth";
-
 import { toast, Toaster } from "react-hot-toast";
 import {
   getFirestore,

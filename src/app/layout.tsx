@@ -132,9 +132,9 @@ const lucy = localFont({
   src: "/fonts/Pacifico-Regular.ttf",
   variable: "--font-lucy",
 });
-export const viewport: Viewport = {
-  themeColor: "#FFFFFF",
-};
+// export const viewport: Viewport = {
+//   themeColor: "#FFFFFF",
+// };
 const rethink = localFont({
   src: [
     {

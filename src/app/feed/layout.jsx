@@ -2,10 +2,10 @@
 import React, { useEffect, useState } from "react";
 import "../styles/gradients.css";
 import "../styles/feed.css";
-import { app } from "@/lib/firebase/firebaseConfig";
+import app from "@/lib/firebase/firebaseConfig";
 import SideBar from "../../components/SideBar";
 import Bottomnav from "../../components/Bottomnav";
-import Notification from "../../components/Notification"; // Import Notification
+import Notification from "../../components/Notification"; //
 import { getFirestore } from "firebase/firestore";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import {
@@ -18,35 +18,9 @@ import {
 import { useSidebarStore } from "../store/zustand";
 
 const Layout = ({ children }) => {
-  const [themeColor, setThemeColor] = useState("#ffffff");
   const [notifications, setNotifications] = useState([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [user, setUser] = useState(null);
   const { enqueueUserMetadata } = useSidebarStore();
   const [nottype, setNottype] = useState(false);
-  useEffect(() => {
-    const isDarkMode = window.matchMedia(
-      "(prefers-color-scheme: dark)"
-    ).matches;
-    setThemeColor(isDarkMode ? "#141414" : "#ffffff");
-
-    const handleColorSchemeChange = (event) => {
-      setThemeColor(event.matches ? "#141414" : "#ffffff");
-    };
-
-    const colorSchemeQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    colorSchemeQuery.addEventListener("change", handleColorSchemeChange);
-
-    return () => {
-      colorSchemeQuery.removeEventListener("change", handleColorSchemeChange);
-    };
-  }, []);
-
-  useEffect(() => {
-    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
-    metaThemeColor.setAttribute("content", themeColor);
-  }, [themeColor]);
-
   const displayNotification = (message) => {
     setNotifications((prev) => [...prev, { message }]);
 
@@ -73,7 +47,8 @@ const Layout = ({ children }) => {
 
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        setUser(user);
+        // setUser(user);
+
         const notrf = collection(db, "notifications");
         const q = onSnapshot(
           query(
@@ -111,9 +86,7 @@ const Layout = ({ children }) => {
             }
           }
         );
-      } else {
-        setUser(null);
-      }
+      } 
     });
 
     return () => unsubscribe();

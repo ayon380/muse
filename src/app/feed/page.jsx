@@ -20,6 +20,7 @@ import {
   orderBy,
 } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
+import {updateThemeColor} from "@/externalfn/updateThemeColour";
 import Image from "next/image";
 import { getFirestore, getDoc, doc } from "firebase/firestore";
 import { useSidebarStore } from "../store/zustand";
@@ -66,7 +67,9 @@ const Home = () => {
     }
     return null;
   }
-
+  useEffect(() => {
+    updateThemeColor();
+  }, []);
   async function fetchData() {
     const idToken = await gettoken();
     if (idToken) {
@@ -237,7 +240,9 @@ const Home = () => {
         <div>
           <div className="main2 md:rounded-2xl bg-white dark:bg-black md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 border-black h-full overflow-y-auto">
             <div className="flex justify-between pt-3 px-2 pb-3 bg-white rounded-b-3xl dark:bg-feedheader shadow-xl shadow-fuchsia-200 dark:shadow-none  sticky top-0 z-20 ">
-            <h1 class="bg-gradient-to-r from-purple-500 via-fuchsia-400 to-pink-400 text-4xl font-lucy inline-block text-transparent bg-clip-text">Muse</h1>
+              <h1 class="bg-gradient-to-r from-purple-500 via-fuchsia-400 to-pink-400 text-4xl font-lucy inline-block text-transparent bg-clip-text">
+                Muse
+              </h1>
               <button onClick={toggle}>
                 <Image
                   src="/icons/sidebar.png"

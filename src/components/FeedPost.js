@@ -1,5 +1,5 @@
 import React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 import { motion } from "framer-motion";
 import { Carousel } from "react-responsive-carousel";
@@ -97,6 +97,8 @@ const FeedPost = ({
   }, [postupdatedata]);
   // console.log(post + "post");
   const [postdata, setPostdata] = useState(post);
+  const [pendingUpdate, setPendingUpdate] = useState(null);
+
   const [uid, setUid] = useState("");
   const [showedit, setShowedit] = useState(false);
   const [showdelete, setShowdelete] = useState(false);
@@ -148,7 +150,7 @@ const FeedPost = ({
     if (uid && postdata) {
       checkIfLiked();
     }
-  }, [uid, postdata]);
+  }, [uid]);
   useEffect(() => {
     console.log(liked + "liked");
   }, [liked]);
@@ -173,35 +175,57 @@ const FeedPost = ({
       console.error("Error sending notification:", error);
     }
   };
+
   const handleLike = async () => {
+   
+    const newLikedState = !liked;
+    console.log(newLikedState + "newLikedState");
+    setLiked(newLikedState);
+    setPostdata({
+      ...postdata,
+      likecount: postdata.likecount + (newLikedState ? +1 : -1),
+    });
     if (userdata) {
       const postRef = doc(db, "posts", postdata.id);
-      const usernameref = doc(db, "username", userdata.uid);
-      if (liked) {
-        setLiked(false);
-        setPostdata({ ...postdata, likecount: postdata.likecount - 1 });
+      const usernameRef = doc(db, "username", userdata.uid);
+      // Update the local state immediately
+
+      // Debounce the database update
+      clearTimeout(pendingUpdate); // Cancel any previously debounced calls
+      setPendingUpdate(
+        setTimeout(updateLike, 5000, postRef, usernameRef, newLikedState)
+      );
+    }
+  };
+
+  const updateLike = async (postRef, usernameRef, newLikedState) => {
+    try {
+      if (newLikedState) {
         await updateDoc(postRef, {
-          likes: arrayRemove(uid),
-          likecount: increment(-1),
-        });
-        await updateDoc(usernameref, {
-          score: increment(-1),
-        });
-      } else {
-        setLiked(true);
-        setPostdata({ ...postdata, likecount: postdata.likecount + 1 });
-        await updateDoc(postRef, {
-          likes: arrayUnion(uid),
+          likes: arrayUnion(userdata.uid),
           likecount: increment(1),
         });
-        await updateDoc(usernameref, {
+        await updateDoc(usernameRef, {
           score: increment(1),
         });
         sendNotification(postdata);
+      } else {
+        await updateDoc(postRef, {
+          likes: arrayRemove(userdata.uid),
+          likecount: increment(-1),
+        });
+        await updateDoc(usernameRef, {
+          score: increment(-1),
+        });
       }
-      // refetchPost();
+    } catch (error) {
+      console.error("Error updating post or username:", error);
     }
   };
+
+  useEffect(() => {
+    return () => clearTimeout(pendingUpdate);
+  }, [pendingUpdate]);
   const Reportposttt = async () => {
     router.push(
       `/report?username=${usermetadata[postdata.uid].userName}&postid=${
@@ -355,34 +379,27 @@ const FeedPost = ({
                     whileHover="hover"
                     variants={scaleUpVariants}
                   >
-                    <CoolMode
-                      options={{
-                        size: 30,
-                        particleCount: 50,
-                        speedHorz: 5,
-                        speedUp: 10,
-                      }}
-                    >
-                      <button>
-                        {!liked ? (
-                          <Image
-                            src="/icons/notliked.png"
-                            alt="Not Liked"
-                            className="h-7 w-7"
-                            height={50}
-                            width={50}
-                          />
-                        ) : (
-                          <Image
-                            src="/icons/liked.png"
-                            alt="Liked"
-                            className="h-7 w-7"
-                            height={50}
-                            width={50}
-                          />
-                        )}
-                      </button>
-                    </CoolMode>
+                   
+                    <button>
+                      {!liked ? (
+                        <Image
+                          src="/icons/notliked.png"
+                          alt="Not Liked"
+                          className="h-7 w-7"
+                          height={50}
+                          width={50}
+                        />
+                      ) : (
+                        <Image
+                          src="/icons/liked.png"
+                          alt="Liked"
+                          className="h-7 w-7"
+                          height={50}
+                          width={50}
+                        />
+                      )}
+                    </button>
+                    {/* </CoolMode> */}
                     {/* <CoolMode options={{
                       particleCount: 50,
                       speedHorz: 5,
