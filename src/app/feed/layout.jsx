@@ -5,7 +5,7 @@ import "../styles/feed.css";
 import app from "@/lib/firebase/firebaseConfig";
 import SideBar from "../../components/SideBar";
 import Bottomnav from "../../components/Bottomnav";
-import Notification from "../../components/Notification"; //
+import Notification from "../../components/Notification";
 import { getFirestore } from "firebase/firestore";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import {
@@ -21,7 +21,21 @@ const Layout = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
   const { enqueueUserMetadata } = useSidebarStore();
   const [nottype, setNottype] = useState(false);
+  const [notysound, setNotysound] = useState(null);
+
+  useEffect(() => {
+    const audio = new Audio("/sounds/inbox.mp3");
+    setNotysound(audio);
+  }, []);
+
+  const playSound = () => {
+    if (notysound) {
+      notysound.play().catch((error) => console.log("Error playing sound:", error));
+    }
+  };
+
   const displayNotification = (message) => {
+    playSound();
     setNotifications((prev) => [...prev, { message }]);
 
     setTimeout(() => {
@@ -47,8 +61,6 @@ const Layout = ({ children }) => {
 
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        // setUser(user);
-
         const notrf = collection(db, "notifications");
         const q = onSnapshot(
           query(
@@ -64,7 +76,6 @@ const Layout = ({ children }) => {
                 enqueueUserMetadata(notification.sender);
                 if (Date.now() - notification.timestamp < 20000) {
                   displayNotification(notification); // Display real-time notification
-                  // playSound();
                 } else {
                   unreadCount += 1;
                 }
@@ -86,7 +97,7 @@ const Layout = ({ children }) => {
             }
           }
         );
-      } 
+      }
     });
 
     return () => unsubscribe();

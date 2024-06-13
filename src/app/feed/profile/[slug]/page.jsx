@@ -419,229 +419,172 @@ const Page = ({ params }) => {
                 Loading...
               </div>
             )}
-            {userdata && (
+            {userdata && posts && (
               <div className="w-full overflow-y-auto scroll-smooth">
                 <div className="posts h-full text-white w-full">
                   <div
-                    className="header  w-full  rounded-xl h-1/3 object-center "
+                    className="header  w-full  object-center "
                     style={{
                       backgroundImage: `url(${userdata.pfp})`,
+                      height: "350px",
                     }}
                   >
-                    <div className="lsad backdrop-blur-lg bg-opacity-50  rounded-xl bg-black z-30 drop-shadow-xl h-full w-full">
-                      {/* <div className="s h-16"></div> */}
-                      <div className="asd py-12">
-                        <div className=" hidden md:flex justify-center w-full ">
-                          <Image
-                            src={userdata.pfp}
-                            width={200}
-                            height={200}
-                            className="rounded-full h-14 w-14  md:h-36 md:w-36 object-cover"
-                            alt="Profile Picture"
-                          />
-                          <div className="ok mx-16 mt-1">
-                            <div className=" text-xl md:text-3xl opacity-80 ">
-                              {userdata.fullname}
-                            </div>
-                            <div className="text-2xl md:text-3xl  font-bold">
-                              @{userdata.userName}
-                            </div>
-
-                            <div className="qw opacity-90">{userdata.bio}</div>
-                            {currentuserdata &&
-                              userdata &&
-                              currentuserdata.userName != userdata.userName && (
-                                <>
-                                  <button
-                                    className="btn py-1 px-4 my-1"
-                                    onClick={() => handlefollow()}
-                                  >
-                                    {follow ? "Following" : "Follow"}
-                                  </button>
-                                  <button
-                                    className="btn ml-3 py-1 px-4 my-1"
-                                    onClick={handleRestrict}
-                                  >
-                                    {restrict ? "Unrestrict" : "Restrict"}
-                                  </button>
-                                </>
-                              )}
-                          </div>
-                          <div className="pk mt-7">
-                            <div className="ojesd text-xl ">
-                              {userdata.profession}
-                            </div>
-                            <div className="sad text-xl font-bold">
-                              {userdata.org}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex md:hidden justify-between w-full ">
-                          <div className="flex ml-3">
-                            <Image
-                              src={userdata.pfp}
-                              width={200}
-                              height={200}
-                              className="rounded-full h-16 w-16  md:h-36 md:w-36 object-cover"
-                              alt="Profile Picture"
-                            />
-                            <div className="s ml-2 -mt-2 mb-5">
-                              <div className=" text md:text-3xl opacity-80 ">
-                                {userdata.fullname}
-                              </div>
-                              <div className="text-xl md:text-3xl  font-bold">
-                                @{userdata.userName}
-                              </div>
-                              <div className="qw opacity-90">
-                                {userdata.bio}
-                              </div>
-                              {currentuserdata &&
-                                userdata &&
-                                currentuserdata.userName !=
-                                  userdata.userName && (
-                                  <div className="flex">
-                                    <button
-                                      className="btn py-1 px-4 my-1"
-                                      onClick={() => handlefollow()}
-                                    >
-                                      {follow ? "Following" : "Follow"}
-                                    </button>
-                                    <button
-                                      className="btn ml-3 py-1 px-4 my-1"
-                                      onClick={handleRestrict}
-                                    >
-                                      {restrict ? "Unrestrict" : "Restrict"}
-                                    </button>
-                                  </div>
-                                )}
-                            </div>
-                          </div>
-
-                          {currentuserdata &&
-                            userdata &&
-                            currentuserdata.userName != userdata.userName && (
-                              <div className="hidden md:flex">
-                                <button
-                                  className="btn py-1 px-4 my-1"
-                                  onClick={() => handlefollow()}
-                                >
-                                  {follow ? "Following" : "Follow"}
-                                </button>
-                                <button
-                                  className="btn ml-3 py-1 px-4 my-1"
-                                  onClick={handleRestrict}
-                                >
-                                  {restrict ? "Unrestrict" : "Restrict"}
-                                </button>
-                              </div>
-                            )}
-                          <div className="pk mt-3 mr-3">
-                            <div className="ojesd  ">{userdata.profession}</div>
-                            <div className="sad font-bold">{userdata.org}</div>
-                          </div>
-                        </div>
-                        <div className="flex justify-between mt-3 mx-10  md:mx-96">
-                          <div className="followers text-center w-16">
-                            <div
-                              className="lp flex "
-                              onClick={() => setFollowersbox(true)}
-                            >
-                              <div className="text-4xl  font-bold">
-                                {userdata.followers.length}
-                              </div>
-                              <div className="text-sm mt-4 mr-6 opacity-80">
-                                Followers
-                              </div>
-                            </div>
-                          </div>
-                          <div className="following text-center w-16">
-                            <div
-                              className="flex"
-                              onClick={() => setfollowingbox(true)}
-                            >
-                              <div className="text-4xl font-bold">
-                                {userdata.following.length}
-                              </div>
-                              <div className="text-sm opacity-80 mt-4">
-                                Following
-                              </div>
-                            </div>
-                          </div>
-                          <div className="following text-center w-16">
-                            <div className="flex">
-                              <div className="text-4xl font-bold">
-                                {usermetadata[userdata.uid] &&
-                                  usermetadata[userdata.uid].score}
-                              </div>
-                              <div className="text-sm opacity-80 mt-4">
-                                ZScore
-                              </div>
-                            </div>
-                          </div>
-                          <div className=" posts">
-                            <div className="flex">
-                              <div className="text-4xl font-bold ">
-                                {userdata.posts.length}
-                              </div>
-                              <div className="text-sm  mt-4 opacity-80">
-                                Posts
-                              </div>
-                            </div>
-                          </div>
-                        </div>
+                    <div className="lsad backdrop-blur-lg bg-opacity-50   bg-black z-30 drop-shadow-xl h-full w-full">
+                      <div className="flex justify-center">
+                        <Image
+                          src={userdata.pfp}
+                          width={500}
+                          height={500}
+                          className="rounded-full mt-5 h-32 w-32  md:h-36 md:w-36 object-cover"
+                          alt="Profile Picture"
+                        />
                       </div>
-
-                      {/* <div className="absolute inset-0 h-1/2 bg-black bg-opacity-50 backdrop-blur-lg z-0"></div> */}
+                      <div className="text-xl mt-5 text-center md:text-3xl  font-bold">
+                        @{userdata.userName}
+                      </div>
+                      <div className="text-center text md:text-3xl opacity-80 ">
+                        {userdata.fullname}
+                      </div>
+                      <div className="qw opacity-80 h-10 mt-3 text-center">
+                        {userdata.bio}
+                      </div>
+                      <div className="flex justify-center">
+                        {currentuserdata &&
+                          userdata &&
+                          currentuserdata.userName !== userdata.userName && (
+                            <>
+                              <button
+                                className="py-2 px-4 my-2 rounded-full bg-fuchsia-300 text-black font-semibold transition-colors duration-300 hover:bg-fuchsia-600"
+                                onClick={handlefollow}
+                              >
+                                {follow ? "Following" : "Follow"}
+                              </button>
+                            </>
+                          )}
+                      </div>
                     </div>
                   </div>
-                  <div className="dsfs w-full flex justify-around my-3">
-                    <button
-                      className="btn py-2 px-3"
-                      onClick={() => setPageState(0)}
+                  <div className="flex dark:text-white text-black  justify-between mt-6 mx-16 md:mx-16">
+                    <div
+                      className="flex flex-col items-center cursor-pointer"
+                      onClick={() => setfollowingbox(true)}
                     >
-                      Posts
-                    </button>
-                    <button
-                      className="btn py-2 px-3"
-                      onClick={() => setPageState(1)}
+                      <div className=" md:text-4xl font-bold text-purple-600 bg-gradient-to-r from-purple-500 via-fuchsia-400 to-pink-400 text-3xl inline-block text-transparent bg-clip-text">
+                        {userdata.following.length}
+                      </div>
+                      <div className="text-sm md:text-base opacity-60">
+                        Following
+                      </div>
+                    </div>
+                    <div
+                      className="flex flex-col -ml-5 items-center cursor-pointer"
+                      onClick={() => setFollowersbox(true)}
                     >
-                      Reels
-                    </button>
-                    <button
-                      className="btn py-2 px-3 "
-                      onClick={() => {
-                        setPageState(2);
-                        getTaggedPosts();
-                      }}
-                    >
-                      Tagged
-                    </button>
-                    {currentuserdata &&
-                      currentuserdata.email == userdata.email && (
-                        <button
-                          className="btn py-2 px-3 "
-                          onClick={() => {
-                            setPageState(3);
-                            getSavedPosts();
-                          }}
-                        >
-                          Saved
-                        </button>
-                      )}
+                      <div className="text-4xl  md:text-5xl font-bold bg-gradient-to-r from-purple-500 via-fuchsia-400 to-pink-400  inline-block text-transparent bg-clip-text">
+                        {userdata.followers.length}
+                      </div>
+                      <div className="text-sm md:text-base opacity-60">
+                        Followers
+                      </div>
+                    </div>
+                    {/* <div className="flex flex-col items-center">
+                      <div className="text-3xl md:text-4xl font-bold text-purple-600">
+                        {usermetadata[userdata.uid] &&
+                          usermetadata[userdata.uid].score}
+                      </div>
+                      <div className="text-sm md:text-base opacity-80">
+                        ZScore
+                      </div>
+                    </div> */}
+                    <div className="flex flex-col items-center">
+                      <div className="text-3xl md:text-4xl font-bold text-purple-600 bg-gradient-to-r from-purple-500 via-fuchsia-400 to-pink-400  inline-block text-transparent bg-clip-text">
+                        {userdata.posts.length}
+                      </div>
+                      <div className="text-sm md:text-base opacity-60">
+                        Posts
+                      </div>
+                    </div>
                   </div>
-                  <div className="postsxs w-full h-3/4">
+                  <div className="flex justify-center my-4">
+                    <div className="flex items-center  bg-gradient-to-r from-purple-400 to-pink-500 rounded-full overflow-hidden">
+                      <button
+                        className={`px-4 py-2 w-20 text-sm text-white transition-colors duration-300 ${
+                          pagestate === 0
+                            ? "bg-purple-600 hover:bg-purple-700"
+                            : "hover:bg-purple-600"
+                        }`}
+                        onClick={() => setPageState(0)}
+                      >
+                        Posts
+                      </button>
+                      <button
+                        className={`px-4 py-2 w-20 text-sm text-white transition-colors duration-300 ${
+                          pagestate === 1
+                            ? "bg-purple-600 hover:bg-purple-700"
+                            : "hover:bg-purple-600"
+                        }`}
+                        onClick={() => setPageState(1)}
+                      >
+                        Reels
+                      </button>
+                      <button
+                        className={`px-4 py-2 w-20 text-sm text-white transition-colors duration-300 ${
+                          pagestate === 2
+                            ? "bg-purple-600 hover:bg-purple-700"
+                            : "hover:bg-purple-600"
+                        }`}
+                        onClick={() => {
+                          setPageState(2);
+                          getTaggedPosts();
+                        }}
+                      >
+                        Tagged
+                      </button>
+                      <button
+                        className={`px-4 py-2 w-20 text-sm text-white transition-colors duration-300 ${
+                          pagestate === 4
+                            ? "bg-purple-600 hover:bg-purple-700"
+                            : "hover:bg-purple-600"
+                        }`}
+                        onClick={() => {
+                          setPageState(4);
+                          // getTaggedPosts();
+                        }}
+                      >
+                        More
+                      </button>
+                      {currentuserdata &&
+                        currentuserdata.email === userdata.email && (
+                          <button
+                            className={`px-4 py-2 text-sm text-white transition-colors duration-300 ${
+                              pagestate === 3
+                                ? "bg-purple-600 hover:bg-purple-700"
+                                : "hover:bg-purple-600"
+                            }`}
+                            onClick={() => {
+                              setPageState(3);
+                              getSavedPosts();
+                            }}
+                          >
+                            Saved
+                          </button>
+                        )}
+                    </div>
+                  </div>
+                  <div className="postsxs w-full pb-40 ">
                     {pagestate === 0 && (
                       <>
+                      
                         {posts.length === 0 ? (
                           <div className="text-2xl m-4 flex justify-center items-center w-full h-full">
                             No Posts Yet
                           </div>
                         ) : (
-                          <div className="grid grid-cols-3 md:grid-cols-4 gap-4 p-4">
+                          <div className="grid grid-cols-3 md:grid-cols-4 gap-1 p-1">
                             {posts.map((post, index) => (
                               <div
                                 key={index}
-                                className="relative h-full"
+                                className="relative h-52"
                                 onClick={() => {
                                   router.push(
                                     `/feed/profile/${userdata.userName}?postid=${post.id}`
@@ -679,17 +622,21 @@ const Page = ({ params }) => {
                             No Reels Yet
                           </div>
                         ) : (
-                          <div className="grid grid-cols-3 md:grid-cols-4 gap-4 p-4">
+                          <div className="grid grid-cols-3 md:grid-cols-4 gap-1 p-1">
                             {reels.map((reel, index) => (
                               <div
                                 key={index}
                                 onClick={() => {
                                   router.push(`/feed/reels?reelid=${reel.id}`);
                                 }}
-                                className="relative aspect-w-16 aspect-h-9"
+                                className="relative h-52 "
                               >
                                 <Image
-                                  src={reel.thumbnail}
+                                  src={
+                                    reel.thumbnail
+                                      ? reel.thumbnail
+                                      : "/thumbnail.png"
+                                  }
                                   alt={reel.caption}
                                   height={800}
                                   width={400}

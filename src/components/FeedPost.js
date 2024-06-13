@@ -177,7 +177,6 @@ const FeedPost = ({
   };
 
   const handleLike = async () => {
-   
     const newLikedState = !liked;
     console.log(newLikedState + "newLikedState");
     setLiked(newLikedState);
@@ -379,7 +378,6 @@ const FeedPost = ({
                     whileHover="hover"
                     variants={scaleUpVariants}
                   >
-                   
                     <button>
                       {!liked ? (
                         <Image

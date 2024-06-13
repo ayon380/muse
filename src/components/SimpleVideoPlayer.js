@@ -55,7 +55,6 @@ const SimpleVideoPlayer = ({ src }) => {
     video.muted = !video.muted;
     setIsMuted(video.muted);
   };
-
   return (
     <div ref={containerRef} className="simple-video-player relative">
       <video

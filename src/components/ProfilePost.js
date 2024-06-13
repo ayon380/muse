@@ -22,50 +22,36 @@ import {
   increment,
 } from "firebase/firestore";
 
-function formatFirebaseTimestamp(firebaseTimestamp) {
-  // Check if the timestamp is valid
-  if (
-    !firebaseTimestamp ||
-    typeof firebaseTimestamp !== "object" ||
-    !("_seconds" in firebaseTimestamp)
-  ) {
-    return "Invalid date";
-  }
+function formatFirebaseTimestamp(timestamp) {
+  timestamp = String(timestamp);
+  const secondsMatch = timestamp.match(/seconds=(\d+)/);
+  const nanosecondsMatch = timestamp.match(/nanoseconds=(\d+)/);
+  const seconds = parseInt(secondsMatch[1]);
+  const nanoseconds = parseInt(nanosecondsMatch[1]);
 
-  // Convert Firestore timestamp to JavaScript Date object
-  const timestampDate = new Date(firebaseTimestamp._seconds * 1000);
+  // Convert the seconds and nanoseconds to milliseconds
+  const milliseconds = seconds * 1000 + nanoseconds / 1000000;
 
-  const now = new Date();
-  const timeDifference = now - timestampDate;
-  const seconds = Math.floor(timeDifference / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
+  // Create a new Date object using the milliseconds
+  const date = new Date(milliseconds);
 
-  if (seconds < 60) {
-    return "Just now";
-  } else if (minutes === 1) {
-    return "A minute ago";
-  } else if (minutes < 60) {
-    return `${minutes} minutes ago`;
-  } else if (hours === 1) {
-    return "An hour ago";
-  } else if (hours < 24) {
-    return `${hours} hours ago`;
-  } else if (days === 1) {
-    return "Yesterday";
-  } else if (days < 7) {
-    return `${days} days ago`;
-  } else {
-    // If it's more than a week, you might want to display the actual date
-    const options = { year: "numeric", month: "long", day: "numeric" };
-    return timestampDate.toLocaleDateString(undefined, options);
-  }
+  // Format the date into a readable string for social media posts
+  const options = {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+  };
+  const readableDate = date.toLocaleString("en-US", options);
+
+  return readableDate;
 }
 
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 const Modal = dynamic(() => import("./Modal"));
+const SimpleVideoPlayer = dynamic(() => import("./SimpleVideoPlayer"));
 const EditPost = dynamic(() => import("./EditPost"));
 const FeedPost = ({
   db,
@@ -88,6 +74,7 @@ const FeedPost = ({
   const [postdata, setPostdata] = useState(post);
   const [uid, setUid] = useState("");
   const [showedit, setShowedit] = useState(false);
+  const [pendingUpdate, setPendingUpdate] = useState(null);
   const [showdelete, setShowdelete] = useState(false);
   const router = useRouter();
   useEffect(() => {
@@ -155,34 +142,54 @@ const FeedPost = ({
     }
   };
   const handleLike = async () => {
+    const newLikedState = !liked;
+    console.log(newLikedState + "newLikedState");
+    setLiked(newLikedState);
+    setPostdata({
+      ...postdata,
+      likecount: postdata.likecount + (newLikedState ? +1 : -1),
+    });
     if (userdata) {
       const postRef = doc(db, "posts", postdata.id);
-      const usernameref = doc(db, "username", userdata.uid);
-      if (liked) {
-        setLiked(false);
-        setPostdata({ ...postdata, likecount: postdata.likecount - 1 });
+      const usernameRef = doc(db, "username", userdata.uid);
+      // Update the local state immediately
+
+      // Debounce the database update
+      clearTimeout(pendingUpdate); // Cancel any previously debounced calls
+      setPendingUpdate(
+        setTimeout(updateLike, 5000, postRef, usernameRef, newLikedState)
+      );
+    }
+  };
+
+  const updateLike = async (postRef, usernameRef, newLikedState) => {
+    try {
+      if (newLikedState) {
         await updateDoc(postRef, {
-          likes: arrayRemove(uid),
-          likecount: increment(-1),
-        });
-        await updateDoc(usernameref, {
-          score: increment(-1),
-        });
-      } else {
-        setLiked(true);
-        setPostdata({ ...postdata, likecount: postdata.likecount + 1 });
-        await updateDoc(postRef, {
-          likes: arrayUnion(uid),
+          likes: arrayUnion(userdata.uid),
           likecount: increment(1),
         });
-        await updateDoc(usernameref, {
+        await updateDoc(usernameRef, {
           score: increment(1),
         });
         sendNotification(postdata);
+      } else {
+        await updateDoc(postRef, {
+          likes: arrayRemove(userdata.uid),
+          likecount: increment(-1),
+        });
+        await updateDoc(usernameRef, {
+          score: increment(-1),
+        });
       }
-      // refetchPost();
+    } catch (error) {
+      console.error("Error updating post or username:", error);
     }
   };
+
+  useEffect(() => {
+    return () => clearTimeout(pendingUpdate);
+  }, [pendingUpdate]);
   const Reportposttt = async () => {
     router.push(
       `/report?username=${usermetadata[postdata.uid].userName}&postid=${
@@ -238,7 +245,7 @@ const FeedPost = ({
   return (
     <>
       <motion.div
-        className=" justify-center relative max-w-4/5  py-4 lg:px-64 md:px-24  dark:bg-black"
+        className="z-10 justify-center bg-white m-2 rounded-3xl w-full py-2 lg:px-64 md:px-24   dark:bg-black"
         key={postdata.id}
         initial="hidden"
         animate="visible"
@@ -267,62 +274,68 @@ const FeedPost = ({
             content="Are you sure you want to delete this post?"
           />
         )}
-
-        <div className="df bg-white dark:bg-black bg-opacity-40 md:ml-96 rounded-2xl px-2 py-2 m-2">
-          <button onClick={() => onclose()}>Close</button>
+        <div className="df bg-white   dark:bg-black bg-opacity-40 rounded-2xl m-2">
           {usermetadata && usermetadata[postdata.uid] && (
-            <div className="header flex justify-between">
+            <div className="header flex justify-between pt-2 px-1">
               <Link
                 href={`/feed/profile/${usermetadata[postdata.uid].userName}`}
               >
                 <div className="flex items-center">
-                  <div className="profile-pic bg-gradient-to-r from-purple-500 to-blue-500 h-10 w-10 rounded-full p-2 md:h-20 md:w-20">
-                    <Image
-                      className="rounded-full h-8 w-8 md:h-16 md:w-16 object-cover "
-                      src={usermetadata[postdata.uid].pfp}
-                      width={100}
-                      height={100}
-                      alt="Profile Picture"
-                    />
-                  </div>
+                  {/* <div className="profile-pic bg-gradient-to-r from-purple-500 to-blue-500 h-10 w-10 rounded-full p-2 md:h-20 md:w-20"> */}
+                  <Image
+                    className="rounded-full h-12 w-12  md:h-16 md:w-16 object-cover "
+                    src={usermetadata[postdata.uid].pfp}
+                    width={100}
+                    height={100}
+                    alt="Profile Picture"
+                  />
+                  {/* </div> */}
                   <div className="username ml-2 text-xl md:text-3xl">
                     {usermetadata[postdata.uid].userName}
                   </div>
                 </div>
               </Link>
-              <div className="time mt-2 opacity-50 md:mt-4">
+              <div className="time mt-5  text-xs opacity-50 md:mt-4">
                 {formatFirebaseTimestamp(postdata.timestamp)}
               </div>
             </div>
           )}
-          <div className="gf rounded-xl pt-6 z-20 w-full">
-            <Carousel showThumbs={false}>
+          <div className="gf rounded-xl pt-4 z-20 w-full">
+            <Carousel
+              showThumbs={false}
+              showStatus={false}
+              dynamicHeight
+              useKeyboardArrows
+              swipeable={false}
+            >
               {postdata?.mediaFiles.map((media) => (
                 <>
                   {isVideoFile(media) ? (
                     <>
-                      <video
+                      {/* <video
                         className="max-h-96 w-full bg-transparent bg-opacity-80 rounded-xl"
                         src={media}
                         controls
                         style={{ maxHeight: "500px" }}
-                      />
+                      /> */}
+                      #
+                      <SimpleVideoPlayer src={media} />
                     </>
                   ) : (
                     <>
                       <Image
                         src={media}
-                        height="500"
-                        width="500"
+                        height={500}
+                        width={500}
                         alt=""
-                        className="rounded-xl object-cover max-h-96"
+                        className="rounded-xl max-h-96 object-cover"
                       />
                     </>
                   )}
                 </>
               ))}
             </Carousel>
-            <div className="footer mt-3">
+            <div className="footer mt-3 mx-1">
               <div className="flex justify-between">
                 <div className="like flex">
                   <motion.div
@@ -331,30 +344,53 @@ const FeedPost = ({
                     whileHover="hover"
                     variants={scaleUpVariants}
                   >
-                    {!liked ? (
-                      <FaRegHeart />
-                    ) : (
-                      <TiHeartFullOutline style={{ color: "red" }} />
-                    )}
-                    <div />
+                    <button>
+                      {!liked ? (
+                        <Image
+                          src="/icons/notliked.png"
+                          alt="Not Liked"
+                          className="h-7 w-7"
+                          height={50}
+                          width={50}
+                        />
+                      ) : (
+                        <Image
+                          src="/icons/liked.png"
+                          alt="Liked"
+                          className="h-7 w-7"
+                          height={50}
+                          width={50}
+                        />
+                      )}
+                    </button>
+                    {/* </CoolMode> */}
+                    {/* <CoolMode options={{
+                      particleCount: 50,
+                      speedHorz: 5,
+                      speedUp: 10,
+                    }}>
+                      
+                      <button>Click</button>
+                      <div />
+                    </CoolMode> */}
                   </motion.div>
-                  <div className="flex">
-                    <div className="count text-xl font-bold mr-1">
+                  <div className="flex  ml-2 ">
+                    <div className="count text-2xl font-bold mr-1">
                       {postdata.likecount ? postdata.likecount : 0}
                     </div>
-                    <div className="likes text-xl opacity-85">likes</div>
+                    <div className="likes text-sm mt-2 opacity-75 ">likes</div>
                   </div>
                 </div>
                 <div className="l12 flex text-3xl">
                   <div
                     className="share cursor-pointer "
                     onClick={() => {
-                      // setSharepostdata(postdata);
+                      setSharepostdata(postdata);
                       setSharemenu(true);
                     }}
                   >
                     <Image
-                      src="/icons/send.png"
+                      src="/icons/feedsend.png"
                       alt="Share"
                       className="dark:invert w-7 h-7 mr-1"
                       width={100}
@@ -363,7 +399,10 @@ const FeedPost = ({
                   </div>
                   <div
                     className="tagged h-7 w-7 flex mr-2"
-                    onClick={() => setTaggeduseropen(true)}
+                    onClick={() => {
+                      setCommentpostdata(postdata);
+                      setTaggedusermenu(true);
+                    }}
                   >
                     <Image
                       src="/icons/supermarket.png"
@@ -401,31 +440,33 @@ const FeedPost = ({
               </div>
 
               {postdata.caption && (
-                <div className="caption m-1 w-full">{postdata.caption}</div>
+                <div className="caption mt-1 mb-2 w-full opacity-80">
+                  {postdata.caption}
+                </div>
               )}
 
-              <div className="comments flex justify-between m-1">
+              <div className="comments flex justify-between mb-1">
                 <div
                   className="om flex"
                   onClick={() => {
                     setShowComments(true);
-                    // setCommentpostdata(postdata);
+                    setCommentpostdata(postdata);
                   }}
                 >
                   <button>
                     <Image
                       src="/icons/comment.png"
-                      className="dark:invert h-7 w-7"
+                      className=" h-7 w-7"
                       width={100}
                       height={100}
                       alt="Comment"
                     />
                   </button>
-                  <div className="k mt-0.5">
+                  <div className="k mt-0.5 ml-3 opacity-50">
                     {postdata ? postdata.commentcount : 0} comments
                   </div>
                 </div>
-                {currentuserdata && currentuserdata.uid === userdata.uid && type=="profile" && (
+                {currentuserdata && currentuserdata.uid === userdata.uid && (
                   <div className="flex">
                     <Image
                       className="dark:invert h-7 w-7"

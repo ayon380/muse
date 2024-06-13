@@ -60,14 +60,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
       setismobile(false);
     }
   }, []);
-  const playSound = () => {
-    notysound.play(); // Play the audio
-  };
-  const [notysound, setAudio] = useState(null);
-  useEffect(() => {
-    setAudio(new Audio("/sounds/inbox.mp3"));
-    // only run once on the first render on the client
-  }, []);
+  
   const checkfollow = () => {
     if (userdata && data && userdata.followers.includes(profileData.uid)) {
       console.log("checkfollow running..." + true);
@@ -220,7 +213,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
             enqueueUserMetadata(q.sender);
             if (Date.now() - q.timestamp < 20000) {
               toast.success("New Notification: ");
-              playSound();
+              // playSound();
             }
             console.log("New notification: ", change.doc.data());
             const r = notifications;
@@ -360,7 +353,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
           open={logoutmodal}
           title={"Logout"}
           setShowModal={setlogoutmodal}
-          type={"logout"} 
+          type={"logout"}
           handleDelete={logout}
           content="Are you sure u want to logout ?"
           onClose={() => setlogoutmodal(false)}
@@ -377,7 +370,9 @@ const SideBar = ({ usage, data, currentuserdata }) => {
         <div className="bg-white pt-5 h-dvh z-50 pb-24 oveflow-hidden dark:bg-black rounded-xl md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-40 shadow-2xl border-1 border-black lpo">
           <div className="md:hidden">
             <div className="flex justify-between mt-5 mx-2">
-              <div className="fg font-lucy text-4xl">Muse</div>
+              <div className="bg-gradient-to-r from-purple-500 via-fuchsia-400 to-pink-400 text-4xl inline-block text-transparent bg-clip-text font-lucy">
+                Muse
+              </div>
               <div className="ss ">
                 <button onClick={() => setlogoutmodal(true)}>
                   <Image
@@ -393,7 +388,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                     src="/icons/sidebar.png"
                     height={50}
                     width={50}
-                    className="dark:invert w-7 h-7"
+                    className=" w-7 h-7"
                     alt="Sidebar"
                   />
                 </button>
@@ -608,7 +603,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                         )}
                       </div>
                     </div>
-                    <div className="flex flex-col h-80  lg:h-96 overflow-y-auto">
+                    <div className="flex flex-col mt-10 h-96  lg:h-96 overflow-y-auto">
                       {notifications.length == 0 && (
                         <div className="text-center mt-10">
                           No Notifications
@@ -617,7 +612,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                       {notifications.map((notification) => (
                         <div
                           key={notification.id}
-                          className="cursor-pointer backdrop-filter backdrop-blur-2xl bg-opacity-50 bg-feedheader shadow-lg justify-between rounded-xl bg-transparent p-5 my-2"
+                          className="cursor-pointer backdrop-filter backdrop-blur-2xl bg-opacity-50 dark:bg-neutral-900 shadow-lg justify-between rounded-xl bg-transparent p-5 my-2"
                         >
                           {usermetadata[notification.sender] && (
                             <div className="d flex w-full">
@@ -656,14 +651,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                                               );
                                             }}
                                           >
-                                            <Image
-                                              className="rounded-xl h-10 w-10"
-                                              src={notification.text[0]}
-                                              alt="Media File"
-                                              height={100}
-                                              width={100}
-                                            />
-                                            <div className="text pt-2 ml-4">
+                                            <div className="text pt-2 ">
                                               {
                                                 usermetadata[
                                                   notification.sender
@@ -671,6 +659,13 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                                               }{" "}
                                               sent you a media file
                                             </div>
+                                            <Image
+                                              className="rounded-xl h-10 w-10"
+                                              src={notification.text[0]}
+                                              alt="Media File"
+                                              height={100}
+                                              width={100}
+                                            />
                                           </div>
                                         )}
                                       {notification.type == "message" &&

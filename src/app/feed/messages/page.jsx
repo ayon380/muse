@@ -1758,7 +1758,10 @@ const Home = () => {
                                             ) {
                                               // If it's a Muse post, create a link
                                               return (
-                                                <a href={message.text} key={message.text}>
+                                                <a
+                                                  href={message.text}
+                                                  key={message.text}
+                                                >
                                                   <div className="flex items-center justify-center px-4 py-2 rounded-md bg-gradient-to-r from-purple-500 to-pink-600 text-white font-semibold hover:from-purple-600 hover:to-pink-700 transition duration-300">
                                                     <span>See Post</span>
                                                     <svg
@@ -1774,7 +1777,7 @@ const Home = () => {
                                                       />
                                                     </svg>
                                                   </div>
-                                                </ a>
+                                                </a>
                                                 // <>Muse Post</>
                                               );
                                             } else if (
