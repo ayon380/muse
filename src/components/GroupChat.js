@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import React, { useState } from "react";
 import Image from "next/image";
 import {
@@ -16,6 +16,7 @@ import {
 import { getFirestore } from "firebase/firestore";
 import toast, { Toaster } from "react-hot-toast";
 import { useTheme } from "next-themes";
+import BottomSheet from "./BottomSheet";
 import imageCompression from "browser-image-compression";
 import { getStorage, ref, getDownloadURL, uploadBytes } from "firebase/storage";
 const options = {
@@ -149,134 +150,131 @@ const GroupChat = ({ userdata, onClose }) => {
     const file = e.target.files[0];
     if (file) {
       setGroupPicture(file);
-
     }
   };
 
   return (
-    <div className="relative">
-      <Toaster />
-      <div
-        className={`fixed inset-0 text-black z-50 flex items-center justify-center transition-all duration-500 ${showModal ? "opacity-100" : "opacity-0 pointer-events-none"
-          }`}
-      >
-        <div
-          className={`absolute inset-0 rounded-2xl ${currentTheme === "dark"
-            ? "bg-gray-800 bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-20 shadow-2xl border-1 border-gray-600"
-            : "bg-white bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-20 shadow-2xl border-1 border-black"
-            } h-full transition-all duration-500 ${showModal ? "opacity-100" : "opacity-0"
-            }`}
-        />
-        <div
-          className={`${currentTheme === "dark"
-            ? "bg-gray-800 text-white"
-            : "bg-white text-black"
-            } w-96 p-8 rounded-xl shadow-2xl relative z-10 transition-all duration-500 ${showModal ? "translate-y-0" : "translate-y-full"
-            }`}
-        >
-          <h2 className="text-xl font-bold mb-4">Create Group Chat</h2>
-          <label className="mb-4 block">
+    <BottomSheet show={true} heading="Create Group Chat" onClose={onClose}>
+      <div className="bg-white dark:bg-black rounded-lg shadow-md p-6">
+     
+        <div className="mb-4">
+          <label
+            htmlFor="chatName"
+            className="block text-gray-700 dark:text-gray-300 font-bold mb-2"
+          >
             Chat Name:
-            <input
-              type="text"
-              value={chatName}
-              onChange={(e) => setChatName(e.target.value)}
-              className={`border ${currentTheme === "dark"
-                ? "border-gray-600 bg-gray-700 text-white"
-                : "border-gray-300"
-                } rounded-lg p-2 w-full mt-2`}
-            />
           </label>
-          <label className="mb-4 block">
+          <input
+            type="text"
+            id="chatName"
+            value={chatName}
+            onChange={(e) => setChatName(e.target.value)}
+            className="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-600"
+          />
+        </div>
+        <div className="mb-4">
+          <label
+            htmlFor="chatInfo"
+            className="block text-gray-700 dark:text-gray-300 font-bold mb-2"
+          >
             Chat Info:
-            <input
-              type="text"
-              value={chatInfo}
-              onChange={(e) => setChatInfo(e.target.value)}
-              className={`border ${currentTheme === "dark"
-                ? "border-gray-600 bg-gray-700 text-white"
-                : "border-gray-300"
-                } rounded-lg p-2 w-full mt-2`}
-            />
           </label>
-          <label className="mb-4 block">
+          <input
+            type="text"
+            id="chatInfo"
+            value={chatInfo}
+            onChange={(e) => setChatInfo(e.target.value)}
+            className="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-600"
+          />
+        </div>
+        <div className="mb-4">
+          <label
+            htmlFor="groupPicture"
+            className="block text-gray-700 dark:text-gray-300 font-bold mb-2"
+          >
             Group Picture:
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-              className={`border ${currentTheme === "dark"
-                ? "border-gray-600 bg-gray-700 text-white"
-                : "border-gray-300"
-                } rounded-lg p-2 w-full mt-2`}
-            />
-            {groupPicture && (
-              <div className="mt-4 flex  justify-center">
-                <Image
-                  src={URL.createObjectURL(groupPicture)}
-                  alt="Group Picture Preview"
-                  className="w-20 h-20 rounded-full"
-                  height={100}
-                  width={100}
-                />
-              </div>
-            )}
           </label>
-          <label className="mb-4 block">
+          <input
+            type="file"
+            id="groupPicture"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-600"
+          />
+          {groupPicture && (
+            <div className="mt-4 flex justify-center">
+              <Image
+                src={URL.createObjectURL(groupPicture)}
+                height={100}
+                width={100}
+                alt="Group Picture"
+                className="rounded-md"
+              />
+            </div>
+          )}
+        </div>
+        <div className="mb-4">
+          <label
+            htmlFor="participants"
+            className="block text-gray-700 dark:text-gray-300 font-bold mb-2"
+          >
             Add Participants:
-            {usernames.map((participant) => (
-              <li key={participant}>{participant}</li>
-            ))}
-            <input
-              type="text"
-              value={searchtext}
-              onChange={(e) => setSearchtext(e.target.value)}
-              className={`border ${currentTheme === "dark"
-                ? "border-gray-600 bg-gray-700 text-white"
-                : "border-gray-300"
-                } rounded-lg p-2 w-full mt-2`}
-              placeholder="Search"
-            />
-            {searchResults.length > 0 && searchtext.length > 0 && (
-              <div className="search-results mt-2">
-                <ul>
-                  {searchResults.map((user) => (
-                    <div
-                      onClick={() => handleAddParticipant(user)}
-                      key={user.id}
-                      className="cursor-pointer"
-                    >
-                      <li>{user.userName}</li>
-                    </div>
-                  ))}
-                </ul>
-              </div>
-            )}
           </label>
-          <div className="flex justify-between">
-            <button
-              onClick={handleCreateGroupChat}
-              className={`${currentTheme === "dark"
-                ? "bg-purple-700 hover:bg-purple-600"
+          <ul className="mb-2">
+            {usernames.map((participant) => (
+              <li
+                key={participant}
+                className="text-gray-800 dark:text-gray-300"
+              >
+                {participant}
+              </li>
+            ))}
+          </ul>
+          <input
+            type="text"
+            id="participants"
+            value={searchtext}
+            onChange={(e) => setSearchtext(e.target.value)}
+            className="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-600"
+            placeholder="Search"
+          />
+          {searchResults.length > 0 && searchtext.length > 0 && (
+            <div className="search-results mt-2 max-h-48 overflow-y-auto rounded-md shadow-md bg-white dark:bg-gray-700">
+              <ul>
+                {searchResults.map((user) => (
+                  <li
+                    key={user.id}
+                    onClick={() => handleAddParticipant(user)}
+                    className="px-4 py-2 cursor-pointer text-gray-800 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200"
+                  >
+                    {user.userName}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+        <div className="flex justify-end">
+          <button
+            onClick={handleCreateGroupChat}
+            className={`${
+              loading
+                ? "bg-purple-600 hover:bg-purple-700 cursor-not-allowed"
                 : "bg-purple-600 hover:bg-purple-700"
-                } text-white px-4 py-2 rounded-lg transition-colors duration-300`}
-                disabled={loading}
-            >
-              {loading ? "Creating..." : "Create"}
-            </button>
-            <button
-              onClick={() => onClose()}
-              className={`${currentTheme === "dark"
-                ? "bg-gray-600 hover:bg-gray-500"
-                : "bg-gray-400 hover:bg-gray-500"
-                } text-white px-4 py-2 rounded-lg transition-colors duration-300`}
-            >
-              Cancel
-            </button>
-          </div>
+            } text-white px-4 py-2 rounded-md transition-colors duration-200 mr-2`}
+            disabled={loading}
+          >
+            {loading ? "Creating..." : "Create"}
+          </button>
+          <button
+            onClick={() => onClose()}
+            className="bg-gray-400 hover:bg-gray-500 text-white px-4 py-2 rounded-md transition-colors duration-200"
+          >
+            Cancel
+          </button>
         </div>
       </div>
-    </div>
+    </BottomSheet>
   );
 };
 

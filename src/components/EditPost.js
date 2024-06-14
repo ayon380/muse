@@ -15,7 +15,8 @@ import {
   arrayUnion,
 } from "firebase/firestore";
 import toast from "react-hot-toast";
-const EditPost = ({ post, userdata, db,refetchPost, setShowedit }) => {
+import BottomSheet from "./BottomSheet";
+const EditPost = ({ post, userdata, db, refetchPost, setShowedit }) => {
   //   const [taggedusers, setTaggedusers] = useState(post.taggedUsers);
   const [caption, setCaption] = useState(post.caption);
   const [searchtext, setSearchtext] = useState("");
@@ -145,82 +146,95 @@ const EditPost = ({ post, userdata, db,refetchPost, setShowedit }) => {
   // ...Existing code
 
   return (
-    <div className="absolute inset-0 flex items-center justify-center">
-      <div className="modal bg-opacity-50 bg-black  h-screen w-screen flex items-center justify-center">
-        <div className="bof bg-white p-4 rounded-xl">
-          <h1 className="text-2xl mb-4 text-center">Edit Post</h1>
+    <BottomSheet
+      show={true}
+      heading="Edit Post"
+      onClose={() => setShowedit(false)}
+    >
+      <div className="flex flex-col space-y-4 p-5">
+        <div>
+          <label htmlFor="caption" className="block text-xl font-medium mb-2">
+            Caption
+          </label>
+          <textarea
+            id="caption"
+            value={caption}
+            onChange={(e) => setCaption(e.target.value)}
+            className="border dark:text-white dark:bg-feedheader border-gray-300 rounded-lg p-2 w-full focus:outline-none focus:ring-2 focus:ring-fuchsia-500"
+          />
+        </div>
 
-          <div>
-            <label htmlFor="caption">Caption</label>
-            <textarea
-              id="caption"
-              value={caption}
-              onChange={(e) => setCaption(e.target.value)}
-              className="border border-gray-300 rounded-lg p-2 w-full"
-            />
-          </div>
-
-          <div className="tagged mt-4">
-            <label className="block mb-2">Add Users to Tag:</label>
-            <ul>
-              {usernames.map((participant, idx) => (
-                <div
-                  className="sd flex items-center mb-2"
-                  key={participant.uid}
+        <div>
+          <label className="block font-medium mb-2 text-xl">
+            Add Users to Tag:
+          </label>
+          <ul className="flex flex-wrap -m-1 dark:text-white dark:bg-feedheader ">
+            {usernames.map((participant, idx) => (
+              <div className="flex items-center m-1" key={participant.uid}>
+                <span className=" px-2 py-1 rounded-md mr-2">
+                  {participant}
+                </span>
+                <button
+                  className="text-red-500 hover:text-red-700 focus:outline-none"
+                  onClick={() => handleRemoveParticipant(participant, idx)}
                 >
-                  <li className="mr-2">{participant}</li>
-                  <button
-                    className="bg-red-500 text-white p-1 rounded"
-                    onClick={() => handleRemoveParticipant(participant, idx)}
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
                   >
-                    Remove
-                  </button>
-                </div>
-              ))}
-            </ul>
-
-            <input
-              type="text"
-              value={searchtext}
-              onChange={(e) => setSearchtext(e.target.value)}
-              className="border border-gray-300 rounded-lg p-2 w-full mt-2"
-              placeholder="Search"
-            />
-            {searchResults.length > 0 && searchtext.length > 0 && (
-              <div className="search-results mt-2">
-                <ul>
-                  {searchResults.map((user) => (
-                    <div
-                      onClick={() => handleAddParticipant(user)}
-                      key={user.id + Math.random()}
-                      className="cursor-pointer"
-                    >
-                      <li>{user.userName}</li>
-                    </div>
-                  ))}
-                </ul>
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </button>
               </div>
-            )}
-          </div>
+            ))}
+          </ul>
+          <input
+            type="text"
+            value={searchtext}
+            onChange={(e) => setSearchtext(e.target.value)}
+            className="border dark:text-white dark:bg-feedheader  border-gray-300 rounded-lg p-2 w-full mt-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Search"
+          />
+          {searchResults.length > 0 && searchtext.length > 0 && (
+            <div className="search-results mt-2 bg-white dark:text-white dark:bg-feedheader  shadow rounded-lg">
+              <ul className="max-h-48 overflow-y-auto">
+                {searchResults.map((user) => (
+                  <li
+                    key={user.id + Math.random()}
+                    className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                    onClick={() => handleAddParticipant(user)}
+                  >
+                    {user.userName}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
 
-          <div className="mt-4 flex justify-end">
-            <button
-              className="bg-gray-300 text-black px-4 py-2 rounded mr-2"
-              onClick={() => setShowedit(false)}
-            >
-              Cancel
-            </button>
-            <button
-              className="bg-blue-500 text-white px-4 py-2 rounded"
-              type="submit"
-              onClick={handleEdit}
-            >
-              Update
-            </button>
-          </div>
+        <div className="flex justify-end">
+          <button
+            className="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-700 mr-2"
+            onClick={() => setShowedit(false)}
+          >
+            Cancel
+          </button>
+          <button
+            className="px-4 py-2 rounded-md bg-blue-500 hover:bg-blue-600 text-white"
+            type="submit"
+            onClick={handleEdit}
+          >
+            Update
+          </button>
         </div>
       </div>
-    </div>
+    </BottomSheet>
   );
 };
 

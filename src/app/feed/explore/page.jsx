@@ -9,7 +9,17 @@ import dynamic from "next/dynamic";
 import Masonry, { ResponsiveMasonry } from "react-responsive-masonry";
 import { useSidebarStore } from "@/app/store/zustand";
 import { onAuthStateChanged } from "firebase/auth";
-import { getFirestore, doc, getDoc } from "firebase/firestore";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  collection,
+  query,
+  where,
+  orderBy,
+  limit,
+  getDocs,
+} from "firebase/firestore";
 const MainLoading = dynamic(() => import("../../../components/MainLoading"));
 const ProfilePost = dynamic(() => import("../../../components/ProfilePost"));
 const SearchExplore = dynamic(() =>
@@ -34,6 +44,7 @@ const Explore = () => {
   const [postid, setPostId] = useState(-1);
   const [posts, setPosts] = useState([]);
   const [reels, setReels] = useState([]);
+  const [hashposts, setHashposts] = useState([]);
   const { initialLoad, toggle, toggleload } = useSidebarStore();
   const [loading, setloading] = useState(true);
   const [feed, setfeed] = useState([]);
@@ -138,6 +149,59 @@ const Explore = () => {
     setPostId(-1);
     // setShowPost(false);
   };
+  function isVideoFile(url) {
+    // List of common video file extensions
+    const videoExtensions = ["mp4", "mov", "avi", "mkv", "wmv", "flv", "webm"];
+
+    // Check if the URL contains any of the video file extensions
+    const hasVideoExtension = videoExtensions.some((extension) =>
+      url.includes(`.${extension}`)
+    );
+
+    // Check if the URL contains a query parameter indicating a video file
+    const hasVideoQueryParameter = url.match(
+      /\.(mp4|mov|avi|mkv|wmv|flv|webm)\?[\w=&-]+/
+    );
+
+    // Return true if either condition is met
+    return hasVideoExtension || hasVideoQueryParameter;
+  }
+
+  const fetchposts = async () => {
+    if (user && expllorepagestate) {
+      let postsMap = new Map();
+      console.log(expllorepagestate + " Current hashtags");
+
+      // Create an array of promises
+      const promises = expllorepagestate.map(async (hashtag) => {
+        const hashref = collection(db, "posts");
+        const q = query(
+          hashref,
+          where("hashtags", "array-contains", hashtag),
+          orderBy("timestamp", "desc"),
+          limit(10)
+        );
+        const querySnapshot = await getDocs(q);
+        querySnapshot.forEach((doc) => {
+          postsMap.set(doc.id, doc.data());
+        });
+      });
+
+      // Wait for all promises to resolve
+      await Promise.all(promises);
+      setHashposts([...postsMap.values()]);
+    }
+  };
+
+  useEffect(() => {
+    if (hashposts) {
+      console.log(hashposts + " Hashposts");
+    }
+  }, [hashposts]);
+
+  useEffect(() => {
+    fetchposts();
+  }, [expllorepagestate]);
   return (
     <div className=" md:ml-5 w-full h-full">
       {loading && initialLoad && <MainLoading />}
@@ -213,31 +277,60 @@ const Explore = () => {
           )}
           {postid !== -1 && posts[0] && (
             <div
-              className="lop h-screen w-screen fixed top-0 left-0 flex justify-center items-center z-10 backdrop-filter backdrop-blur-3xl"
+              className="lop h-screen w-screen fixed top-0   z-10 bg-white dark:bg-black overflow-y-auto"
               onClick={(e) => {
                 if (e.target.classList.contains("lop")) {
                   onclose();
                 }
               }}
             >
-              <ProfilePost
-                db={db}
-                userdata={userdata}
-                post={posts.find((post) => {
-                  return post.id === postid;
-                })}
-                onclose={() => {
-                  setPostId(-1);
-                  // setShowPost(false);
-                }}
-                type="explore"
-                setShowComments={setShowComments}
-                usermetadata={usermetadata}
-                setSharemenu={setSharemenuopen}
-                enqueueUserMetadata={enqueueUserMetadata}
-                currentuserdata={userdata}
-                setTaggeduseropen={setTaggeduseropen}
-              />
+              <div>
+                <div className="dd mt-32">
+                  <button onClick={() => setPostId(-1)}>Back</button>
+                </div>
+                <ProfilePost
+                  db={db}
+                  userdata={userdata}
+                  post={posts.find((post) => {
+                    return post.id === postid;
+                  })}
+                  onclose={() => {
+                    setPostId(-1);
+                    // setShowPost(false);
+                  }}
+                  type="explore"
+                  setShowComments={setShowComments}
+                  usermetadata={usermetadata}
+                  setSharemenu={setSharemenuopen}
+                  enqueueUserMetadata={enqueueUserMetadata}
+                  currentuserdata={userdata}
+                  setTaggeduseropen={setTaggeduseropen}
+                />
+                {hashposts.length > 0 &&
+                  hashposts.map((post, index) => (
+                    <div className="mb-10" key={index}>
+                      {post.id !== postid && (
+                        <ProfilePost
+                          db={db}
+                          userdata={userdata}
+                          post={post}
+                          onclose={() => {
+                            setPostId(-1);
+                            // setShowPost(false);
+                          }}
+                          type="explore"
+                          setShowComments={setShowComments}
+                          usermetadata={usermetadata}
+                          setSharemenu={setSharemenuopen}
+                          enqueueUserMetadata={enqueueUserMetadata}
+                          currentuserdata={userdata}
+                          setTaggeduseropen={setTaggeduseropen}
+                        />
+                      )}
+                    </div>
+                  ))}
+                <div className="h-32 "></div>
+              </div>
             </div>
           )}
           <div className="main2 md:rounded-2xl dark:bg-black bg-white md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 border-black md:p-10 overflow-y-auto">
@@ -255,7 +348,7 @@ const Explore = () => {
                     src="/icons/search.png"
                     height={50}
                     width={50}
-                    className="  w-7 h-7 mr-4"
+                    className=" dark:invert w-7 h-7 mr-4"
                     alt="Search"
                   />
                 </button>
@@ -279,18 +372,35 @@ const Explore = () => {
                 {feed.map((post) => (
                   <div key={post.id} className="m-0.5 md:m-2">
                     {post.type == "post" ? (
-                      <Image
-                        onClick={() => {
-                          setPostId(post.id);
-                          // console.log(post.hashtags+"Hashtags");
-                          setexpllorepagestate(post.hashtags);
-                        }}
-                        src={post.mediaFiles[0]}
-                        alt=""
-                        width={300}
-                        height={300}
-                        className="md:rounded-3xl rounded-xl w-full"
-                      />
+                      <div className="">
+                        {!isVideoFile(post.mediaFiles[0]) ? (
+                          <Image
+                            onClick={() => {
+                              setPostId(post.id);
+                              // console.log(post.hashtags+"Hashtags");
+                              setexpllorepagestate(post.hashtags);
+                            }}
+                            src={post.mediaFiles[0]}
+                            alt=""
+                            width={300}
+                            height={300}
+                            className="md:rounded-3xl rounded-xl w-full"
+                          />
+                        ) : (
+                          <Image
+                            onClick={() => {
+                              setPostId(post.id);
+                              // console.log(post.hashtags+"Hashtags");
+                              setexpllorepagestate(post.hashtags);
+                            }}
+                            src="/thumbnail.png"
+                            alt=""
+                            width={300}
+                            height={300}
+                            className="md:rounded-3xl rounded-xl w-full"
+                          />
+                        )}
+                      </div>
                     ) : (
                       <div
                         onClick={() => {

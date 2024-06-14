@@ -231,13 +231,13 @@ const SearchExplore = ({
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         type="text"
-        className="h-10 w-full px-4 my-5 rounded-full border-2 border-gray-300 focus:outline-none focus:border-blue-500 "
+        className="h-10 w-full px-4 my-5 rounded-full border-2 dark:bg-feedheader border-gray-300 focus:outline-none focus:border-blue-500 "
         placeholder="Search for users or hashtags..."
       />
 
       {/* Container for results */}
       {selectedhashtags && <>{}</>}
-      <div className="mb-20">
+      <div className="mb-20 ">
         {searchResults.length > 0 ? (
           <>
             {searching ? (
@@ -297,14 +297,17 @@ const SearchExplore = ({
           </>
         ) : (
           <>
-            <div className="max-w-md w-full p-5 bg-white rounded-3xl shadow-lg">
+            <div className="max-w-md w-full p-5 bg-white dark:bg-feedheader rounded-3xl shadow-lg">
               {loadinghashtag ? (
                 <div className="text-xl p-4">Loading hashtags...</div>
               ) : (
                 <div>
-                  <div className="flex">
-                    <div className="sd h-1/2">Trending </div>
+                  <div className="flex border-b-2 p-2 border-fuchsia-50">
+                    <div className="sd h-1/2 text-xl mr-5 c:\Users\ayons\Downloads\badge.png">
+                      Trending{" "}
+                    </div>
                     <Image
+                      className="h-7 w-7"
                       src="/icons/trending.png"
                       height={50}
                       width={50}
@@ -314,7 +317,7 @@ const SearchExplore = ({
                   {hashtags.map((result) => (
                     <div
                       key={result.id}
-                      className="flex  justify-between items-center p-4 border-b"
+                      className="flex  justify-between items-center p-2 "
                       onClick={() => {
                         setexpllorepagestate(result.id);
                       }}
@@ -325,7 +328,7 @@ const SearchExplore = ({
                           close();
                           enqueueUserMetadata(usermetadata, result);
                         }}
-                        className="bg-blue-500 text-white px-4 py-2 rounded-full"
+                        className="bg-fuchsia-500 text-black px-4 py-2 rounded-full"
                       >
                         Go
                       </button>
@@ -338,11 +341,20 @@ const SearchExplore = ({
                 <div className="text-xl p-4">Loading users...</div>
               ) : (
                 <div>
-                  <div className="ss">Top Creators</div>
+                  <div className="flex border-b-2 p-2 border-fuchsia-50 ">
+                    <div className="ss mr-5 text-xl">Top Creators</div>
+                    <Image
+                      className="h-7 w-7"
+                      src="/icons/badge.png"
+                      height={50}
+                      width={50}
+                      alt="trending"
+                    />
+                  </div>
                   {users.map((result) => (
                     <div
                       key={result.id}
-                      className="flex justify-between items-center p-4 border-b"
+                      className="flex justify-between items-center p-2"
                       onClick={() => {
                         router.push(`/feed/profile/${result.userName}`);
                       }}
@@ -353,7 +365,7 @@ const SearchExplore = ({
                           close();
                           enqueueUserMetadata(usermetadata, result);
                         }}
-                        className="bg-blue-500 text-white px-4 py-2 rounded-full"
+                        className="bg-fuchsia-500 text-black px-4 py-2 rounded-full"
                       >
                         Profile
                       </button>

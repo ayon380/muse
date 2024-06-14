@@ -2,8 +2,9 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { saveAs } from "file-saver";
 import { getStorage, ref, getDownloadURL } from "firebase/storage";
+import BottomSheet from "./BottomSheet";
 const Follower = ({ mediaviewerfiles, setMediaViewerOpen, close }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
   const [currentMedia, setCurrentMedia] = useState(null);
   const storage = getStorage();
   useEffect(() => {
@@ -60,37 +61,13 @@ const Follower = ({ mediaviewerfiles, setMediaViewerOpen, close }) => {
   };
 
   return (
-    <div
-      className={`fixed top-0 left-0 w-full h-full flex items-center justify-center py-10 z-50 bg-opacity-75 bg-black transition-opacity duration-250 ${
-        isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-      }`}
-    >
-      <div
-        className={`bg-white rounded-xl p-6  mx-4 w-full max-w-4xl h-full max-h-screen overflow-hidden flex flex-col transition-transform duration-500 ${
-          isOpen ? "translate-y-0" : "translate-y-full"
-        }`}
-      >
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold">Media Viewer</h2>
-          <button
-            onClick={() => {
-              setIsOpen(false);
-              setTimeout(close, 500);
-            }}
-            className="text-gray-500 hover:text-gray-700 transition-colors duration-300"
-          >
-            ✖
-          </button>
-        </div>
+    <BottomSheet show={isOpen} heading="Media Viewer" onClose={close}>
+      <div>
         <div className="flex-grow flex items-center justify-center mb-4 relative">
           {currentMedia && (
             <>
               {isVideo(currentMedia) ? (
-                <video
-                  src={currentMedia}
-                  controls
-                  className="object-cover"
-                />
+                <video src={currentMedia} controls className="object-cover" />
               ) : (
                 <Image
                   src={currentMedia}
@@ -112,7 +89,7 @@ const Follower = ({ mediaviewerfiles, setMediaViewerOpen, close }) => {
             </>
           )}
         </div>
-        <div className="flex-shrink-0 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 absolute bottom-0 w-full bg-white p-4">
+        <div className="flex-shrink-0 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 absolute bottom-0 w-full bg-white dark:bg-black p-4">
           {mediaviewerfiles &&
             mediaviewerfiles.map((file, index) => (
               <div
@@ -142,7 +119,7 @@ const Follower = ({ mediaviewerfiles, setMediaViewerOpen, close }) => {
             ))}
         </div>
       </div>
-    </div>
+    </BottomSheet>
   );
 };
 

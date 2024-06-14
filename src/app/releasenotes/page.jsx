@@ -4,6 +4,16 @@ import React from "react";
 const ReleaseNotes = () => {
   const releaseNotes = [
     {
+      version: "v0.88",
+      descriptions:[
+        "Added New Sheet UI in many more  components",
+        "All new Explore Page",
+        "All new Explore Search Page"
+      ],
+      commit: "TBD",
+      date: "2024-06-14",
+    },
+    {
       version: "v0.87",
       descriptions: [
         "Added New In Chat Notification System",

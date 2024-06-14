@@ -9,6 +9,7 @@ import {
   getDoc,
 } from "firebase/firestore";
 import toast, { Toaster } from "react-hot-toast";
+import BottomSheet from "./BottomSheet";
 import { useRouter } from "next/navigation";
 const Follower = ({
   currentuserdata,
@@ -19,7 +20,7 @@ const Follower = ({
   enqueueUserMetadata,
   close,
 }) => {
-  const [isOpen, setIsOpen] = React.useState(false);
+  const [isOpen, setIsOpen] = React.useState(true);
   const Router = useRouter();
   const [postdata, setPostData] = React.useState(null);
   const fetchpostdata = async () => {
@@ -47,30 +48,10 @@ const Follower = ({
     };
 
     fetchData();
-  }, [postdata]);
+  }, []);
   return (
-    <div
-      className={`fixed top-0 py-10  left-0 w-full h-full flex items-center justify-center z-50 bg-opacity-50 bg-black transition-all duration-250 ${
-        isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-      }`}
-    >
-      <div
-        className={`bg-white rounded-xl p-4 mx-4 w-full max-w-2xl h-full max-h-screen overflow-y-auto transition-all duration-500 ${
-          isOpen ? "translate-y-0" : "translate-y-full"
-        }`}
-      >
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-2xl font-bold">Tagged Users</h2>
-          <button
-            onClick={() => {
-              setIsOpen(false);
-              setTimeout(close, 500);
-            }}
-            className="text-gray-500 hover:text-gray-700 transition-colors duration-300"
-          >
-            Close
-          </button>
-        </div>
+    <BottomSheet show={isOpen} heading="Tagged Users" onClose={close}>
+      <div className="p-5">
         <Toaster />
         {postdata && postdata.taggedUsers.length === 0 && (
           <p className="text-gray-500 text-center ">No tagged users Yet</p>
@@ -103,7 +84,7 @@ const Follower = ({
             return null;
           })}
       </div>
-    </div>
+    </BottomSheet>
   );
 };
 

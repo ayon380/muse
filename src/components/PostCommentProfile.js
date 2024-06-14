@@ -19,6 +19,7 @@ import {
   increment,
 } from "firebase/firestore";
 import toast from "react-hot-toast";
+import BottomSheet from "./BottomSheet";
 
 const PostComment = ({
   setShowComments,
@@ -34,10 +35,13 @@ const PostComment = ({
   const [commentlikes, setCommentlikes] = useState({});
   const [replies, setReplies] = useState({});
   const [commentreply, setCommentreply] = useState({});
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
   const [reply, setReply] = useState("");
   const [comment, setComment] = useState("");
+  // const [postdata, setPostdata] = useState({});
   const limit = 50;
+  const inputref = React.useRef();
+  const replyref = React.useRef();
   const { setpostdataupdate } = useSidebarStore();
   console.log(postid);
   function formatTimestamp(firebaseTimestamp) {
@@ -186,14 +190,15 @@ const PostComment = ({
 
   const handleReplySubmit = async (comment) => {
     try {
-      if (reply.trim() === "") {
+      let rtxt = replyref.current.value;
+      if (rtxt.trim() === "") {
         return;
       }
-      setReply("");
+      replyref.current.value = "";
       const commentId = comment.id;
       const replyRef = collection(db, "replies");
       const replyData = {
-        content: reply,
+        content: rtxt,
         likecount: 0,
         uid: uid,
         timestamp: new Date(),
@@ -260,6 +265,7 @@ const PostComment = ({
 
   const handleCommentSubmit = async () => {
     try {
+      let comment = inputref.current.value;
       if (comment.trim() === "") {
         return;
       }
@@ -273,7 +279,7 @@ const PostComment = ({
         timestamp: new Date(),
       };
       const q = await addDoc(commentRef, commentData);
-      const postRef = doc(db, "posts", postdid);
+      const postRef = doc(db, "posts", postid);
       await updateDoc(postRef, {
         commentcount: increment(1),
         comments: arrayUnion(q.id),
@@ -283,8 +289,9 @@ const PostComment = ({
       });
       commentData.timestamp = formatTimestamp(commentData.timestamp);
       setCommentList((prevState) => [...prevState, commentData]);
-      setComment("");
-      setpostdataupdate(postdid);
+      // setComment("");
+      inputref.current.value = "";
+      setpostdataupdate(postid);
       toast.success("Comment posted successfully");
     } catch (error) {
       toast.error("Error posting comment: " + error.message);
@@ -304,196 +311,190 @@ const PostComment = ({
   };
 
   return (
-    <div
-      className={`fixed top-0 left-0 py-10 w-full h-full flex items-center justify-center z-50 bg-opacity-50 bg-black transition-opacity duration-500 ${
-        isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-      }`}
-    >
-      <motion.div
-        className={`bg-white dark:bg-gray-900 rounded-xl  mx-4 w-full max-w-2xl h-full max-h-screen overflow-y-auto transition-transform duration-500 ${
-          isOpen ? "translate-y-0" : "translate-y-full"
-        }`}
-      >
-        <div className="flex sticky z-50 bg-white dark:bg-gray-900 top-0 justify-between items-center mb-4 p-2 border-b dark:border-gray-700">
-          <h2 className="text-2xl font-bold">Comments</h2>
-          <button
-            onClick={() => {
-              setIsOpen(false);
-              setTimeout(close, 500);
-            }}
-            className="text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-400 transition-colors duration-300"
+    <BottomSheet show={isOpen} heading="Comments" onClose={close}>
+      <div className="comments sheetcontent dark:bg-black bg-fuchsia-50  p-5 mb-20 w-full h-full overflow-y-auto">
+        {commentList.length === 0 && !commentsloading && (
+          <div className="text-center text-gray-500 dark:text-gray-400">
+            No comments yet
+          </div>
+        )}
+        {commentList.map((comment) => (
+          <motion.div
+            key={comment.id}
+            className="comment transition transform-gpu bg-fuchsia-100 dark:bg-black rounded-xl my-3 p-3 md:mx-5"
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
           >
-            Close
+            <div className="flex z-20 items-center">
+              {usermetadata[comment.uid] ? (
+                <Link
+                  href={`/feed/profile/${usermetadata[comment.uid].userName}`}
+                >
+                  <div className="flex items-center">
+                    <div className="profile-pic-container flex justify-center items-center">
+                      <Image
+                        className="profile-pic rounded-full h-5 w-5 object-cover"
+                        src={usermetadata[comment.uid].pfp}
+                        width={50}
+                        height={50}
+                        alt="Commenter Profile Pic"
+                      />
+                    </div>
+                    <div className="text-xs w-24 opacity-80 ml-2 dark:text-gray-300">
+                      {usermetadata[comment.uid].userName}
+                    </div>
+                  </div>
+                </Link>
+              ) : (
+                <>
+                  <div className="flex flex-col items-center justify-center h-full">
+                    <div className="lds-ring">
+                      <div></div>
+                      <div></div>
+                      <div></div>
+                      <div></div>
+                    </div>
+                    <p className="text-gray-700 dark:text-gray-300 mt-4">
+                      Loading...
+                    </p>
+                  </div>
+                </>
+              )}
+              <div className="time text-xs opacity-60 ml-auto dark:text-gray-400">
+                {comment.timestamp}
+              </div>
+              <div
+                className="likes ml-3 flex items-center cursor-pointer"
+                onClick={() => handleCommentLike(comment.id)}
+              >
+                {commentlikes[comment.id] ? (
+                  <TiHeartFullOutline className="text-red-500" />
+                ) : (
+                  <FaRegHeart className="dark:text-gray-300" />
+                )}
+              </div>
+              <div className="text-xs ml-1 dark:text-gray-300">
+                {comment.likecount}
+              </div>
+            </div>
+            <div className="comment-content md:text-base mt-2 dark:text-gray-300">
+              {comment.content}
+            </div>
+            <div className="replies mt-3 md:ml-5">
+              <button
+                className="reply-btn text-xs opacity-60 dark:opacity-80 transition hover:opacity-80 dark:hover:opacity-90"
+                onClick={() =>
+                  setCommentreply((prevState) => ({
+                    ...prevState,
+                    [comment.id]: !prevState[comment.id],
+                  }))
+                }
+              >
+                Reply
+              </button>
+              {commentreply[comment.id] && (
+                <div className="reply-form flex flex-col mt-2">
+                  <textarea
+                    className="border rounded-lg p-2 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
+                    ref={replyref}
+                    rows="2"
+                    placeholder="Write your reply..."
+                  />
+                  <button
+                    className="self-end mt-1 bg-blue-500 text-white py-1 px-2 rounded-lg text-xs transition hover:bg-blue-600"
+                    onClick={() => handleReplySubmit(comment)}
+                  >
+                    Post Reply
+                  </button>
+                </div>
+              )}
+              {comment.replies.length > 0 && (
+                <button
+                  className="text-xs text-fuchsia-400 mt-2 ml-5 transition hover:underline"
+                  onClick={() => {
+                    if (!replies[comment.id]) getReplies(comment);
+                    else
+                      setReplies((prevReplies) => ({
+                        ...prevReplies,
+                        [comment.id]: null,
+                      }));
+                  }}
+                >
+                  {replies[comment.id] ? "Hide" : "View"} Replies
+                </button>
+              )}
+              {replies[comment.id] &&
+                replies[comment.id].map((reply, index) => (
+                  <motion.div
+                    key={index}
+                    className="reply-content bg-fuchsia-200 dark:bg-gray-800 rounded-lg p-3 mt-2 ml-5 md:text-sm"
+                    initial={{ opacity: 0, y: 50 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <div className="flex justify-between items-center">
+                      {usermetadata[reply.uid] && (
+                        <Link
+                          href={`/feed/profile/${
+                            usermetadata[reply.uid].userName
+                          }`}
+                        >
+                          <div className="flex items-center">
+                            <div className="profile-pic-container h-6 w-6 md:h-8 md:w-8 flex justify-center items-center">
+                              <Image
+                                className="profile-pic rounded-full h-full w-full object-cover"
+                                src={usermetadata[reply.uid].pfp}
+                                width={50}
+                                height={50}
+                                alt="Reply Profile Pic"
+                              />
+                            </div>
+                            <span className="text-blue-500 text-xs  ml-2 dark:text-blue-300">
+                              {usermetadata[reply.uid].userName}
+                            </span>
+                          </div>
+                        </Link>
+                      )}
+                      <span className="text-gray-500 text-xs  dark:text-gray-400">
+                        {reply.timestamp}
+                      </span>
+                    </div>
+                    <div className="dark:text-gray-300 text">
+                      {reply.content}
+                    </div>
+                  </motion.div>
+                ))}
+            </div>
+          </motion.div>
+        ))}
+        {commentsloading && (
+          <div className="text-center text-gray-500 dark:text-gray-400">
+            Loading...
+          </div>
+        )}
+      </div>
+      <div className="sticky bottom-0  w-full bg-white dark:bg-black py-4 px-6 shadow-lg">
+        <div className="flex items-center">
+          <input
+            className="w-full dark:bg-feedheader rounded-full p-2 text-sm border border-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all duration-300"
+            // value={comment}
+            // onChange={(e) => {
+            //   setComment(e.target.value);
+            //   e.preventDefault();
+            // }}
+            ref={inputref}
+            placeholder="Write a comment..."
+          />
+          <button
+            className="ml-4 disabled:bg-purple-300 bg-purple-500 text-white py-2 px-4 rounded-full text-sm transition hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-400"
+            onClick={handleCommentSubmit}
+          >
+            Comment
           </button>
         </div>
-        <div className="comments rounded-xl pt-5 mb-20 w-full h-full overflow-y-auto">
-          {commentList.length === 0 && (
-            <div className="text-center text-gray-500 dark:text-gray-400">
-              No comments yet
-            </div>
-          )}
-          {commentList.map((comment) => (
-            <motion.div
-              key={comment.id}
-              className="comment transition transform-gpu bg-gray-50 dark:bg-gray-800 rounded-xl my-3 p-5 mx-2 md:mx-5"
-              initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <div className="flex z-20 items-center">
-                {usermetadata[comment.uid] ? (
-                  <Link
-                    href={`/feed/profile/${usermetadata[comment.uid].userName}`}
-                  >
-                    <div className="flex items-center">
-                      <div className="profile-pic-container h-10 w-10 md:h-12 md:w-12 flex justify-center items-center">
-                        <Image
-                          className="profile-pic rounded-full h-full w-full object-cover"
-                          src={usermetadata[comment.uid].pfp}
-                          width={50}
-                          height={50}
-                          alt="Commenter Profile Pic"
-                        />
-                      </div>
-                      <div className="text-xs w-24 opacity-80 ml-2 dark:text-gray-300">
-                        {usermetadata[comment.uid].userName}
-                      </div>
-                    </div>
-                  </Link>
-                ) : (
-                  <>Loading..</>
-                )}
-                <div className="time text-xs opacity-60 ml-auto dark:text-gray-400">
-                  {comment.timestamp}
-                </div>
-                <div
-                  className="likes ml-3 flex items-center cursor-pointer"
-                  onClick={() => handleCommentLike(comment.id)}
-                >
-                  {commentlikes[comment.id] ? (
-                    <TiHeartFullOutline className="text-red-500" />
-                  ) : (
-                    <FaRegHeart className="dark:text-gray-300" />
-                  )}
-                </div>
-                <div className="text-xs ml-1 dark:text-gray-300">
-                  {comment.likecount}
-                </div>
-              </div>
-              <div className="comment-content text-xs md:text-base mt-2 dark:text-gray-300">
-                {comment.content}
-              </div>
-              <div className="replies mt-3 md:ml-5">
-                <button
-                  className="reply-btn text-xs opacity-60 dark:opacity-80 transition hover:opacity-80 dark:hover:opacity-90"
-                  onClick={() =>
-                    setCommentreply((prevState) => ({
-                      ...prevState,
-                      [comment.id]: !prevState[comment.id],
-                    }))
-                  }
-                >
-                  Reply
-                </button>
-                {commentreply[comment.id] && (
-                  <div className="reply-form flex flex-col mt-2">
-                    <textarea
-                      className="border rounded-lg p-2 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
-                      value={reply}
-                      onChange={(e) => setReply(e.target.value)}
-                      rows="2"
-                      placeholder="Write your reply..."
-                    />
-                    <button
-                      className="self-end mt-1 bg-blue-500 text-white py-1 px-2 rounded-lg text-xs transition hover:bg-blue-600"
-                      onClick={() => handleReplySubmit(comment)}
-                    >
-                      Post Reply
-                    </button>
-                  </div>
-                )}
-                {comment.replies.length > 0 && (
-                  <button
-                    className="text-xs text-blue-500 mt-2 ml-5 transition hover:underline"
-                    onClick={() => {
-                      if (!replies[comment.id]) getReplies(comment);
-                      else
-                        setReplies((prevReplies) => ({
-                          ...prevReplies,
-                          [comment.id]: null,
-                        }));
-                    }}
-                  >
-                    {replies[comment.id] ? "Hide" : "View"} Replies
-                  </button>
-                )}
-                {replies[comment.id] &&
-                  replies[comment.id].map((reply, index) => (
-                    <motion.div
-                      key={index}
-                      className="reply-content bg-gray-100 dark:bg-gray-800 rounded-lg p-2 mt-2 ml-5 text-xs md:text-sm"
-                      initial={{ opacity: 0, y: 50 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5 }}
-                    >
-                      <div className="flex justify-between items-center">
-                        {usermetadata[reply.uid] && (
-                          <Link
-                            href={`/feed/profile/${
-                              usermetadata[reply.uid].userName
-                            }`}
-                          >
-                            <div className="flex items-center">
-                              <div className="profile-pic-container h-6 w-6 md:h-8 md:w-8 flex justify-center items-center">
-                                <Image
-                                  className="profile-pic rounded-full h-full w-full object-cover"
-                                  src={usermetadata[reply.uid].pfp}
-                                  width={50}
-                                  height={50}
-                                  alt="Reply Profile Pic"
-                                />
-                              </div>
-                              <span className="text-blue-500 ml-2 dark:text-blue-300">
-                                {usermetadata[reply.uid].userName}
-                              </span>
-                            </div>
-                          </Link>
-                        )}
-                        <span className="text-gray-500 dark:text-gray-400">
-                          {reply.timestamp}
-                        </span>
-                      </div>
-                      <div className="dark:text-gray-300">{reply.content}</div>
-                    </motion.div>
-                  ))}
-              </div>
-            </motion.div>
-          ))}
-          {commentsloading && (
-            <div className="text-center text-gray-500 dark:text-gray-400">
-              Loading...
-            </div>
-          )}
-        </div>
-        <div className="sticky bottom-0  w-full bg-white py-2 px-4 border-t border-gray-200 dark:bg-gray-900 dark:border-gray-700">
-          <div className="flex items-center">
-            <textarea
-              className="border rounded-lg w-full p-2 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              rows="2"
-              placeholder="Write a comment..."
-            />
-            <button
-              className="ml-2 bg-blue-500 text-white py-1 px-2 rounded-lg text-sm transition hover:bg-blue-600"
-              onClick={handleCommentSubmit}
-            >
-              Comment
-            </button>
-          </div>
-        </div>
-      </motion.div>
-    </div>
+      </div>
+    </BottomSheet>
   );
 };
 

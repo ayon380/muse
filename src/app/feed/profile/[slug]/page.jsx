@@ -319,6 +319,16 @@ const Page = ({ params }) => {
     }
     setSavedPosts(temp);
   };
+  const checkbothfollow = () => {
+    if (
+      userdata &&
+      currentuserdata &&
+      userdata.followers.includes(currentuserdata.uid) &&
+      currentuserdata.following.includes(userdata.uid)
+    ) {
+      return true;
+    } else return false;
+  };
   return (
     <div className="md:ml-5 w-full h-full">
       <Toaster />
@@ -461,6 +471,23 @@ const Page = ({ params }) => {
                               </button>
                             </>
                           )}
+                        {currentuserdata &&
+                          userdata &&
+                          currentuserdata.userName !== userdata.userName &&
+                          checkbothfollow() && (
+                            <>
+                              <button
+                                className="py-2 px-4 my-2 ml-2 rounded-full bg-fuchsia-300 text-black font-semibold transition-colors duration-300 hover:bg-fuchsia-600"
+                                onClick={() => {
+                                  router.push(
+                                    `/feed/chat/${userdata.userName}`
+                                  );
+                                }}
+                              >
+                                Message
+                              </button>
+                            </>
+                          )}{" "}
                       </div>
                     </div>
                   </div>
@@ -574,7 +601,6 @@ const Page = ({ params }) => {
                   <div className="postsxs w-full pb-40 ">
                     {pagestate === 0 && (
                       <>
-                      
                         {posts.length === 0 ? (
                           <div className="text-2xl m-4 flex justify-center items-center w-full h-full">
                             No Posts Yet

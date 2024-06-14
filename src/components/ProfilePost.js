@@ -252,7 +252,7 @@ const FeedPost = ({
   return (
     <>
       <motion.div
-        className="z-10 justify-center bg-white m-2 rounded-3xl w-full py-2 lg:px-64 md:px-24   dark:bg-black"
+        className="z-10 justify-center bg-white  rounded-3xl w-full py-2 lg:px-64 md:px-24   dark:bg-black"
         key={postdata.id}
         initial="hidden"
         animate="visible"
@@ -392,7 +392,7 @@ const FeedPost = ({
                   <div
                     className="share cursor-pointer "
                     onClick={() => {
-                      setSharepostdata(postdata);
+                      // setSharepostdata(postdata);
                       setSharemenu(true);
                     }}
                   >
@@ -407,8 +407,8 @@ const FeedPost = ({
                   <div
                     className="tagged h-7 w-7 flex mr-2"
                     onClick={() => {
-                      setCommentpostdata(postdata);
-                      setTaggedusermenu(true);
+                      // setCommentpostdata(postdata);
+                      setTaggeduseropen(true);
                     }}
                   >
                     <Image
@@ -457,7 +457,7 @@ const FeedPost = ({
                   className="om flex"
                   onClick={() => {
                     setShowComments(true);
-                    setCommentpostdata(postdata);
+                    // setCommentpostdata(postdata);
                   }}
                 >
                   <button>
@@ -473,7 +473,7 @@ const FeedPost = ({
                     {postdata ? postdata.commentcount : 0} comments
                   </div>
                 </div>
-                {currentuserdata && currentuserdata.uid === userdata.uid && (
+                {post.uid == currentuserdata.uid && (
                   <div className="flex">
                     <Image
                       className="dark:invert h-7 w-7"

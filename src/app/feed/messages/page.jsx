@@ -1089,7 +1089,7 @@ const Home = () => {
               />
             )}
             {showaddfiles && (
-              <div className="absolute right-0 w-full bottom-4 z-40 mb-12 lg:mb-20 lg:mr-10 bg-opacity-85 bg-white rounded-xl p-4">
+              <div className="absolute right-0 w-full bottom-4 z-40 mb-14 lg:mb-20 lg:mr-10  bg-white text-black dark:bg-feedheader dark:text-white rounded-t-3xl p-4">
                 <div className="mb-4">
                   <label className="block text font-bold mb-2">
                     Upload Photos or Videos (up to 10)
@@ -1142,7 +1142,7 @@ const Home = () => {
                 </div>
                 <div className="mt-4">
                   <button
-                    className="btn ml-3 py-3 px-4 disabled:text-gray-400 disabled:cursor-not-allowed "
+                    className="rounded-2xl bg-fuchsia-400 ml-3 py-3 px-4 disabled:text-gray-400 disabled:cursor-not-allowed "
                     disabled={mediaFiles.length == 0}
                     onClick={handlesubmitfiles}
                   >
