@@ -153,7 +153,7 @@ const Home = () => {
   const [showEmoji, setshowemoji] = React.useState(false);
   const fileTypes = ["JPG", "PNG"];
   const [deleting, setdeleting] = React.useState(false);
-  const { initialLoad, toggleload, toggle } = useSidebarStore();
+  const { initialLoad, toggleload, toggle, unread } = useSidebarStore();
   const [fileDataURL, setFileDataURL] = React.useState(null);
   const [ismobile, setismobile] = React.useState(false);
   useEffect(() => {
@@ -303,15 +303,14 @@ const Home = () => {
     }
   };
   return (
-    <div  className={`${ismobile ? "" : "ml-5"} w-full dark:bg-black`}>
+    <div className={`${ismobile ? "" : "ml-5"} w-full dark:bg-black`}>
       <Toaster />
       <div className="flex w-full rounded-b-3xl shadow-xl shadow-fuchsia-100 dark:bg-feedheader dark:shadow-none bg-white p-3 justify-between">
         <h1 class="bg-gradient-to-r from-purple-500 via-fuchsia-400 to-pink-400 text-4xl inline-block text-transparent bg-clip-text">
           Settings
         </h1>
         <div className="flex justify-end ">
-          
-          <button onClick={toggle}>
+          <button onClick={toggle} className="px-3">
             <Image
               className="h-7 w-7  "
               src="/icons/sidebar.png"
@@ -319,6 +318,9 @@ const Home = () => {
               alt="Sidebar"
               height={50}
             />
+            <span className="absolute top-3 right-5 bg-red-500 text-white rounded-full px-1 text-xs">
+              {unread}
+            </span>
           </button>
         </div>
       </div>

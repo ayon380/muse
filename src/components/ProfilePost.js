@@ -22,32 +22,6 @@ import {
   increment,
 } from "firebase/firestore";
 
-function formatFirebaseTimestamp(timestamp) {
-  timestamp = String(timestamp);
-  const secondsMatch = timestamp.match(/seconds=(\d+)/);
-  const nanosecondsMatch = timestamp.match(/nanoseconds=(\d+)/);
-  const seconds = parseInt(secondsMatch[1]);
-  const nanoseconds = parseInt(nanosecondsMatch[1]);
-
-  // Convert the seconds and nanoseconds to milliseconds
-  const milliseconds = seconds * 1000 + nanoseconds / 1000000;
-
-  // Create a new Date object using the milliseconds
-  const date = new Date(milliseconds);
-
-  // Format the date into a readable string for social media posts
-  const options = {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "numeric",
-  };
-  const readableDate = date.toLocaleString("en-US", options);
-
-  return readableDate;
-}
-
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 const Modal = dynamic(() => import("./Modal"));
@@ -97,6 +71,39 @@ const FeedPost = ({
 
     // Return true if either condition is met
     return hasVideoExtension || hasVideoQueryParameter;
+  }
+
+  function formatFirebaseTimestamp(timestamp) {
+    console.log(type);
+    let seconds = 0,
+      nanoseconds = 0;
+    if (type == "explore") {
+      console.log(JSON.stringify(timestamp) + "timestamp");
+      const { _seconds: seconds, _nanoseconds: nanoseconds } = timestamp;
+    } else {
+      timestamp = String(timestamp);
+      const secondsMatch = timestamp.match(/seconds=(\d+)/);
+      const nanosecondsMatch = timestamp.match(/nanoseconds=(\d+)/);
+      seconds = parseInt(secondsMatch[1]);
+      nanoseconds = parseInt(nanosecondsMatch[1]);
+    }
+    // Convert the seconds and nanoseconds to milliseconds
+    const milliseconds = seconds * 1000 + nanoseconds / 1000000;
+
+    // Create a new Date object using the milliseconds
+    const date = new Date(milliseconds);
+
+    // Format the date into a readable string for social media posts
+    const options = {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+    };
+    const readableDate = date.toLocaleString("en-US", options);
+
+    return readableDate;
   }
 
   const checkIfLiked = async () => {

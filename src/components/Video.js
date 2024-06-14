@@ -254,6 +254,25 @@ const Reel = ({
       console.log("viewed");
       if (userdata) {
         const postRef = doc(db, "reels", reeldata.id);
+        const hashtags = reeldata.hashtags;
+
+        hashtags.forEach(async (hashtag) => {
+          const hashtagRef = doc(db, "hashtags", hashtag);
+          const hashtagDoc = await getDoc(hashtagRef);
+
+          if (hashtagDoc.exists()) {
+            // Hashtag document exists, increment the count
+            await updateDoc(hashtagRef, {
+              count: increment(1),
+            });
+          } else {
+            // Hashtag document doesn't exist, create it with count set to 1
+            await setDoc(hashtagRef, {
+              count: 1,
+              tag: hashtag.toLowerCase(),
+            });
+          }
+        });
         await updateDoc(postRef, {
           views: arrayUnion(userdata.uid),
           viewcount: increment(1),

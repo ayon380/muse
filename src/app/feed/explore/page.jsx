@@ -12,6 +12,9 @@ import { onAuthStateChanged } from "firebase/auth";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
 const MainLoading = dynamic(() => import("../../../components/MainLoading"));
 const ProfilePost = dynamic(() => import("../../../components/ProfilePost"));
+const SearchExplore = dynamic(() =>
+  import("../../../components/SearchExplore")
+);
 const PostCommentProfile = dynamic(
   () => import("@/components/PostCommentProfile"),
   {
@@ -31,12 +34,14 @@ const Explore = () => {
   const [postid, setPostId] = useState(-1);
   const [posts, setPosts] = useState([]);
   const [reels, setReels] = useState([]);
-  const { initialLoad, toggle,toggleload } = useSidebarStore();
+  const { initialLoad, toggle, toggleload } = useSidebarStore();
   const [loading, setloading] = useState(true);
   const [feed, setfeed] = useState([]);
-  const { usermetadata, enqueueUserMetadata } = useSidebarStore();
+  const [expllorepagestate, setexpllorepagestate] = useState("");
+  const { usermetadata, enqueueUserMetadata, unread } = useSidebarStore();
   const [showComments, setShowComments] = React.useState(false);
   const [sharemenuopen, setSharemenuopen] = React.useState(false);
+  const [searchopen, setSearchopen] = React.useState(false);
   const [taggeduseropen, setTaggeduseropen] = React.useState(false);
   const db = getFirestore(app);
   const getuserdata = async (currentUser) => {
@@ -100,7 +105,12 @@ const Explore = () => {
     };
     fetchexplore();
   }, [user]);
-
+  // const
+  useEffect(() => {
+    if (expllorepagestate) {
+      console.log(expllorepagestate + "Current  hashtags");
+    }
+  }, [expllorepagestate]);
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
@@ -124,9 +134,14 @@ const Explore = () => {
       toggleload();
     }
   }, [loading]);
+  const onclose = () => {
+    setPostId(-1);
+    // setShowPost(false);
+  };
   return (
     <div className=" md:ml-5 w-full h-full">
       {loading && initialLoad && <MainLoading />}
+      {/* {expllorepagestate} */}
       {loading && !initialLoad && (
         <>
           <div className="main2 md:rounded-2xl bg-white dark:bg-black md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 border-black h-full overflow-y-auto">
@@ -151,7 +166,17 @@ const Explore = () => {
           </div>
         </>
       )}
-
+      {searchopen && (
+        <SearchExplore
+          userdata={userdata}
+          db={db}
+          uid={userdata.uid}
+          usermetadata={usermetadata}
+          enqueueUserMetadata={enqueueUserMetadata}
+          close={() => setSearchopen(false)}
+          setexpllorepagestate={setexpllorepagestate}
+        />
+      )}
       {userdata && !loading && (
         <div>
           {showComments && (
@@ -217,16 +242,37 @@ const Explore = () => {
           )}
           <div className="main2 md:rounded-2xl dark:bg-black bg-white md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 border-black md:p-10 overflow-y-auto">
             <div className="flex justify-between pt-3 px-2 pb-4 bg-white rounded-b-3xl dark:bg-feedheader shadow-xl  dark:shadow-none  sticky top-0 z-20 ">
-            <h1 class="bg-gradient-to-r from-purple-500 via-fuchsia-400 to-pink-400 text-4xl inline-block text-transparent bg-clip-text">Explore</h1>
-              <button onClick={toggle}>
-                <Image
-                  src="/icons/sidebar.png"
-                  height={50}
-                  width={50}
-                  className="  w-7 h-7 mr-4"
-                  alt="Sidebar"
-                />
-              </button>
+              <h1 class="bg-gradient-to-r from-purple-500 via-fuchsia-400 to-pink-400 text-4xl inline-block text-transparent bg-clip-text">
+                Explore
+              </h1>
+              <div className="s mt-2">
+                <button
+                  onClick={() => {
+                    setSearchopen((prev) => !prev);
+                  }}
+                >
+                  <Image
+                    src="/icons/search.png"
+                    height={50}
+                    width={50}
+                    className="  w-7 h-7 mr-4"
+                    alt="Search"
+                  />
+                </button>
+
+                <button onClick={toggle}>
+                  <Image
+                    src="/icons/sidebar.png"
+                    height={50}
+                    width={50}
+                    className="  w-7 h-7 mr-4"
+                    alt="Sidebar"
+                  />
+                  <span className="absolute top-3 right-5 bg-red-500 text-white rounded-full px-1 text-xs">
+                    {unread}
+                  </span>
+                </button>
+              </div>
             </div>
             <ResponsiveMasonry columnsCountBreakPoints={{ 350: 3 }}>
               <Masonry>
@@ -236,6 +282,8 @@ const Explore = () => {
                       <Image
                         onClick={() => {
                           setPostId(post.id);
+                          // console.log(post.hashtags+"Hashtags");
+                          setexpllorepagestate(post.hashtags);
                         }}
                         src={post.mediaFiles[0]}
                         alt=""

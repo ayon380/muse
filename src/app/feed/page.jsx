@@ -20,7 +20,7 @@ import {
   orderBy,
 } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
-import {updateThemeColor} from "@/externalfn/updateThemeColour";
+import { updateThemeColor } from "@/externalfn/updateThemeColour";
 import Image from "next/image";
 import { getFirestore, getDoc, doc } from "firebase/firestore";
 import { useSidebarStore } from "../store/zustand";
@@ -53,6 +53,7 @@ const Home = () => {
     initialLoad,
     toggleload,
     usermetadata,
+    unread,
     enqueueUserMetadata,
   } = useSidebarStore();
   async function gettoken() {
@@ -251,6 +252,9 @@ const Home = () => {
                   className="  w-7 h-7 mr-4"
                   alt="Sidebar"
                 />
+                <span className="absolute top-3 right-5 bg-red-500 text-white rounded-full px-1 text-xs">
+                  {unread}
+                </span>
               </button>
             </div>
             {postloading && (

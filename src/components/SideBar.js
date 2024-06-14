@@ -48,8 +48,14 @@ const SideBar = ({ usage, data, currentuserdata }) => {
   const [notifications, setnotificationOpen] = useState([]);
   const [follow, setFollow] = React.useState(false);
   const db = getFirestore(app);
-  const { isOpen, toggle, usermetadata, enqueueUserMetadata } =
-    useSidebarStore();
+  const {
+    isOpen,
+    toggle,
+    usermetadata,
+    enqueueUserMetadata,
+    unread,
+    setunread,
+  } = useSidebarStore();
   const [ismobile, setismobile] = useState(false);
   useEffect(() => {
     if (window.innerWidth <= 768) {
@@ -60,7 +66,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
       setismobile(false);
     }
   }, []);
-  
+
   const checkfollow = () => {
     if (userdata && data && userdata.followers.includes(profileData.uid)) {
       console.log("checkfollow running..." + true);
@@ -241,6 +247,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
     const sortedNotifications = [...notifications].sort(
       (a, b) => b.timestamp - a.timestamp
     );
+    setunread(sortedNotifications.length);
   }, [notifications]);
   const handledismissnotification = async (notification) => {
     try {
@@ -383,14 +390,17 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                     width={50}
                   />
                 </button>
-                <button onClick={toggle}>
+                <button onClick={toggle} className="relative">
                   <Image
                     src="/icons/sidebar.png"
                     height={50}
                     width={50}
-                    className=" w-7 h-7"
+                    className="w-7 h-7"
                     alt="Sidebar"
                   />
+                  <span className="absolute top-0 right-0 bg-red-500 text-white rounded-full px-1 text-xs">
+                    {unread}
+                  </span>
                 </button>
               </div>
             </div>

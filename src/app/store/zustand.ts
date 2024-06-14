@@ -8,11 +8,13 @@ type SidebarStore = {
   chatopen: boolean;
   initialLoad: boolean;
   postdataupdate: string;
+  unread: number;
   usermetadata: Record<string, any>;
   setpostdataupdate: (data: string) => void;
   setUserMetadata: (data: Record<string, any>) => void;
   toggleload: () => void;
   setchatopen: () => void;
+  setunread: (data: number) => void;
   toggle: () => void;
   enqueueUserMetadata: (uid: string) => Promise<void>;
 };
@@ -44,7 +46,7 @@ export const useSidebarStore = create<SidebarStore>(
 
     const updateMetadata = async () => {
       console.log("Updating metadata");
-      
+
       const userIds = Object.keys(usermetadata);
       for (const uid of userIds) {
         await enqueueUserMetadata(uid);
@@ -57,13 +59,15 @@ export const useSidebarStore = create<SidebarStore>(
     return {
       isOpen: false,
       chatopen: false,
+      unread: 0,
       initialLoad: true,
-      postdataupdate:"",
+      postdataupdate: "",
       usermetadata,
+      setunread: (data) => set((state) => ({ unread: data })),
       setpostdataupdate: (data) => set((state) => ({ postdataupdate: data })),
       setUserMetadata: (data) =>
         set((state) => ({ usermetadata: { ...state.usermetadata, ...data } })),
-      toggleload: ()=>set((state) => ({ initialLoad: (state.initialLoad = false) })),
+      toggleload: () => set((state) => ({ initialLoad: (state.initialLoad = false) })),
       setchatopen: () => set((state) => ({ chatopen: !state.chatopen })),
       toggle: () => set((state) => ({ isOpen: !state.isOpen })),
       enqueueUserMetadata,

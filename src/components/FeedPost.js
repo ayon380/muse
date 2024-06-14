@@ -78,10 +78,8 @@ const FeedPost = ({
   setSharepostdata,
   userdata,
   usermetadata,
-  onclose,
   setTaggedusermenu,
   currentuserdata,
-  showComments,
   setShowComments,
   setCommentpostdata,
   enqueueUserMetadata,
@@ -208,6 +206,24 @@ const FeedPost = ({
           score: increment(1),
         });
         sendNotification(postdata);
+        const hashtags = postdata.hashtags;
+        hashtags.forEach(async (hashtag) => {
+          const hashtagRef = doc(db, "hashtags", hashtag);
+          const hashtagDoc = await getDoc(hashtagRef);
+
+          if (hashtagDoc.exists()) {
+            // Hashtag document exists, increment the count
+            await updateDoc(hashtagRef, {
+              count: increment(1),
+            });
+          } else {
+            // Hashtag document doesn't exist, create it with count set to 1
+            await setDoc(hashtagRef, {
+              count: 1,
+              tag : hashtag.toLowerCase()
+            });
+          }
+        });
       } else {
         await updateDoc(postRef, {
           likes: arrayRemove(userdata.uid),

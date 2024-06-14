@@ -95,6 +95,7 @@ const Home = () => {
     initialLoad,
     toggleload,
     usermetadata,
+    unread,
     enqueueUserMetadata,
   } = useSidebarStore();
   //function to get data of messagerooms'
@@ -1197,6 +1198,9 @@ const Home = () => {
                         alt="Sidebar"
                         height={50}
                       />
+                      <span className="absolute top-4 right-2 bg-red-500 text-white rounded-full px-1 text-xs">
+                        {unread}
+                      </span>
                     </button>
                   </div>
                 </div>
