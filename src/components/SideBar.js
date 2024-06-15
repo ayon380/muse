@@ -368,14 +368,15 @@ const SideBar = ({ usage, data, currentuserdata }) => {
         />
       )}
       <div
-        className={`lp w-screen  h-dvh lg:h-full   lg:w-1/3 z-50 ${
+        className={`lp w-screen  h-dvh lg:h-full lg:mr-5   lg:w-1/3 z-50 ${
           ismobile && "absolute"
         } ${isOpen ? "slide-in-right " : "slide-out-right "} ${
           !isAnimationComplete && !isOpen && "hidden"
         }`}
         onAnimationEnd={handleAnimationEnd}
       >
-        <div className="bg-white pt-5 h-dvh z-50 pb-24 oveflow-hidden dark:bg-black rounded-xl md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-40 shadow-2xl border-1 border-black lpo">
+        <div className="bg-white pt-5 h-full z-50 pb-24 oveflow-hidden  dark:bg-black rounded-xl 
+        shadow-2xl border-1 border-black lpo">
           <div className="md:hidden">
             <div className="flex justify-between mt-5 mx-2">
               <div className="bg-gradient-to-r from-purple-500 via-fuchsia-400 to-pink-400 text-4xl inline-block text-transparent bg-clip-text font-lucy">
@@ -424,9 +425,6 @@ const SideBar = ({ usage, data, currentuserdata }) => {
           )}
           {userdata && (
             <div className="main1 h-full  flex flex-col justify-between items-center">
-              <div className="hidden md:flex text-4xl my-2 lg:text-6xl font-lucy text-center lg:mt-6 lg:mb-8">
-                Muse
-              </div>
               {!ismobile ? (
                 <>
                   <div className="flex justify-center">
@@ -614,7 +612,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                         )}
                       </div>
                     </div>
-                    <div className="flex flex-col bg-slate-100 dark:bg-feedheader p-2 rounded-3xl mt-10 h-4/5 scroll-smooth  overflow-y-auto">
+                    <div className="flex flex-col bg-slate-100 dark:bg-feedheader p-2 rounded-3xl mt-10 h-4/5 md:h-3/5 scroll-smooth  overflow-y-auto">
                       {notifications.length == 0 && (
                         <div className="text-center mt-10">
                           No Notifications
@@ -623,7 +621,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                       {notifications.map((notification) => (
                         <div
                           key={notification.id}
-                          className="cursor-pointer  bg-white dark:bg-black shadow-xl shadow-fuchsia-200 justify-between rounded-3xl bg-transparent p-5 my-2"
+                          className="cursor-pointer  bg-white dark:bg-black shadow-xl dark:shadow shadow-fuchsia-200 justify-between rounded-3xl bg-transparent p-5 my-2"
                         >
                           {usermetadata[notification.sender] && (
                             <div className="d flex w-full">
@@ -832,7 +830,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                   </div>
                 </div>
               )}
-              <div className="s fixed bottom-0 opacity-75">
+              <div className="s fixed bottom-0 opacity-75 md:opacity-95">
                 <div className="okedoesd flex w-full justify-evenly  text-sm">
                   <div
                     className=" font-bold text-center cursor-pointer "

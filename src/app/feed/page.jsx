@@ -186,7 +186,7 @@ const Home = () => {
     }
   }, [postloading]);
   return (
-    <div className=" lg:ml-5 w-full h-full">
+    <div className=" w-full h-full">
       {sharemenu && (
         <ShareMenu
           userdata={userdata}
@@ -237,7 +237,7 @@ const Home = () => {
       {postloading && initialLoad && <MainLoading />}
       {postloading && !initialLoad && (
         <>
-          <div className="main2 md:rounded-2xl bg-white dark:bg-black md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 border-black h-full overflow-y-auto">
+          <div className="main2 md:rounded-2xl bg-white dark:bg-black shadow-2xl border-1 border-black h-full overflow-y-auto">
             <div className="flex justify-center items-center h-full">
               <div className="edwdw ">
                 {" "}
@@ -260,7 +260,7 @@ const Home = () => {
       )}
       {userdata && !postloading && (
         <div>
-          <div className="main2 md:rounded-2xl bg-white dark:bg-black md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 border-black h-full overflow-y-auto">
+          <div className="main2 md:rounded-2xl bg-white dark:bg-black shadow-2xl border-1 border-black h-full overflow-y-auto">
             <div className="flex justify-between pt-3 px-2 pb-3 bg-white rounded-b-3xl dark:bg-feedheader shadow-xl shadow-fuchsia-200 dark:shadow-none  sticky top-0 z-20 ">
               <h1 class="bg-gradient-to-r from-purple-500 via-fuchsia-400 to-pink-400 text-4xl font-lucy inline-block text-transparent bg-clip-text">
                 Muse
@@ -302,8 +302,8 @@ const Home = () => {
               </div>
             )}
             <div className="pol font-rethink ">
-              <div className="feed w-full h-full overflow-y-auto">
-                <div className="buf h-5 bg-white dark:bg-black"></div>
+              <div className="feed  h-full overflow-y-auto">
+                <div className="buf h-5  bg-white dark:bg-black"></div>
                 {posts && posts.length > 0 ? (
                   posts.map((post) => (
                     <FeedPost

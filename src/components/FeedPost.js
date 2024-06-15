@@ -296,7 +296,7 @@ const FeedPost = ({
   return (
     <>
       <motion.div
-        className="z-10 justify-center bg-white relative w-full py-2 lg:px-64 md:px-24 max-h-3/5 dark:bg-black"
+        className="z-10 justify-center bg-white relative w-full py-2 lg:px-96 md:px-24  dark:bg-black"
         key={postdata.id}
         initial="hidden"
         animate="visible"

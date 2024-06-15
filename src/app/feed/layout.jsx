@@ -104,7 +104,7 @@ const Layout = ({ children }) => {
   }, [enqueueUserMetadata]);
 
   return (
-    <div className="h-dvh w-screen flex items-center font-rethink relative text-black">
+    <div className="h-dvh overflow-hidden w-screen flex items-center font-rethink relative text-black">
       <div className="main tndmain w-screen bg-transparent dark:bg-transparent dark:text-white rounded-2xl lg:mx-4 align-middle max-w-none">
         <div className="flex h-full">
           <SideBar usage={"feed"} />

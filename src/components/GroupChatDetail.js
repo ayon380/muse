@@ -30,6 +30,7 @@ const GroupChatDetail = ({ onClose, roomdata, usernames, db }) => {
   const [editMode, setEditMode] = useState(false);
   const [newTitle, setNewTitle] = useState(roomdata.title);
   const [newInfo, setNewInfo] = useState(roomdata.info);
+  const initialParticipants = roomdata.participants;
   const [newParticipants, setNewParticipants] = useState(roomdata.participants);
   const [newPfp, setNewPfp] = useState(null);
   const [newPfpPreview, setNewPfpPreview] = useState(roomdata.pfp);
@@ -181,7 +182,7 @@ const GroupChatDetail = ({ onClose, roomdata, usernames, db }) => {
       onClose();
       setEditMode(false);
     } catch (e) {
-      toast.error("Error Updating Chat" + e.message);
+      toast.error("Error Updating Chat " + e.message);
     }
   };
 
@@ -209,23 +210,25 @@ const GroupChatDetail = ({ onClose, roomdata, usernames, db }) => {
       <div>
         {editMode ? (
           <div className="p-8">
-            <div className="kl">Edit Title</div>
+            <div className="kl text-xl py-2">Edit Title</div>
             <input
               type="text"
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
               placeholder="Edit Title"
-              className="w-full p-2 mb-2 rounded border border-gray-300"
+              className="w-full p-2 mb-2 rounded-3xl dark:bg-feedheader border border-gray-300"
             />
-            <div className="kl">Edit Info</div>
+            <div className="kl text-xl py-2">Edit Info</div>
             <textarea
               value={newInfo}
               onChange={(e) => setNewInfo(e.target.value)}
               placeholder="Edit Info"
-              className="w-full p-2 mb-2 rounded border border-gray-300"
+              className="w-full p-2 mb-2 rounded-3xl border dark:bg-feedheader border-gray-300"
             />
-            <div className="mb-4 block max-h-24 overflow-y-auto">
-              <p className="text-gray-600 mb-2">Participants:</p>
+            <p className="text-gray-600 dark:text-white mb-2 text-xl py-2">
+              Participants:
+            </p>
+            <div className="mb-4 block max-h-24 dark:text-white overflow-y-auto">
               {newParticipants.map((participant) => (
                 <motion.div
                   key={participant}
@@ -234,9 +237,7 @@ const GroupChatDetail = ({ onClose, roomdata, usernames, db }) => {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <span className="text-gray-800">
-                    {usernames[participant].userName}
-                  </span>
+                  <span className="">{usernames[participant].userName}</span>
                   <motion.button
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
@@ -252,7 +253,7 @@ const GroupChatDetail = ({ onClose, roomdata, usernames, db }) => {
               type="text"
               value={searchtext}
               onChange={(e) => setSearchtext(e.target.value)}
-              className="border border-gray-300 text-gray-800 rounded-lg p-2 w-full my-2"
+              className="border border-gray-300 text-gray-800 rounded-3xl p-2 w-full my-2"
               placeholder="Search Participants"
             />
             {searchResults.length > 0 && searchtext.length > 0 && (
@@ -269,7 +270,7 @@ const GroupChatDetail = ({ onClose, roomdata, usernames, db }) => {
                       whileTap={{ scale: 0.9 }}
                       onClick={() => handleAddParticipant(user)}
                       key={user.uid}
-                      className="cursor-pointer p-2 rounded-lg transition-colors duration-300"
+                      className="cursor-pointer p-2 rounded-lg dark:bg-feedheader transition-colors duration-300"
                     >
                       <li>{user.userName}</li>
                     </motion.div>
@@ -367,6 +368,7 @@ const GroupChatDetail = ({ onClose, roomdata, usernames, db }) => {
                     height={20}
                     width={20}
                     alt="Edit"
+                    className="dark:invert"
                   />
                 </motion.button>
                 <motion.button

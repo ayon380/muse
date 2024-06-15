@@ -596,7 +596,10 @@ const Home = () => {
     // Scroll to the bottom of the chat window when messages update
     if (loadingold) console.log("loading older" + loadingold);
     if (messages.length != 0 && !loadingold) {
-      messagesEndRef.current?.scrollIntoView();
+      messagesEndRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
       // rm--;
       // console.log(rm);
     }
@@ -1013,7 +1016,7 @@ const Home = () => {
     setmediaviewerfiles([]);
   };
   return (
-    <div className="lg:ml-5 w-full h-full overflow-hidden">
+    <div className=" w-full h-full overflow-hidden">
       <Toaster />
       {mainloading && initialLoad && <MainLoading />}
       {mediaViewerOpen && mediaviewerfiles && (
@@ -1025,7 +1028,7 @@ const Home = () => {
       )}
       {mainloading && !initialLoad && (
         <>
-          <div className="main2 md:rounded-2xl bg-white dark:bg-black md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 border-black h-full overflow-y-auto">
+          <div className="main2 md:rounded-2xl bg-white dark:bg-black shadow-2xl border-1 border-black h-full overflow-y-auto">
             <div className="flex justify-center items-center h-full">
               <div className="edwdw ">
                 {" "}
@@ -1047,7 +1050,7 @@ const Home = () => {
         </>
       )}
       {userdata && !mainloading && (
-        <div className="main2 w-full lg:rounded-2xl  dark:bg-black md:dark:bg-gray-900 bg-white md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 border-black h-full">
+        <div className="main2 w-full lg:rounded-2xl  dark:bg-black md:dark:bg-feedheader bg-white shadow-2xl border-1 border-black h-full">
           <div className="flex justify-between w-full h-full">
             {gifopen && (
               <div className="absolute right-0 bottom-4 z-40 mb-12 lg:mb-20 mr-1 lg:mr-10">
@@ -1162,7 +1165,7 @@ const Home = () => {
             )}
             {!checkchat("Q") && (
               <div
-                className="followingusers bg-white dark:bg-black w-full lg:w-1/3 md:m-6 overflow-y-auto"
+                className="followingusers bg-white dark:bg-black w-full lg:w-1/3 rounded-tl-xl rounded-bl-xl overflow-y-auto"
                 key={roomid}
               >
                 <div className="flex w-full rounded-b-3xl shadow-xl shadow-fuchsia-100 dark:bg-feedheader dark:shadow-none bg-white p-3 justify-between">
@@ -1360,12 +1363,12 @@ const Home = () => {
                   : roomdata.theme == "heaven"
                   ? "bg-[url('/chatbg/heaven.jpeg')]"
                   : "bg-fuchsia-100"
-              } dark:bg-black md:dark:bg-gray-700  bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-10 shadow-2xl border-none  md:rounded-2xl h-full relative`}
+              } dark:bg-black md:dark:bg-feedheader bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-10 shadow-2xl border-none  md:rounded-2xl h-full relative`}
               >
                 {roomid != "" && (
                   <>
                     <div className="overflow-y-auto h-full pb-20  pt-10 w-full">
-                      <div className="fixed top-0 left-0 right-0 rounded-b-3xl z-50 bg-white dark:bg-feedheader shadow-lg transition-all duration-300 ease-in-out">
+                      <div className="fixed top-0 left-0 right-0 rounded-b-3xl z-50 bg-white dark:bg-feedheader lg:rounded-2xl shadow-lg transition-all duration-300 ease-in-out">
                         <div className="container mx-auto px-4 py-3">
                           <div className="flex items-center justify-between">
                             <button
@@ -1913,7 +1916,7 @@ const Home = () => {
                       ))}
 
                       <div ref={messagesEndRef} />
-                      <div className="fixed bottom-0 left-0 right-0 rounded-t-3xl bg-white dark:bg-feedheader shadow-lg p-4 transition-all duration-300 ease-in-out">
+                      <div className="fixed bottom-0 left-0 right-0 rounded-t-3xl lg:rounded-br-xl bg-white dark:bg-feedheader shadow-lg p-4 transition-all duration-300 ease-in-out">
                         <div className="container mx-auto">
                           <div className="flex items-center space-x-2">
                             <div className="flex-grow">

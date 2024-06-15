@@ -43,6 +43,7 @@ export async function POST(req) {
     const q = await db
       .collection("reels")
       .orderBy("viewcount", "desc")
+      .orderBy("timestamp", "desc")
       .limit(limit)
       .get();
     let postarray = [];

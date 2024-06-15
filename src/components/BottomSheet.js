@@ -33,6 +33,12 @@ const Sheet = styled(animated.div)`
   z-index: 1001;
   flex-direction: column;
   cursor: grab;
+  @media (min-width: 640px) {
+    width: 100%;
+    max-width: 640px;
+    margin: 0 auto;
+    border: 2px solid ${({ isDark }) => (isDark ? "#374151" : "#e0e0e0")};
+  }
 `;
 
 const Pill = styled.div`
@@ -49,7 +55,7 @@ const SheetHeader = styled.div`
   padding-top: 16px;
   padding-left: 16px;
   padding-right: 16px;
-  
+
   border-bottom: 1px solid ${({ isDark }) => (isDark ? "#374151" : "#e0e0e0")};
   display: flex;
   justify-content: space-between;

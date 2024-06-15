@@ -368,7 +368,7 @@ const Reel = ({
                       <Image
                         src="/icons/notliked.png"
                         alt="Not Liked"
-                        className="h-7 w-7"
+                        className="h-7 dark:invert w-7"
                         height={50}
                         width={50}
                       />
@@ -400,7 +400,13 @@ const Reel = ({
                 <Image src="/fullscreen.svg" alt="" height={50} width={50} />
               </button> */}
               <button className="share-button mr-2" onClick={Shareposttt}>
-                <FaShare />
+                <Image
+                  src="/icons/feedsend.png"
+                  alt="Share"
+                  className="invert h-7 w-7 mr-4"
+                  height={50}
+                  width={50}
+                />
               </button>
               <button className="report-button" onClick={Reportposttt}>
                 <MdOutlineReportGmailerrorred />
@@ -410,7 +416,7 @@ const Reel = ({
           <div className="caption opacity-75">{reeldata.caption}</div>
 
           <button
-            className="show-comments-button"
+            className="show-comments-button opacity-50"
             onClick={() => {
               setShowComments(true);
               setselectedReelid(reeldata.id);
