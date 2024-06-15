@@ -399,7 +399,7 @@ const FeedPost = ({
                         <Image
                           src="/icons/notliked.png"
                           alt="Not Liked"
-                          className="h-7 w-7"
+                          className="h-7 w-7 dark:invert"
                           height={50}
                           width={50}
                         />

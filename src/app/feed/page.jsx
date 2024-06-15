@@ -7,7 +7,12 @@ import {
   onAuthStateChanged,
   signOut,
 } from "firebase/auth";
-
+const CreatePost = dynamic(() => import("@/components/Createpost"), {
+  ssr: false,
+});
+const CreateReel = dynamic(() => import("@/components/CreateReel"), {
+  ssr: false,
+});
 import { useRouter } from "next/navigation";
 import "../styles/gradients.css";
 import "../styles/feed.css";
@@ -35,6 +40,7 @@ const Home = () => {
   const auth = getAuth(app);
   const [user, setUser] = useState(auth.currentUser);
   const [createpostmenu, setcreatepostmenu] = useState(false);
+  const [createreelopen, setcreatereelopen] = useState(false);
   const router = useRouter();
   const [userdata, setUserData] = useState(null);
   const db = getFirestore(app);
@@ -199,7 +205,22 @@ const Home = () => {
           close={() => setTaggedusermenu(false)}
         />
       )}
-
+      {createpostmenu && (
+        <CreatePost
+          onClose={() => setcreatepostmenu(!createpostmenu)}
+          userdata={userdata}
+          usermetadata={usermetadata}
+          enqueueUserMetadata={enqueueUserMetadata}
+        />
+      )}
+      {createreelopen && (
+        <CreateReel
+          onClose={() => setcreatereelopen(!createreelopen)}
+          userdata={userdata}
+          usermetadata={usermetadata}
+          enqueueUserMetadata={enqueueUserMetadata}
+        />
+      )}
       {showComments && (
         <div className="">
           <PostComment
@@ -244,18 +265,36 @@ const Home = () => {
               <h1 class="bg-gradient-to-r from-purple-500 via-fuchsia-400 to-pink-400 text-4xl font-lucy inline-block text-transparent bg-clip-text">
                 Muse
               </h1>
-              <button onClick={toggle}>
+              <div className="sd flex ">
                 <Image
-                  src="/icons/sidebar.png"
-                  height={50}
-                  width={50}
-                  className="  w-7 h-7 mr-4"
-                  alt="Sidebar"
+                  src="/icons/plus.png"
+                  height={100}
+                  width={100}
+                  className="  w-8 h-8 mt-1 mr-4"
+                  alt="Create Post"
+                  onClick={handleCreatePost}
                 />
-                <span className="absolute top-3 right-5 bg-red-500 text-white rounded-full px-1 text-xs">
-                  {unread}
-                </span>
-              </button>
+                <Image
+                  src="/icons/reel.png"
+                  height={100}
+                  width={100}
+                  className="  w-7 h-7 mt-1.5 mr-4"
+                  alt="Create Post"
+                  onClick={() => setcreatereelopen(!createreelopen)}
+                />
+                <button onClick={toggle}>
+                  <Image
+                    src="/icons/sidebar.png"
+                    height={50}
+                    width={50}
+                    className="  w-7 h-7 mr-4"
+                    alt="Sidebar"
+                  />
+                  <span className="absolute top-3 right-5 bg-red-500 text-white rounded-full px-1 text-xs">
+                    {unread}
+                  </span>
+                </button>
+              </div>
             </div>
             {postloading && (
               <div className="flex justify-center ">

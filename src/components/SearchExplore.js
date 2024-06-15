@@ -16,6 +16,7 @@ const FeedPost = dynamic(() => import("./FeedPost"), { ssr: false });
 const SearchExplore = ({
   db,
   userdata,
+  setFromexplorescreen,
   usermetadata,
   enqueueUserMetadata,
   setexpllorepagestate,
@@ -252,18 +253,19 @@ const SearchExplore = ({
                         key={result.id}
                         className="flex justify-between items-center p-4 border-b"
                         onClick={() => {
-                          setexpllorepagestate(result.id);
+                          setexpllorepagestate([result.id]);
+                          setFromexplorescreen(true);
                         }}
                       >
                         <div>{result.id}</div>
                         <button
                           onClick={() => {
                             close();
-                            enqueueUserMetadata(usermetadata, result);
+                            // enqueueUserMetadata();
                           }}
                           className="bg-blue-500 text-white px-4 py-2 rounded-full"
                         >
-                          Add
+                          Go
                         </button>
                       </div>
                     ))}
@@ -279,14 +281,8 @@ const SearchExplore = ({
                         }}
                       >
                         <div>{result.userName}</div>
-                        <button
-                          onClick={() => {
-                            close();
-                            enqueueUserMetadata(usermetadata, result);
-                          }}
-                          className="bg-blue-500 text-white px-4 py-2 rounded-full"
-                        >
-                          Go
+                        <button className="bg-blue-500 text-white px-4 py-2 rounded-full">
+                          Profile
                         </button>
                       </div>
                     ))}
@@ -319,7 +315,8 @@ const SearchExplore = ({
                       key={result.id}
                       className="flex  justify-between items-center p-2 "
                       onClick={() => {
-                        setexpllorepagestate(result.id);
+                        setexpllorepagestate([result.id]);
+                        setFromexplorescreen(true);
                       }}
                     >
                       <div>{result.id}</div>
@@ -330,7 +327,15 @@ const SearchExplore = ({
                         }}
                         className="bg-fuchsia-500 text-black px-4 py-2 rounded-full"
                       >
-                        Go
+                        Posts
+                      </button>
+                      <button
+                        onClick={() => {
+                          router.push(`/feed/reels?hashtag=${result.id}`);
+                        }}
+                        className="bg-fuchsia-500 text-black px-4 py-2 rounded-full"
+                      >
+                        Reels
                       </button>
                     </div>
                   ))}

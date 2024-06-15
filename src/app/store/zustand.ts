@@ -26,22 +26,28 @@ export const useSidebarStore = create<SidebarStore>(
     const usermetadata: Record<string, any> = {};
 
     const enqueueUserMetadata = async (uid: string) => {
-      return new Promise<void>((resolve) => {
-        if (!usermetadata[uid]) {
-          console.log("Fetching user metadata");
-          const userRef = doc(db, "username", uid);
-          getDoc(userRef).then((docSnap) => {
-            if (docSnap.exists()) {
-              set((state) => ({
-                usermetadata: { ...state.usermetadata, [uid]: docSnap.data() },
-              }));
-              resolve();
-            }
-          });
-        } else {
-          resolve();
-        }
-      });
+      try {
+        return new Promise<void>((resolve) => {
+          if (!usermetadata[uid]) {
+            console.log("Fetching user metadata");
+            if (typeof uid !== "string") return;
+            const userRef = doc(db, "username", uid);
+            getDoc(userRef).then((docSnap) => {
+              if (docSnap.exists()) {
+                set((state) => ({
+                  usermetadata: { ...state.usermetadata, [uid]: docSnap.data() },
+                }));
+                resolve();
+              }
+            });
+          } else {
+            resolve();
+          }
+        });
+      }
+      catch (e) {
+        console.error(e);
+      }
     };
 
     const updateMetadata = async () => {

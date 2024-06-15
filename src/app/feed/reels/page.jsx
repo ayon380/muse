@@ -28,7 +28,9 @@ const Reels = () => {
   const [showComments, setShowComments] = useState(false);
   const [selectedreelid, setselectedReelid] = useState(null);
   const id = SearchParams.get("reelid") || null;
+  const hash = SearchParams.get("hashtag") || null;
   const [reelid, setReelid] = useState(id);
+  const [hashtags, setHashtags] = useState(hash);
   // State to hold the next page cursor
   const [nextPageCursor, setNextPageCursor] = useState(0);
   const [reelsloading, setReelsloading] = useState(true);

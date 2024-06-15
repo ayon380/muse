@@ -52,6 +52,7 @@ const Explore = () => {
   const { usermetadata, enqueueUserMetadata, unread } = useSidebarStore();
   const [showComments, setShowComments] = React.useState(false);
   const [sharemenuopen, setSharemenuopen] = React.useState(false);
+  const [fromexplorescreen, setFromexplorescreen] = React.useState(false);
   const [searchopen, setSearchopen] = React.useState(false);
   const [taggeduseropen, setTaggeduseropen] = React.useState(false);
   const db = getFirestore(app);
@@ -183,6 +184,7 @@ const Explore = () => {
         );
         const querySnapshot = await getDocs(q);
         querySnapshot.forEach((doc) => {
+          // enqueueUserMetadata(doc.data().uid);
           postsMap.set(doc.id, doc.data());
         });
       });
@@ -195,7 +197,8 @@ const Explore = () => {
 
   useEffect(() => {
     if (hashposts) {
-      console.log(hashposts + " Hashposts");
+      // setPostId(hashposts[0]?.id);
+      console.log(JSON.stringify(hashposts) + " Hashposts");
     }
   }, [hashposts]);
 
@@ -238,6 +241,7 @@ const Explore = () => {
           usermetadata={usermetadata}
           enqueueUserMetadata={enqueueUserMetadata}
           close={() => setSearchopen(false)}
+          setFromexplorescreen={setFromexplorescreen}
           setexpllorepagestate={setexpllorepagestate}
         />
       )}
@@ -274,6 +278,51 @@ const Explore = () => {
               enwueueUserMetadata={enqueueUserMetadata}
               close={() => setTaggeduseropen(false)}
             />
+          )}
+          {fromexplorescreen && (
+            <>
+              <div
+                className="lop h-screen w-screen fixed top-0   z-10 bg-white dark:bg-black overflow-y-auto"
+                onClick={(e) => {
+                  if (e.target.classList.contains("lop")) {
+                    onclose();
+                  }
+                }}
+              >
+                <div>
+                  <div className="dd mt-32">
+                    <button onClick={() => setFromexplorescreen(false)}>
+                      Back
+                    </button>
+                  </div>
+
+                  {hashposts.length > 0 &&
+                    hashposts.map((post, index) => (
+                      <div className="mb-10" key={index}>
+                        {post.id !== postid && (
+                          <ProfilePost
+                            db={db}
+                            userdata={userdata}
+                            post={post}
+                            onclose={() => {
+                              setPostId(-1);
+                              // setShowPost(false);
+                            }}
+                            type="explore"
+                            setShowComments={setShowComments}
+                            usermetadata={usermetadata}
+                            setSharemenu={setSharemenuopen}
+                            enqueueUserMetadata={enqueueUserMetadata}
+                            currentuserdata={userdata}
+                            setTaggeduseropen={setTaggeduseropen}
+                          />
+                        )}
+                      </div>
+                    ))}
+                  <div className="h-32 "></div>
+                </div>
+              </div>
+            </>
           )}
           {postid !== -1 && posts[0] && (
             <div

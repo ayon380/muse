@@ -20,7 +20,7 @@ import {
 } from "firebase/firestore";
 import app from "@/lib/firebase/firebaseConfig";
 import toast, { Toaster } from "react-hot-toast";
-
+import BottomSheet from "./BottomSheet";
 function extractHashtags(caption) {
   const hashtags = caption.match(/#\w+/g) || [];
   const cleanedHashtags = hashtags.map((tag) => tag.substring(1).toLowerCase());
@@ -33,7 +33,7 @@ const CreatePost = ({ onClose, userdata }) => {
   const [thumbnail, setThumbnail] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
   const db = getFirestore(app);
   const storage = getStorage(app);
   const auth = getAuth();
@@ -210,14 +210,9 @@ const CreatePost = ({ onClose, userdata }) => {
   }, [thumbnail]);
 
   return (
-    <div
-      className={`fixed w-full inset-0 z-10 overflow-y-auto flex items-center justify-center rounded-xl bg-gray-900 bg-opacity-50 backdrop-blur-lg ${
-        isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-      }`}
-    >
-      <Toaster />
-      <div className="bg-white shadow-xl shadow-orange-300 dark:bg-black w-full text-black dark:text-white bg-opacity-70 backdrop-blur-lg rounded-lg p-8 transition-transform duration-300 mx-6">
-        <h1 className="text-2xl font-bold mb-4">Create a Reel</h1>
+    <BottomSheet show={isOpen} onClose={handleClose} heading="Create Reel">
+      <div className="bg-white dark:bg-black p-5">
+       
         <div className="mb-4">
           <label className="block text font-bold mb-2">Caption</label>
           <textarea
@@ -283,15 +278,15 @@ const CreatePost = ({ onClose, userdata }) => {
             Cancel
           </button>
           <button
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold disabled:opacity-50 py-2 px-4 rounded focus:outline-none focus:shadow-outline"
             onClick={handleSubmit}
-            disabled={submitting}
+            disabled={submitting || !mediaFile || !caption}
           >
             {submitting ? "Posting..." : "Post"}
           </button>
         </div>
       </div>
-    </div>
+    </BottomSheet>
   );
 };
 export default CreatePost;

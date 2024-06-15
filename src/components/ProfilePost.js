@@ -356,7 +356,7 @@ const FeedPost = ({
                         <Image
                           src="/icons/notliked.png"
                           alt="Not Liked"
-                          className="h-7 w-7"
+                          className="h-7 w-7 dark:invert"
                           height={50}
                           width={50}
                         />
@@ -473,7 +473,7 @@ const FeedPost = ({
                     {postdata ? postdata.commentcount : 0} comments
                   </div>
                 </div>
-                {post.uid == currentuserdata.uid && (
+                {post?.uid == currentuserdata.uid && (
                   <div className="flex">
                     <Image
                       className="dark:invert h-7 w-7"

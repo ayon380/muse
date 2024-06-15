@@ -130,6 +130,7 @@ const GroupChat = ({ userdata, onClose }) => {
       setLoading(false);
     } catch (error) {
       toast.error("Error creating group chat");
+
       console.error("Error creating group chat:", error.message);
     }
   };
@@ -156,7 +157,6 @@ const GroupChat = ({ userdata, onClose }) => {
   return (
     <BottomSheet show={true} heading="Create Group Chat" onClose={onClose}>
       <div className="bg-white dark:bg-black rounded-lg shadow-md p-6">
-     
         <div className="mb-4">
           <label
             htmlFor="chatName"
@@ -261,8 +261,8 @@ const GroupChat = ({ userdata, onClose }) => {
               loading
                 ? "bg-purple-600 hover:bg-purple-700 cursor-not-allowed"
                 : "bg-purple-600 hover:bg-purple-700"
-            } text-white px-4 py-2 rounded-md transition-colors duration-200 mr-2`}
-            disabled={loading}
+            } text-white px-4 py-2 rounded-md transition-colors duration-200 mr-2 disabled:opacity-50`}
+            disabled={loading || participants.length <= 2 || !groupPicture}
           >
             {loading ? "Creating..." : "Create"}
           </button>

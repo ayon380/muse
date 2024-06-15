@@ -193,6 +193,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
   };
   const handlemessagerouting = (notification) => {
     handledismissnotification(notification);
+    toggle();
     if (notification.chattype == "g") {
       router.push(
         `/feed/messages?roomid=${notification.roomid}&chattype=g&chatwindow=${notification.title}`
@@ -480,19 +481,19 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                   <div className="text-2xl  font-bold">
                     {userdata.followers.length}
                   </div>
-                  <div className="text-sm mr-6">Followers</div>
+                  <div className="text-sm mr-6 opacity-70">Followers</div>
                 </div>
                 <div className="following text-center w-16">
                   <div className="text-2xl font-bold">
                     {userdata.following.length}
                   </div>
-                  <div className="text-sm">Following</div>
+                  <div className="text-sm opacity-70">Following</div>
                 </div>
                 <div className="ml-6 posts">
                   <div className="text-2xl font-bold w-16">
                     {userdata.posts.length}
                   </div>
-                  <div className="text-sm -ml-2">Posts</div>
+                  <div className="text-sm -ml-2 opacity-70">Posts</div>
                 </div>
               </div>
               {userdata &&
@@ -583,7 +584,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                       </div>
                     </div>
                   </div>
-                  <div className="notif p-4  scroll-smooth  overflow-y-auto ">
+                  <div className="notif p-2 h-4/5  scroll-smooth  ">
                     <div
                       className="heading sticky top-0 
                   "
@@ -613,7 +614,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                         )}
                       </div>
                     </div>
-                    <div className="flex flex-col mt-10 h-96  lg:h-96 overflow-y-auto">
+                    <div className="flex flex-col bg-slate-100 dark:bg-feedheader p-2 rounded-3xl mt-10 h-4/5 scroll-smooth  overflow-y-auto">
                       {notifications.length == 0 && (
                         <div className="text-center mt-10">
                           No Notifications
@@ -622,7 +623,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                       {notifications.map((notification) => (
                         <div
                           key={notification.id}
-                          className="cursor-pointer backdrop-filter backdrop-blur-2xl bg-opacity-50 dark:bg-neutral-900 shadow-lg justify-between rounded-xl bg-transparent p-5 my-2"
+                          className="cursor-pointer  bg-white dark:bg-black shadow-xl shadow-fuchsia-200 justify-between rounded-3xl bg-transparent p-5 my-2"
                         >
                           {usermetadata[notification.sender] && (
                             <div className="d flex w-full">
@@ -831,29 +832,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                   </div>
                 </div>
               )}
-              <div className="s fixed bottom-0">
-                {(currentuserdata || usage == "feed") && (
-                  <div className="flex w-full  ">
-                    {usage == "feed" && (
-                      <button
-                        className="create btn px-6 py-2 font-rethink mb-4 mr-5"
-                        onClick={() => setcreatereelOpen(true)}
-                        disabled={createreelopen}
-                      >
-                        Create a Reel
-                      </button>
-                    )}
-                    {usage == "feed" && (
-                      <button
-                        className="create btn px-6 py-2 font-rethink mb-4 "
-                        onClick={() => setcreatepostOpen(true)}
-                        disabled={createpostopen}
-                      >
-                        Create a Post
-                      </button>
-                    )}
-                  </div>
-                )}
+              <div className="s fixed bottom-0 opacity-75">
                 <div className="okedoesd flex w-full justify-evenly  text-sm">
                   <div
                     className=" font-bold text-center cursor-pointer "

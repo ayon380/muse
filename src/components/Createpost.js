@@ -21,6 +21,7 @@ import {
 import app from "@/lib/firebase/firebaseConfig";
 import toast, { Toaster } from "react-hot-toast";
 import React from "react";
+import BottomSheet from "./BottomSheet";
 function extractHashtags(caption) {
   const hashtags = caption.match(/#\w+/g) || [];
   const cleanedHashtags = hashtags.map((tag) => tag.substring(1).toLowerCase());
@@ -32,6 +33,7 @@ const options = {
   useWebWorker: true,
 };
 const CreatePost = ({ onClose, userdata }) => {
+  console.log("loading create post");
   const [caption, setCaption] = useState("");
   const [mediaFiles, setMediaFiles] = useState([]);
   const [searchtext, setSearchtext] = useState("");
@@ -40,7 +42,7 @@ const CreatePost = ({ onClose, userdata }) => {
   const [submitting, setSubmitting] = useState(false);
   const [usernames, setUsernames] = useState([]);
   const [taggedUsers, setTaggedUsers] = useState([]); // [user1, user2, user3
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
   const db = getFirestore(app);
   const storage = getStorage(app);
   const auth = getAuth();
@@ -219,15 +221,9 @@ const CreatePost = ({ onClose, userdata }) => {
   }, [searchtext]);
 
   return (
-    <div
-      className={`fixed w-full inset-0 z-10 overflow-y-auto flex items-center justify-center rounded-xl bg-gray-900 bg-opacity-50 backdrop-blur-lg ${
-        isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-      }`}
-    >
-      <Toaster />
-      <div className="bg-white shadow-xl shadow-orange-300 dark:bg-black w-full text-black dark:text-white bg-opacity-70 backdrop-blur-lg  rounded-lg p-8 transition-transform duration-300 mx-6">
-        <h1 className="text-2xl font-bold mb-4">Create a Post</h1>
-        <div className="mb-4">
+    <BottomSheet show={true} onClose={handleClose} heading="Create Post">
+      <div className="p-5 bg-white dark:bg-black">
+        <div className="mb-4  ">
           <label className="block text font-bold mb-2">Caption</label>
           <textarea
             className="resize-none text border active:border-2 active:border-cyan-100 rounded w-full py-2 px-3 bg-transparent text-opacity-75"
@@ -336,16 +332,18 @@ const CreatePost = ({ onClose, userdata }) => {
             Cancel
           </button>
           <button
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 disabled:opacity-50 rounded focus:outline-none focus:shadow-outline"
             onClick={handleSubmit}
-            disabled={mediaFiles.length === 0 || submitting|| caption.length === 0}
-            // disabled={submitting}
+            disabled={
+              mediaFiles.length === 0 || submitting || caption.length === 0
+            }
+            
           >
             {submitting ? "Posting..." : "Post"}
           </button>
         </div>
       </div>
-    </div>
+    </BottomSheet>
   );
 };
 

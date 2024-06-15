@@ -202,67 +202,68 @@ const Home = () => {
     console.log(pfps);
   }, [pfps]);
   const getchats = async () => {
-    try {
-      if (!userdata) return;
+    // try {
+    if (!userdata) return;
 
-      const charef = doc(db, "chats", userdata.uid);
-      const chasnap = await getDoc(charef);
+    const charef = doc(db, "chats", userdata.uid);
+    const chasnap = await getDoc(charef);
 
-      if (chasnap.exists()) {
-        // console.log("Document data:", chasnap.data());
+    if (chasnap.exists()) {
+      // console.log("Document data:", chasnap.data());
 
-        // Fetch message data for all rooms
-        const roomDataPromises = chasnap.data().rooms.map(async (roomId) => {
-          const roomData = await getroomdata(roomId);
-          if (roomData.type == "p") {
-            enqueueUserMetadata(
-              roomData.participants[0] == userdata.uid
-                ? roomData.participants[1]
-                : roomData.participants[0]
-            );
-          } else {
-            roomData.participants.map(async (participant) => {
-              enqueueUserMetadata(participant);
-            });
-            getgpfp(roomId);
-          }
-          const lastMessageId =
-            roomData.messages.length > 0
-              ? roomData.messages[roomData.messages.length - 1]
-              : null;
+      // Fetch message data for all rooms
+      const roomDataPromises = chasnap.data().rooms.map(async (roomId) => {
+        const roomData = await getroomdata(roomId);
+        // console.log(roomData);
+        if (roomData.type == "p") {
+          enqueueUserMetadata(
+            roomData.participants[0] == userdata.uid
+              ? roomData.participants[1]
+              : roomData.participants[0]
+          );
+        } else {
+          roomData.participants.map(async (participant) => {
+            enqueueUserMetadata(participant);
+          });
+          getgpfp(roomId);
+        }
+        const lastMessageId =
+          roomData.messages.length > 0
+            ? roomData.messages[roomData.messages.length - 1]
+            : null;
+        console.log(lastMessageId);
+        if (lastMessageId) {
           const lastmessage = await getDoc(doc(db, "messages", lastMessageId));
           if (lastmessage.exists()) {
             roomData.lastMessage = lastmessage.data();
           }
+        }
+        if (lastMessageId) {
+          const messageData = await getDoc(doc(db, "messages", lastMessageId));
+          roomData.lastMessageTimestamp = messageData.data().timestamp;
+        } else {
+          roomData.lastMessageTimestamp = 0; // Set a default timestamp for rooms without messages
+        }
+        return roomData;
+      });
 
-          if (lastMessageId) {
-            const messageData = await getDoc(
-              doc(db, "messages", lastMessageId)
-            );
-            roomData.lastMessageTimestamp = messageData.data().timestamp;
-          } else {
-            roomData.lastMessageTimestamp = 0; // Set a default timestamp for rooms without messages
-          }
-          return roomData;
-        });
+      // Wait for all message data to be fetched
+      const chatroomsWithTimestamp = await Promise.all(roomDataPromises);
 
-        // Wait for all message data to be fetched
-        const chatroomsWithTimestamp = await Promise.all(roomDataPromises);
+      // Sort the chatrooms array based on the timestamp of the last message in each room
+      chatroomsWithTimestamp.sort(
+        (a, b) => b.lastMessageTimestamp - a.lastMessageTimestamp
+      );
+      console.log(chatroomsWithTimestamp);
 
-        // Sort the chatrooms array based on the timestamp of the last message in each room
-        chatroomsWithTimestamp.sort(
-          (a, b) => b.lastMessageTimestamp - a.lastMessageTimestamp
-        );
-        console.log(chatroomsWithTimestamp);
-
-        // console.log("After sorting:", chatroomsWithTimestamp);
-        setChats(chatroomsWithTimestamp);
-        setmainloading(false);
-      }
-    } catch (error) {
-      console.error("Error getting chats:", error.message);
-      toast.error("Error " + error.message);
+      // console.log("After sorting:", chatroomsWithTimestamp);
+      setChats(chatroomsWithTimestamp);
+      setmainloading(false);
     }
+    // } catch (error) {
+    //   console.error("Error getting chats:", error.message);
+    //   toast.error("Error " + error.message);
+    // }
   };
   useEffect(() => {
     getchats();
@@ -1084,8 +1085,9 @@ const Home = () => {
                 setsearchopen={setsearchopen}
                 userdata={userdata}
                 chats={chats}
+                enqueueUserMetadata={enqueueUserMetadata}
                 setChatwindow={setChatwindow}
-                usernames={usermetadata}
+                usermetadata={usermetadata}
               />
             )}
             {showaddfiles && (
@@ -1305,7 +1307,7 @@ const Home = () => {
                           );
                         }}
                       >
-                        <div className="flex">
+                        <div className="flex mx-6">
                           <Image
                             className="h-10 w-10 rounded-full mr-2"
                             src={pfps[chat.roomid]}
@@ -1313,8 +1315,30 @@ const Home = () => {
                             width={50}
                             alt=""
                           />
-                          <div className="title font-bold text-xl">
-                            {chat.title}
+                          <div className="d">
+                            <div className="title font-bold text-xl">
+                              {chat.title}
+                            </div>
+                            <div className="sd">
+                              <div className="ds font-light opacity-75 text-sm">
+                                <div className="flex">
+                                  <Image
+                                    alt=""
+                                    src={
+                                      usermetadata[chat.lastMessage.sender].pfp
+                                    }
+                                    height={20}
+                                    width={20}
+                                    className="rounded-full mr-1"
+                                  />
+                                  {chat.lastMessage.type === "text"
+                                    ? chat.lastMessage.text.substr(0, 40)
+                                    : chat.lastMessage.type === "media"
+                                    ? "Media"
+                                    : "Gif"}
+                                </div>
+                              </div>
+                            </div>
                           </div>
                         </div>
                         {/* {chat.participants.map(
@@ -1545,11 +1569,26 @@ const Home = () => {
                                               ) {
                                                 // If it's a Muse post, create a link
                                                 return (
-                                                  <ShortMusePost
-                                                    message={message}
-                                                    key={index}
-                                                  />
-                                                  // <>{message.text}</>
+                                                  <a
+                                                    href={message.text}
+                                                    key={message.text}
+                                                  >
+                                                    <div className="flex items-center justify-center px-4 py-2 rounded-md bg-gradient-to-r from-purple-500 to-pink-600 text-white font-semibold hover:from-purple-600 hover:to-pink-700 transition duration-300">
+                                                      <span>See Post</span>
+                                                      <svg
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                        className="h-5 w-5 ml-2"
+                                                        viewBox="0 0 20 20"
+                                                        fill="currentColor"
+                                                      >
+                                                        <path
+                                                          fillRule="evenodd"
+                                                          d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+                                                          clipRule="evenodd"
+                                                        />
+                                                      </svg>
+                                                    </div>
+                                                  </a>
                                                 );
                                               } else if (
                                                 part.startsWith("http")
@@ -1669,145 +1708,203 @@ const Home = () => {
                           ) : (
                             <>
                               <div className="ko  flex right-0 my-5">
-                                <div className="e bg-purple-300 dark:bg-purple-500 p-2 lg:p-5 shadow-xl rounded-2xl  md:rounded-3xl rounded-tl-none">
-                                  <div className="flex">
-                                    {/* {console.log(pfps[message.sender])} */}
-                                    {usermetadata[message.sender] && (
-                                      <Image
-                                        src={usermetadata[message.sender].pfp}
-                                        className="rounded-full h-5 w-5 mr-1"
-                                        alt="Profile Pic"
-                                        height={50}
-                                        width={50}
-                                      />
-                                    )}
+                                <div
+                                  className="e bg-purple-300 dark:bg-purple-500 p-2 lg:p-5 shadow-xl rounded-2xl  md:rounded-3xl rounded-tl-none"
+                                  onClick={() => handledropdown(message)}
+                                >
+                                  <div className="lp">
+                                    <div className="flex">
+                                      {/* {console.log(pfps[message.sender])} */}
+                                      {usermetadata[message.sender] && (
+                                        <Image
+                                          src={usermetadata[message.sender].pfp}
+                                          className="rounded-full h-5 w-5 mr-1"
+                                          alt="Profile Pic"
+                                          height={50}
+                                          width={50}
+                                        />
+                                      )}
 
-                                    <div className="time text-xs ml-1  opacity-50">
-                                      {convertToChatTime(message.timestamp)}
+                                      <div className="time text-xs ml-1  opacity-50">
+                                        {convertToChatTime(message.timestamp)}
+                                      </div>
                                     </div>
-                                  </div>
-                                  {message.type == "gif" && (
-                                    <>
-                                      {" "}
-                                      <Image
-                                        className=" rounded-xl text-center"
-                                        src={message.text}
-                                        alt=""
-                                        height={100}
-                                        width={100}
-                                      />
-                                    </>
-                                  )}
-                                  {message.type == "media" && (
-                                    <div
-                                      className="flex"
-                                      onClick={() => {
-                                        setmediaviewerfiles(message.text);
-                                        setMediaViewerOpen(true);
-                                      }}
-                                    >
-                                      {message.text.map((media, index) => (
-                                        <div key={index}>
-                                          {media.startsWith(
-                                            "https://firebasestorage"
-                                          ) &&
-                                            (media.includes("mp4") ||
-                                              media.includes("mov") ||
-                                              media.includes("mkv") ||
-                                              media.includes("hevc")) && (
-                                              <video
-                                                loop
-                                                src={media}
-                                                alt=""
-                                                controls
-                                                className="rounded-xl h-36 w-36 m-2 object-cover"
-                                              />
-                                            )}
-                                          {media.startsWith(
-                                            "https://firebasestorage"
-                                          ) &&
-                                            (media.includes("jpg") ||
-                                              media.includes("heif") ||
-                                              media.includes("jpeg")) && (
-                                              <Image
-                                                src={media}
-                                                alt=""
-                                                height={100}
-                                                width={100}
-                                                className="rounded-xl h-36 w-36 m-2 object-cover"
-                                              />
-                                            )}
+                                    {message.type == "gif" && (
+                                      <>
+                                        {" "}
+                                        <Image
+                                          className=" rounded-xl text-center"
+                                          src={message.text}
+                                          alt=""
+                                          height={100}
+                                          width={100}
+                                        />
+                                      </>
+                                    )}
+                                    {message.type == "media" && (
+                                      <div
+                                        className="flex"
+                                        onClick={() => {
+                                          setmediaviewerfiles(message.text);
+                                          setMediaViewerOpen(true);
+                                        }}
+                                      >
+                                        {message.text.map((media, index) => (
+                                          <div key={index}>
+                                            {media.startsWith(
+                                              "https://firebasestorage"
+                                            ) &&
+                                              (media.includes("mp4") ||
+                                                media.includes("mov") ||
+                                                media.includes("mkv") ||
+                                                media.includes("hevc")) && (
+                                                <video
+                                                  loop
+                                                  src={media}
+                                                  alt=""
+                                                  controls
+                                                  className="rounded-xl h-36 w-36 m-2 object-cover"
+                                                />
+                                              )}
+                                            {media.startsWith(
+                                              "https://firebasestorage"
+                                            ) &&
+                                              (media.includes("jpg") ||
+                                                media.includes("heif") ||
+                                                media.includes("jpeg")) && (
+                                                <Image
+                                                  src={media}
+                                                  alt=""
+                                                  height={100}
+                                                  width={100}
+                                                  className="rounded-xl h-36 w-36 m-2 object-cover"
+                                                />
+                                              )}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                    {message.type == "text" &&
+                                      (message.text ? (
+                                        <span className="fg text-lg md:text-xl text-wrap">
+                                          {message.text
+                                            .split(/(@\S+|https?:\/\/\S+)/)
+                                            .map((part, index) => {
+                                              if (part.startsWith("@")) {
+                                                // If it's a mention, create a link
+                                                return (
+                                                  <a
+                                                    href={`/${part.slice(1)}`}
+                                                    key={index}
+                                                  >
+                                                    <strong>{part}</strong>
+                                                  </a>
+                                                );
+                                              } else if (
+                                                part.includes("muse.nofilter")
+                                              ) {
+                                                // If it's a Muse post, create a link
+                                                return (
+                                                  <a
+                                                    href={message.text}
+                                                    key={message.text}
+                                                  >
+                                                    <div className="flex items-center justify-center px-4 py-2 rounded-md bg-gradient-to-r from-purple-500 to-pink-600 text-white font-semibold hover:from-purple-600 hover:to-pink-700 transition duration-300">
+                                                      <span>See Post</span>
+                                                      <svg
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                        className="h-5 w-5 ml-2"
+                                                        viewBox="0 0 20 20"
+                                                        fill="currentColor"
+                                                      >
+                                                        <path
+                                                          fillRule="evenodd"
+                                                          d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+                                                          clipRule="evenodd"
+                                                        />
+                                                      </svg>
+                                                    </div>
+                                                  </a>
+                                                  // <>Muse Post</>
+                                                );
+                                              } else if (
+                                                part.startsWith("http")
+                                              ) {
+                                                // If it's a website link, create a link
+                                                return (
+                                                  <a href={part} key={index}>
+                                                    <strong>{part}</strong>
+                                                  </a>
+                                                );
+                                              } else {
+                                                // Otherwise, render it as plain text
+                                                return (
+                                                  <React.Fragment key={index}>
+                                                    {part}
+                                                  </React.Fragment>
+                                                );
+                                              }
+                                            })}
+                                        </span>
+                                      ) : (
+                                        <div className="fg text-xl">
+                                          {message.text}
                                         </div>
                                       ))}
-                                    </div>
-                                  )}
-                                  {message.type == "text" &&
-                                    (message.text ? (
-                                      <span className="fg text-lg md:text-xl text-wrap">
-                                        {message.text
-                                          .split(/(@\S+|https?:\/\/\S+)/)
-                                          .map((part, index) => {
-                                            if (part.startsWith("@")) {
-                                              // If it's a mention, create a link
-                                              return (
-                                                <a
-                                                  href={`/${part.slice(1)}`}
-                                                  key={index}
-                                                >
-                                                  <strong>{part}</strong>
-                                                </a>
-                                              );
-                                            } else if (
-                                              part.includes("muse.nofilter")
-                                            ) {
-                                              // If it's a Muse post, create a link
-                                              return (
-                                                <a
-                                                  href={message.text}
-                                                  key={message.text}
-                                                >
-                                                  <div className="flex items-center justify-center px-4 py-2 rounded-md bg-gradient-to-r from-purple-500 to-pink-600 text-white font-semibold hover:from-purple-600 hover:to-pink-700 transition duration-300">
-                                                    <span>See Post</span>
-                                                    <svg
-                                                      xmlns="http://www.w3.org/2000/svg"
-                                                      className="h-5 w-5 ml-2"
-                                                      viewBox="0 0 20 20"
-                                                      fill="currentColor"
-                                                    >
-                                                      <path
-                                                        fillRule="evenodd"
-                                                        d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
-                                                        clipRule="evenodd"
-                                                      />
-                                                    </svg>
-                                                  </div>
-                                                </a>
-                                                // <>Muse Post</>
-                                              );
-                                            } else if (
-                                              part.startsWith("http")
-                                            ) {
-                                              // If it's a website link, create a link
-                                              return (
-                                                <a href={part} key={index}>
-                                                  <strong>{part}</strong>
-                                                </a>
-                                              );
-                                            } else {
-                                              // Otherwise, render it as plain text
-                                              return (
-                                                <React.Fragment key={index}>
-                                                  {part}
-                                                </React.Fragment>
-                                              );
-                                            }
-                                          })}
-                                      </span>
-                                    ) : (
-                                      <div className="fg text-xl">
-                                        {message.text}
-                                      </div>
-                                    ))}
+                                  </div>
+                                  {isDropdownOpen &&
+                                    selectedMessage == message && (
+                                      <motion.div
+                                        className="dropdown-menu  mt-4 flex"
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{
+                                          opacity: isDropdownOpen ? 1 : 0,
+                                          height: isDropdownOpen ? "auto" : 0,
+                                        }}
+                                        transition={{
+                                          duration: 0.3,
+                                          ease: "easeInOut",
+                                        }}
+                                        layoutTransition={{
+                                          type: "tween",
+                                          duration: 0.3,
+                                          ease: "easeInOut",
+                                        }}
+                                      >
+                                        <button
+                                          onClick={() =>
+                                            handlemessagereply(message)
+                                          }
+                                        >
+                                          <Image
+                                            className="h-5 w-5 rounded-full"
+                                            src="/icons/reply.png"
+                                            height={50}
+                                            width={50}
+                                            alt=""
+                                          />
+                                        </button>
+
+                                        <button
+                                          className=" ml-2 dropdown-item mr-2 disabled:hidden"
+                                          onClick={() =>
+                                            handleCopy(message.text)
+                                          }
+                                          disabled={
+                                            message.type == "media" ||
+                                            message.type == "gif"
+                                          }
+                                        >
+                                          <Image
+                                            className="w-5 h-5 "
+                                            src="/icons/copy.png"
+                                            height={50}
+                                            width={50}
+                                            alt="delete"
+                                          />
+                                        </button>
+                                      </motion.div>
+                                    )}
                                 </div>
                               </div>
                             </>
