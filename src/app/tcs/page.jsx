@@ -34,16 +34,17 @@ const Home = () => {
                     <br />
                     - &quot;App&quot; refers to Muse.
                     <br />
-                    - &quot;Company&quot; refers to NoFilter LLC, the provider of the App.
+                    - &quot;Company&quot; refers to NoFilter LLC, the provider
+                    of the App.
                     <br />
-                    - &quot;User&quot; refers to any individual who accesses or uses the
-                    App.
+                    - &quot;User&quot; refers to any individual who accesses or
+                    uses the App.
                     <br />
-                    - &quot;Content&quot; refers to any data, text, images, videos, audio,
-                    or other materials posted, uploaded, or shared on the App by
-                    Users.
-                    <br />- &quot;Personal Data&quot; refers to any information that
-                    identifies or can be used to identify a User.
+                    - &quot;Content&quot; refers to any data, text, images,
+                    videos, audio, or other materials posted, uploaded, or
+                    shared on the App by Users.
+                    <br />- &quot;Personal Data&quot; refers to any information
+                    that identifies or can be used to identify a User.
                   </p>
 
                   <div className="text-2xl font-bold my-2 mt-5">
@@ -133,9 +134,9 @@ const Home = () => {
                     <b className="text-bold text-xl my-2">
                       4.3 Platform Ownership:
                     </b>{" "}
-                    The App&apos;platform and infrastructure are owned and operated
-                    by the Company. Users acknowledge that the Company retains
-                    all rights, title, and interest in and to the App.
+                    The App&apos;platform and infrastructure are owned and
+                    operated by the Company. Users acknowledge that the Company
+                    retains all rights, title, and interest in and to the App.
                   </p>
 
                   <div className="text-2xl font-bold my-2 mt-5">
@@ -145,11 +146,12 @@ const Home = () => {
                     <b className="text-bold text-xl my-2">
                       5.1 Warranties Disclaimer:
                     </b>{" "}
-                    The App is provided on an &quot;as-is&quot; and &quot;as-available&quot; basis
-                    without warranties of any kind, whether express or implied.
-                    The Company disclaims all warranties, including but not
-                    limited to the implied warranties of merchantability,
-                    fitness for a particular purpose, or non-infringement.
+                    The App is provided on an &quot;as-is&quot; and
+                    &quot;as-available&quot; basis without warranties of any
+                    kind, whether express or implied. The Company disclaims all
+                    warranties, including but not limited to the implied
+                    warranties of merchantability, fitness for a particular
+                    purpose, or non-infringement.
                   </p>
                   <p>
                     <b className="text-bold text-xl my-2">
@@ -239,7 +241,10 @@ const Home = () => {
                       9.1 Contact Details:
                     </b>{" "}
                     If you have any questions about these Terms, please contact
-                    us at [Your Contact Email Address].
+                    us at{" "}
+                    <a href="mailto:connectonmuse@gmail.com">
+                      connectonmuse@gmail.com
+                    </a>
                   </p>
 
                   <p>

@@ -78,33 +78,35 @@ const Home = () => {
     updateThemeColor();
   }, []);
   async function fetchData() {
-    const idToken = await gettoken();
-    if (idToken) {
-      try {
-        const response = await fetch("/api/feed", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${idToken}`,
-            email: user.email,
-          },
+    // const idToken = await gettoken();
+
+    try {
+      if (userdata && userdata.following) {
+        const w = query(
+          collection(db, "posts"),
+          where("uid", "in", userdata.following),
+          where("uid", "!=", userdata.uid),
+          limit(10),
+          orderBy("timestamp", "desc")
+        );
+        const response = await getDocs(w);
+        console.log(response + "response");
+        const data = [];
+        response.forEach((doc) => {
+          data.push({ ...doc.data(), id: doc.id });
+          enqueueUserMetadata(doc.data().uid);
         });
-        const userData = await response.json();
-        setPosts(userData.posts);
-        console.log(userData);
-        userData.posts.map((post) => {
-          enqueueUserMetadata(post.uid);
-          console.log(post.timestamp, "timestamp");
-        });
-        setPostLoading(false);
-      } catch (error) {
-        console.error("Error fetching data:", error);
+        setPosts(data);
+        // console.log(userData);
       }
+      setPostLoading(false);
+    } catch (error) {
+      console.error("Error fetching data:", error);
     }
   }
   useEffect(() => {
     fetchData();
-  }, [user]);
+  }, [userdata]);
   const searchUsers = async () => {
     try {
       console.log("Searching users..." + searchtext);

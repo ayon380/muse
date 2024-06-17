@@ -206,7 +206,7 @@ const Explore = () => {
     fetchposts();
   }, [expllorepagestate]);
   return (
-    <div className=" md:ml-5 w-full h-full">
+    <div className=" w-full h-full">
       {loading && initialLoad && <MainLoading />}
       {/* {expllorepagestate} */}
       {loading && !initialLoad && (
@@ -233,18 +233,7 @@ const Explore = () => {
           </div>
         </>
       )}
-      {searchopen && (
-        <SearchExplore
-          userdata={userdata}
-          db={db}
-          uid={userdata.uid}
-          usermetadata={usermetadata}
-          enqueueUserMetadata={enqueueUserMetadata}
-          close={() => setSearchopen(false)}
-          setFromexplorescreen={setFromexplorescreen}
-          setexpllorepagestate={setexpllorepagestate}
-        />
-      )}
+
       {userdata && !loading && (
         <div>
           {showComments && (
@@ -282,7 +271,7 @@ const Explore = () => {
           {fromexplorescreen && (
             <>
               <div
-                className="lop h-screen w-screen fixed top-0   z-10 bg-white dark:bg-black overflow-y-auto"
+                className="lop h-screen  top-0 fixed  z-10 bg-white dark:bg-black overflow-y-auto"
                 onClick={(e) => {
                   if (e.target.classList.contains("lop")) {
                     onclose();
@@ -326,7 +315,7 @@ const Explore = () => {
           )}
           {postid !== -1 && posts[0] && (
             <div
-              className="lop h-screen w-screen fixed top-0   z-10 bg-white dark:bg-black overflow-y-auto"
+              className="lop h-screen w-full lg:px-80  fixed md:top-3 md:right-3 z-10 bg-white dark:bg-black overflow-y-auto"
               onClick={(e) => {
                 if (e.target.classList.contains("lop")) {
                   onclose();
@@ -382,7 +371,7 @@ const Explore = () => {
               </div>
             </div>
           )}
-          <div className="main2 md:rounded-2xl dark:bg-black bg-white md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 border-black md:p-10 overflow-y-auto">
+          <div className="main2 md:rounded-2xl dark:bg-black bg-white md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 border-black  overflow-y-auto">
             <div className="flex justify-between pt-3 px-2 pb-4 bg-white rounded-b-3xl dark:bg-feedheader shadow-xl  dark:shadow-none  sticky top-0 z-20 ">
               <h1 class="bg-gradient-to-r from-purple-500 via-fuchsia-400 to-pink-400 text-4xl inline-block text-transparent bg-clip-text">
                 Explore
@@ -416,6 +405,18 @@ const Explore = () => {
                 </button>
               </div>
             </div>
+            {searchopen && (
+              <SearchExplore
+                userdata={userdata}
+                db={db}
+                uid={userdata.uid}
+                usermetadata={usermetadata}
+                enqueueUserMetadata={enqueueUserMetadata}
+                close={() => setSearchopen(false)}
+                setFromexplorescreen={setFromexplorescreen}
+                setexpllorepagestate={setexpllorepagestate}
+              />
+            )}
             <ResponsiveMasonry columnsCountBreakPoints={{ 350: 3 }}>
               <Masonry>
                 {feed.map((post) => (

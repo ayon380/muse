@@ -2,10 +2,11 @@
 import React, { useState, useRef, useEffect, use } from "react";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import app from "@/lib/firebase/firebaseConfig";
-import { getFirestore, doc, getDoc } from "firebase/firestore";
+import { getFirestore, doc, getDoc, where, orderBy } from "firebase/firestore";
 import Video from "@/components/Video";
 import "../../styles/reels.css";
 import Image from "next/image";
+import { getDocs, collection, query, limit } from "firebase/firestore";
 import { useSidebarStore } from "../../store/zustand";
 import { usePathname, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
@@ -44,7 +45,6 @@ const Reels = () => {
     usermetadata,
     enqueueUserMetadata,
   } = useSidebarStore();
-  const limit = 5; // Number of documents to fetch per page
   const toggleGlobalMute = () => {
     setIsGlobalMuted((prevState) => !prevState);
   };
@@ -95,27 +95,27 @@ const Reels = () => {
   }
   const fetchReels = async () => {
     console.log("fetching reels");
-    const response = await fetch("/api/reels/trending", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${await gettoken()}`,
-        email: user.email,
-        // Pass the cursor in the request header
-      },
-      body: JSON.stringify({ cursor: nextPageCursor }), // Send current page and cursor in the request body
+    const q = query(
+      // collection(db, "posts"),
+      // where("uid", "in", userdata.following),
+      // where("uid", "!=", userdata.uid),
+      // limit(10),
+      // orderBy("timestamp", "desc"),
+      collection(db, "reels"),
+      where("uid", "!=", userdata.uid),
+      orderBy("timestamp", "desc"),
+      // orderBy("likecount", "desc"),
+      limit(20)
+    );
+    const response = await getDocs(q);
+    console.log("response", response.docs.length);
+    response.forEach((doc) => {
+      // console.log(doc.id, " => ", doc.data());
+      setReels((prevReels) => [...prevReels, ...[doc.data()]]);
+      enqueueUserMetadata(doc.data().uid);
     });
-    const data = await response.json();
-    if (data.status === "true") {
-      setReels((prevReels) => [...prevReels, ...data.posts]); // Append new reels to the existing reels; // Set total pages received from
-      setNextPageCursor(data.cursor); // Update the next page cursor for subsequent requests
-      console.log(data.cursor, "cursor");
-      setCurrentPage(currentPage + 1);
-      if (reels.length > 20) {
-        setReels(reels.slice(reel.length - 20, reels.length));
-      }
-      setReelsloading(false);
-    }
+    setNextPageCursor(response.docs[response.docs.length - 1]);
+    setReelsloading(false);
   };
 
   useEffect(() => {

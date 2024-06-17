@@ -23,45 +23,27 @@ import {
   increment,
 } from "firebase/firestore";
 
-function formatFirebaseTimestamp(firebaseTimestamp) {
-  // Check if the timestamp is valid
-  if (
-    !firebaseTimestamp ||
-    typeof firebaseTimestamp !== "object" ||
-    !("_seconds" in firebaseTimestamp)
-  ) {
-    return "Invalid date";
-  }
+function formatFirebaseTimestamp(timestamp) {
+  // console.log(JSON.stringify(timestamp) + "timestamp");
+  const seconds = timestamp.seconds;
+  const nanoseconds = timestamp.nanoseconds;
+  // Convert the seconds and nanoseconds to milliseconds
+  const milliseconds = seconds * 1000 + nanoseconds / 1000000;
 
-  // Convert Firestore timestamp to JavaScript Date object
-  const timestampDate = new Date(firebaseTimestamp._seconds * 1000);
+  // Create a new Date object using the milliseconds
+  const date = new Date(milliseconds);
 
-  const now = new Date();
-  const timeDifference = now - timestampDate;
-  const seconds = Math.floor(timeDifference / 1000);
-  const minutes = Math.floor(seconds / 60);
-  const hours = Math.floor(minutes / 60);
-  const days = Math.floor(hours / 24);
+  // Format the date into a readable string for social media posts
+  const options = {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+  };
+  const readableDate = date.toLocaleString("en-US", options);
 
-  if (seconds < 60) {
-    return "Just now";
-  } else if (minutes === 1) {
-    return "A minute ago";
-  } else if (minutes < 60) {
-    return `${minutes} minutes ago`;
-  } else if (hours === 1) {
-    return "An hour ago";
-  } else if (hours < 24) {
-    return `${hours} hours ago`;
-  } else if (days === 1) {
-    return "Yesterday";
-  } else if (days < 7) {
-    return `${days} days ago`;
-  } else {
-    // If it's more than a week, you might want to display the actual date
-    const options = { year: "numeric", month: "long", day: "numeric" };
-    return timestampDate.toLocaleDateString(undefined, options);
-  }
+  return readableDate;
 }
 
 import { useRouter } from "next/navigation";
@@ -220,7 +202,7 @@ const FeedPost = ({
             // Hashtag document doesn't exist, create it with count set to 1
             await setDoc(hashtagRef, {
               count: 1,
-              tag : hashtag.toLowerCase()
+              tag: hashtag.toLowerCase(),
             });
           }
         });

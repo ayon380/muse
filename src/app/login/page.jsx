@@ -70,7 +70,7 @@ const Home = () => {
   };
 
   return (
-    <div className="root hl">
+    <div className="root hl h-screen">
       <Toaster />
       <div className=" mt-52 mx-12 md:mx-96 bg-gray-700 rounded-md bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-10 shadow-2xl border-1 border-black">
         <div className="f1 font-lucy text-8xl lg:text-9xl pt-10   text-center">

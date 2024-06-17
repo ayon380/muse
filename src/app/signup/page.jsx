@@ -182,10 +182,35 @@ const Signup = () => {
       return false;
     }
   };
+  function isOnlyLowercase(str) {
+    // Define the regular expression pattern for lowercase characters
+    const lowercasePattern = /^[a-z]+$/;
+
+    // Test the string against the pattern
+    return lowercasePattern.test(str);
+  }
   const checkUserName = async () => {
     try {
       setCheckStatus(2);
       console.log("checking username");
+      if (userName.includes(" ")) {
+        toast.error("Username cannot contain spaces");
+        setUserName("");
+        setCheckStatus(1);
+        return;
+      }
+      if (userName.length < 3) {
+        toast.error("Username should be atleast 3 characters long");
+        setUserName("");
+        setCheckStatus(1);
+        return;
+      }
+      if (!isOnlyLowercase(userName)) {
+        toast.error("Username should be in lowercase");
+        setUserName("");
+        setCheckStatus(1);
+        return;
+      }
       const useRef = doc(db, "username", userName);
       const userSnapshot = await getDoc(useRef);
       if (userSnapshot.exists()) {
@@ -360,7 +385,11 @@ const Signup = () => {
           uid: user.uid,
           pfp: downloadURL,
           userName: userName,
+          followerscount: 0,
           fullname: name,
+          active: true,
+          lastseen: new Date(),
+          score: 0,
         };
         await setDoc(usernameref, usernameData);
         const userData = {
@@ -377,15 +406,19 @@ const Signup = () => {
           bio: bio,
           pubpriv: pubpriv,
           posts: [],
+          savedposts: [],
           postcount: 0,
           taggedPosts: [],
           pfp: downloadURL,
           following: [],
           postcount: 0,
+          blocked:[],
           followingcount: 0,
           followerscount: 0,
           uid: user.uid,
           followers: [],
+          viewedposts: [],
+          viewedreels: [],
           profession: profession,
           org: org,
           closefriends: [],
@@ -408,300 +441,299 @@ const Signup = () => {
     }
   };
   return (
-    // <div>
-    //   <div className="root hl font-rethink mb-20  text-white dark:text-black">
-    //     <Toaster />
-    //     <div className=" mt-40 mx-12 md:mx-96 bg-gray-700 rounded-xl bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-10 shadow-2xl border-1 border-black">
-    //       <div className="f1 font-lucy text-8xl lg:text-9xl pt-10   text-center">
-    //         <Link href="/">Muse</Link>
-    //       </div>
-    //       <div className="main ">
-    //         <div className="flex my-5 justify-evenly">
-    //           <div className="h11 text-xl">Signup</div>
-    //           <div className="status border-2 px-2 rounded-xl dark:border-black ">
-    //             {signupstate} of 4
-    //           </div>
-    //         </div>
-    //         {signupstate === 1 ? (
-    //           <div>
-    //             <div className="flex justify-center">
-    //               <input
-    //                 className="input bg-transparent border-white border-2 dark:text-black  dark:border-black p-2 rounded-xl shadow-2xl focus:border-2 dark:focus:border-black focus:outline-none placeholder-white dark:placeholder-black"
-    //                 onChange={handleChange}
-    //                 value={userName}
-    //                 placeholder="UserName"
-    //                 onKeyDown={(e) => {
-    //                   if (e.key === "Enter") checkUserName();
-    //                 }}
-    //               />
-    //             </div>
-    //             <div className=" mt-10 flex justify-center">
-    //               <button
-    //                 className="fd font-rethink  flex mb-5 pl-6 pr-5 "
-    //                 onClick={checkUserName}
-    //               >
-    //                 Check
-    //                 <div className="lp mt-3 ml-2">
-    //                   {checkStatus === 1 ? (
-    //                     <FaQuestion />
-    //                   ) : checkStatus === 2 ? (
-    //                     <Image
-    //                       src="/gif.gif"
-    //                       height={20}
-    //                       width={20}
-    //                       alt="gif"
-    //                     />
-    //                   ) : checkStatus === 3 ? (
-    //                     <Image
-    //                       src="/suc.png"
-    //                       height={20}
-    //                       width={20}
-    //                       alt="png"
-    //                     />
-    //                   ) : null}
-    //                 </div>
-    //               </button>
-    //             </div>
-    //           </div>
-    //         ) : signupstate === 2 ? (
-    //           <div>
-    //             {/* Name, City , DOB, Gender  */}
-    //             <div className="flex justify-center">
-    //               <input
-    //                 className="input bg-transparent border-white border-2 dark:text-black  dark:border-black p-2 rounded-xl shadow-2xl focus:border-2 dark:focus:border-black focus:outline-none placeholder-current placeholder-white dark:placeholder-black"
-    //                 onChange={handleNameChange}
-    //                 value={name}
-    //                 placeholder="Full Name"
-    //               />
-    //             </div>
-    //             <div className="flex justify-center mt-4">
-    //               <input
-    //                 className="input bg-transparent border-white border-2 dark:text-black  dark:border-black p-2 rounded-xl shadow-2xl focus:border-2 dark:focus:border-black focus:outline-none placeholder-current placeholder-white dark:placeholder-black"
-    //                 onChange={(e) => setProfession(e.target.value)}
-    //                 value={profession}
-    //                 placeholder="Profession Student/Employee"
-    //               />
-    //             </div>
-    //             <div className="flex justify-center mt-4">
-    //               <input
-    //                 className="input bg-transparent border-white border-2 dark:text-black  dark:border-black p-2 rounded-xl shadow-2xl focus:border-2 dark:focus:border-black focus:outline-none placeholder-current placeholder-white dark:placeholder-black"
-    //                 onChange={(e) => setOrg(e.target.value)}
-    //                 value={org}
-    //                 placeholder="Organization University/Employer Organization"
-    //               />
-    //             </div>
-    //             <div className="flex justify-center">
-    //               <select
-    //                 className="input w-64 bg-transparent border-white border-2 dark:text-black  dark:border-black p-2 rounded-xl my-5 shadow-2xl focus:border-2 dark:focus:border-black focus:outline-none placeholder-current placeholder-white dark:placeholder-black"
-    //                 onChange={handleStateChange}
-    //                 value={state}
-    //               >
-    //                 {state_arr.map((key) => (
-    //                   <option className="text-black" key={key} value={key}>
-    //                     {key}
-    //                   </option>
-    //                 ))}
-    //               </select>
-    //             </div>
-    //             <div className="flex justify-center">
-    //               <input
-    //                 className="input bg-transparent border-white border-2 dark:text-black  dark:border-black p-2 rounded-xl shadow-2xl focus:border-2 dark:focus:border-black focus:outline-none placeholder-current"
-    //                 onChange={handleCityChange}
-    //                 placeholder="City"
-    //                 value={city}
-    //               />
-    //             </div>
-    //             <div className="flex justify-center">
-    //               <div className="absolute text-black rounded-md px-14 w-62 bg-white cursor-pointer z-10">
-    //                 {cities.current.map((cityy) => (
-    //                   <div key={cityy} onClick={handleCityDropdwonClick}>
-    //                     {cityy}
-    //                   </div>
-    //                 ))}
-    //               </div>
-    //             </div>
-    //             <div className="flex justify-evenly mx-20 my-5">
-    //               <button
-    //                 className={`fd button px-5 ${
-    //                   gender == "Male" ? "!bg-green-500 text-black" : ""
-    //                 }`}
-    //                 onClick={() => {
-    //                   setGender("Male");
-    //                   console.log(gender);
-    //                 }}
-    //               >
-    //                 Male
-    //               </button>
-    //               <button
-    //                 className={`fd px-5 ${
-    //                   gender == "Female" ? "!bg-green-500 text-white" : ""
-    //                 }`}
-    //                 onClick={() => setGender("Female")}
-    //               >
-    //                 Female
-    //               </button>
-    //               <button
-    //                 className={`fd px-5 ${
-    //                   gender == "Other" ? "!bg-green-500 text-white" : ""
-    //                 }`}
-    //                 onClick={() => setGender("Other")}
-    //               >
-    //                 Other
-    //               </button>
-    //             </div>
+    <div className="h-dvh">
+      <div className="root hl font-rethink mb-20  text-white dark:text-black">
+        <Toaster />
+        <div className=" mt-40 mx-12 md:mx-96 bg-gray-700 rounded-xl bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-10 shadow-2xl border-1 border-black">
+          <div className="f1 font-lucy text-8xl lg:text-9xl pt-10   text-center">
+            <Link href="/">Muse</Link>
+          </div>
+          <div className="main ">
+            <div className="flex my-5 justify-evenly">
+              <div className="h11 text-xl">Signup</div>
+              <div className="status border-2 px-2 rounded-xl dark:border-black ">
+                {signupstate} of 4
+              </div>
+            </div>
+            {signupstate === 1 ? (
+              <div>
+                <div className="flex justify-center">
+                  <input
+                    className="input bg-transparent border-white border-2 dark:text-black  dark:border-black p-2 rounded-xl shadow-2xl focus:border-2 dark:focus:border-black focus:outline-none placeholder-white dark:placeholder-black"
+                    onChange={handleChange}
+                    value={userName}
+                    placeholder="UserName"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") checkUserName();
+                    }}
+                  />
+                </div>
+                <div className=" mt-10 flex justify-center">
+                  <button
+                    className="fd font-rethink  flex mb-5 pl-6 pr-5 "
+                    onClick={checkUserName}
+                  >
+                    Check
+                    <div className="lp mt-3 ml-2">
+                      {checkStatus === 1 ? (
+                        <FaQuestion />
+                      ) : checkStatus === 2 ? (
+                        <Image
+                          src="/gif.gif"
+                          height={20}
+                          width={20}
+                          alt="gif"
+                        />
+                      ) : checkStatus === 3 ? (
+                        <Image
+                          src="/suc.png"
+                          height={20}
+                          width={20}
+                          alt="png"
+                        />
+                      ) : null}
+                    </div>
+                  </button>
+                </div>
+              </div>
+            ) : signupstate === 2 ? (
+              <div>
+                {/* Name, City , DOB, Gender  */}
+                <div className="flex justify-center">
+                  <input
+                    className="input bg-transparent border-white border-2 dark:text-black  dark:border-black p-2 rounded-xl shadow-2xl focus:border-2 dark:focus:border-black focus:outline-none placeholder-current placeholder-white dark:placeholder-black"
+                    onChange={handleNameChange}
+                    value={name}
+                    placeholder="Full Name"
+                  />
+                </div>
+                <div className="flex justify-center mt-4">
+                  <input
+                    className="input bg-transparent border-white border-2 dark:text-black  dark:border-black p-2 rounded-xl shadow-2xl focus:border-2 dark:focus:border-black focus:outline-none placeholder-current placeholder-white dark:placeholder-black"
+                    onChange={(e) => setProfession(e.target.value)}
+                    value={profession}
+                    placeholder="Profession Student/Employee"
+                  />
+                </div>
+                <div className="flex justify-center mt-4">
+                  <input
+                    className="input bg-transparent border-white border-2 dark:text-black  dark:border-black p-2 rounded-xl shadow-2xl focus:border-2 dark:focus:border-black focus:outline-none placeholder-current placeholder-white dark:placeholder-black"
+                    onChange={(e) => setOrg(e.target.value)}
+                    value={org}
+                    placeholder="Organization University/Employer Organization"
+                  />
+                </div>
+                <div className="flex justify-center">
+                  <select
+                    className="input w-64 bg-transparent border-white border-2 dark:text-black  dark:border-black p-2 rounded-xl my-5 shadow-2xl focus:border-2 dark:focus:border-black focus:outline-none placeholder-current placeholder-white dark:placeholder-black"
+                    onChange={handleStateChange}
+                    value={state}
+                  >
+                    {state_arr.map((key) => (
+                      <option className="text-black" key={key} value={key}>
+                        {key}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex justify-center">
+                  <input
+                    className="input bg-transparent border-white border-2 dark:text-black  dark:border-black p-2 rounded-xl shadow-2xl focus:border-2 dark:focus:border-black focus:outline-none placeholder-current"
+                    onChange={handleCityChange}
+                    placeholder="City"
+                    value={city}
+                  />
+                </div>
+                <div className="flex justify-center">
+                  <div className="absolute text-black rounded-md px-14 w-62 bg-white cursor-pointer z-10">
+                    {cities.current.map((cityy) => (
+                      <div key={cityy} onClick={handleCityDropdwonClick}>
+                        {cityy}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex justify-evenly mx-20 my-5">
+                  <button
+                    className={`fd button px-5 ${
+                      gender == "Male" ? "!bg-green-500 text-black" : ""
+                    }`}
+                    onClick={() => {
+                      setGender("Male");
+                      console.log(gender);
+                    }}
+                  >
+                    Male
+                  </button>
+                  <button
+                    className={`fd px-5 ${
+                      gender == "Female" ? "!bg-green-500 text-white" : ""
+                    }`}
+                    onClick={() => setGender("Female")}
+                  >
+                    Female
+                  </button>
+                  <button
+                    className={`fd px-5 ${
+                      gender == "Other" ? "!bg-green-500 text-white" : ""
+                    }`}
+                    onClick={() => setGender("Other")}
+                  >
+                    Other
+                  </button>
+                </div>
 
-    //             <div className="flex text-black justify-center">
-    //               <div className="kp mt-1 mr-2">DOB</div>
-    //               <DatePicker
-    //                 value={dob}
-    //                 onChange={(dob) => {
-    //                   setDob(dob);
-    //                 }}
-    //               />
-    //             </div>
-    //           </div>
-    //         ) : signupstate === 3 ? (
-    //           // Profile Picture , Bio, Interests
-    //           <div>
-    //             {" "}
-    //             <div className="txt mx-20 ">
-    //               <div className="kl my-5 text-center">
-    //                 Upload your Profile Picture
-    //                 <div className="fg text-xs opacity-70">
-    //                   Smile, it is contagious! 😊
-    //                 </div>
-    //               </div>
-    //               <FileUploader
-    //                 styles={{
-    //                   color: "white",
-    //                   display: "flex",
-    //                   justifyContent: "center",
-    //                 }}
-    //                 handleChange={handlePPChange}
-    //                 name="Profile Picture"
-    //                 types={fileTypes}
-    //               />
-    //             </div>
-    //             <div className="flex justify-center h-24 my-5">
-    //               {fileDataURL ? (
-    //                 <Image
-    //                   alt="PFP "
-    //                   height={100}
-    //                   width={100}
-    //                   layout="fixed"
-    //                   className="object-cover rounded-full"
-    //                   src={fileDataURL}
-    //                 ></Image>
-    //               ) : (
-    //                 <div className="border pt-9 opacity-70 text-xs w-24 text-center rounded-full">
-    //                   Profile Image
-    //                 </div>
-    //               )}
-    //             </div>
-    //             <div className="qw mx-20">Bio</div>
-    //             <div className="kp text-xs opacity-70 mx-20">
-    //               Spice up your profile – Introduce yourself in a groove,
-    //               sprinkle some interests, and jazz it up with a funky flair!
-    //               🚀✨ #BeYouBeFunky
-    //             </div>
-    //             <div className="flex justify-center">
-    //               <textarea
-    //                 className="input bg-transparent border-white border-2 dark:text-black  dark:border-black p-2 w-96 mt-2 rounded-xl shadow-2xl focus:border-2 dark:focus:border-black focus:outline-none placeholder-current placeholder-white dark:placeholder-black"
-    //                 placeholder="Bio "
-    //                 onChange={(e) => setBio(e.target.value)}
-    //               />
-    //             </div>
-    //           </div>
-    //         ) : signupstate === 4 ? (
-    //           // Security Measures
-    //           <div>
-    //             <div className="mx-20">
-    //               <p>
-    //                 <strong>Vibe Check First:</strong> Keep the vibes positive!
-    //                 Roll with friends who radiate good energy. 🌟 Dodge the
-    //                 sketchy stuff and keep the vibe zone strong. #GoodVibesOnly
-    //               </p>
-    //               <p>
-    //                 <strong>Go Google Sign-In or Go Home:</strong> Passwords? So
-    //                 last season. Embrace the Google Sign-In wave for a
-    //                 hassle-free and secure ride. 🏄‍♂️ Let Google be your vibe
-    //                 bouncer. #GoogleSignInSwag
-    //               </p>
-    //               <p>
-    //                 <strong>Report the Funk:</strong> Spotted something off? Hit
-    //                 us up! Report funky accounts or weird vibes. 🚨 We&apos;re
-    //                 all about keeping the vibe real and safe for everyone.
-    //                 #ReportTheFunk
-    //               </p>
-    //               <p>
-    //                 <strong>Phishing Alert - Keep It 💯:</strong> Watch for
-    //                 phishing vibes! We won&apos;t slide into your DMs asking for
-    //                 secrets. 🎣 If it smells fishy, it probably is. Stay woke,
-    //                 keep it 💯, and vibe strong! #StayWokeVibes
-    //               </p>
-    //               <p>
-    //                 <strong>Account Privacy Matters:</strong> Choose wisely!
-    //                 Decide if you want to keep your account private or roll with
-    //                 the public. 🔒🌐 Your vibe, your choice. #PrivacyMatters
-    //               </p>
-    //             </div>
-    //             <div className="flex my-10 justify-center">
-    //               <button
-    //                 onClick={() => {
-    //                   setPubPriv("Private");
-    //                 }}
-    //                 className={`fd  mr-24 px-10 ${
-    //                   pubpriv == "Private" ? "!bg-green-600" : null
-    //                 }`}
-    //               >
-    //                 Private
-    //               </button>
-    //               <button
-    //                 className={`fd  px-10 ${
-    //                   pubpriv == "Public" ? "!bg-red-600" : null
-    //                 }`}
-    //                 onClick={() => {
-    //                   setPubPriv("Public");
-    //                 }}
-    //               >
-    //                 Public
-    //               </button>
-    //             </div>
-    //           </div>
-    //         ) : null}
-    //         <div className="flex justify-center">
-    //           {signupstate > 1 && signupstate < 5 ? (
-    //             <div className="po flex justify-center my-5 ">
-    //               <button className=" fd  mr-6 px-10" onClick={prevstate()}>
-    //                 Prev
-    //               </button>
-    //             </div>
-    //           ) : null}
-    //           {signupstate != 4 ? (
-    //             <div className="po  flex justify-center my-5">
-    //               <button className=" fd  px-10" onClick={nextstate()}>
-    //                 Next
-    //               </button>
-    //             </div>
-    //           ) : null}
-    //         </div>
-    //         {signupstate === 4 ? (
-    //           <div className="po flex justify-center my-5">
-    //             <button className=" fd  px-10" onClick={handleSignup}>
-    //               {signupprocess ? "Creating Account..." : "Let's goooo🎉🎉"}
-    //             </button>
-    //           </div>
-    //         ) : null}
-    //         <div className="flex justify-center">
-    //           <div className="q1 text-sm mb-10">
-    //             <Link href="/tcs">Terms and Conditions</Link>
-    //           </div>
-    //         </div>
-    //       </div>
-    //     </div>
-    //   </div>
-    // </div>
-    <div className="flex justify-center align-middle">Coming Soon.........</div>
+                <div className="flex text-black justify-center">
+                  <div className="kp mt-1 mr-2">DOB</div>
+                  <DatePicker
+                    value={dob}
+                    onChange={(dob) => {
+                      setDob(dob);
+                    }}
+                  />
+                </div>
+              </div>
+            ) : signupstate === 3 ? (
+              // Profile Picture , Bio, Interests
+              <div>
+                {" "}
+                <div className="txt mx-20 ">
+                  <div className="kl my-5 text-center">
+                    Upload your Profile Picture
+                    <div className="fg text-xs opacity-70">
+                      Smile, it is contagious! 😊
+                    </div>
+                  </div>
+                  <FileUploader
+                    styles={{
+                      color: "white",
+                      display: "flex",
+                      justifyContent: "center",
+                    }}
+                    handleChange={handlePPChange}
+                    name="Profile Picture"
+                    types={fileTypes}
+                  />
+                </div>
+                <div className="flex justify-center h-24 my-5">
+                  {fileDataURL ? (
+                    <Image
+                      alt="PFP "
+                      height={100}
+                      width={100}
+                      layout="fixed"
+                      className="object-cover rounded-full"
+                      src={fileDataURL}
+                    ></Image>
+                  ) : (
+                    <div className="border pt-9 opacity-70 text-xs w-24 text-center rounded-full">
+                      Profile Image
+                    </div>
+                  )}
+                </div>
+                <div className="qw mx-20">Bio</div>
+                <div className="kp text-xs opacity-70 mx-20">
+                  Spice up your profile – Introduce yourself in a groove,
+                  sprinkle some interests, and jazz it up with a funky flair!
+                  🚀✨ #BeYouBeFunky
+                </div>
+                <div className="flex justify-center">
+                  <textarea
+                    className="input bg-transparent border-white border-2 dark:text-black  dark:border-black p-2 w-96 mt-2 rounded-xl shadow-2xl focus:border-2 dark:focus:border-black focus:outline-none placeholder-current placeholder-white dark:placeholder-black"
+                    placeholder="Bio "
+                    onChange={(e) => setBio(e.target.value)}
+                  />
+                </div>
+              </div>
+            ) : signupstate === 4 ? (
+              // Security Measures
+              <div>
+                <div className="mx-20">
+                  <p>
+                    <strong>Vibe Check First:</strong> Keep the vibes positive!
+                    Roll with friends who radiate good energy. 🌟 Dodge the
+                    sketchy stuff and keep the vibe zone strong. #GoodVibesOnly
+                  </p>
+                  <p>
+                    <strong>Go Google Sign-In or Go Home:</strong> Passwords? So
+                    last season. Embrace the Google Sign-In wave for a
+                    hassle-free and secure ride. 🏄‍♂️ Let Google be your vibe
+                    bouncer. #GoogleSignInSwag
+                  </p>
+                  <p>
+                    <strong>Report the Funk:</strong> Spotted something off? Hit
+                    us up! Report funky accounts or weird vibes. 🚨 We&apos;re
+                    all about keeping the vibe real and safe for everyone.
+                    #ReportTheFunk
+                  </p>
+                  <p>
+                    <strong>Phishing Alert - Keep It 💯:</strong> Watch for
+                    phishing vibes! We won&apos;t slide into your DMs asking for
+                    secrets. 🎣 If it smells fishy, it probably is. Stay woke,
+                    keep it 💯, and vibe strong! #StayWokeVibes
+                  </p>
+                  <p>
+                    <strong>Account Privacy Matters:</strong> Choose wisely!
+                    Decide if you want to keep your account private or roll with
+                    the public. 🔒🌐 Your vibe, your choice. #PrivacyMatters
+                  </p>
+                </div>
+                <div className="flex my-10 justify-center">
+                  <button
+                    onClick={() => {
+                      setPubPriv("Private");
+                    }}
+                    className={`fd  mr-24 px-10 ${
+                      pubpriv == "Private" ? "!bg-green-600" : null
+                    }`}
+                  >
+                    Private
+                  </button>
+                  <button
+                    className={`fd  px-10 ${
+                      pubpriv == "Public" ? "!bg-red-600" : null
+                    }`}
+                    onClick={() => {
+                      setPubPriv("Public");
+                    }}
+                  >
+                    Public
+                  </button>
+                </div>
+              </div>
+            ) : null}
+            <div className="flex justify-center">
+              {signupstate > 1 && signupstate < 5 ? (
+                <div className="po flex justify-center my-5 ">
+                  <button className=" fd  mr-6 px-10" onClick={prevstate()}>
+                    Prev
+                  </button>
+                </div>
+              ) : null}
+              {signupstate != 4 ? (
+                <div className="po  flex justify-center my-5">
+                  <button className=" fd  px-10" onClick={nextstate()}>
+                    Next
+                  </button>
+                </div>
+              ) : null}
+            </div>
+            {signupstate === 4 ? (
+              <div className="po flex justify-center my-5">
+                <button className=" fd  px-10" onClick={handleSignup}>
+                  {signupprocess ? "Creating Account..." : "Let's goooo🎉🎉"}
+                </button>
+              </div>
+            ) : null}
+            <div className="flex justify-center">
+              <div className="q1 text-sm mb-10">
+                <Link href="/tcs">Terms and Conditions</Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 

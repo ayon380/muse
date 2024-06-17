@@ -209,9 +209,9 @@ body {
       linear-gradient(336deg, rgba(255, 191, 138), rgba(0, 0, 255, 0) 70.71%);
 
     /* Add dark mode background */
-    @media (prefers-color-scheme: dark) {
+    /* @media (prefers-color-scheme: dark) {
       background: #1a1a1a;
-    }
+    } */
   }
 }
 

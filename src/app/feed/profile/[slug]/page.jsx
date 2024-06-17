@@ -324,13 +324,16 @@ const Page = ({ params }) => {
       userdata &&
       currentuserdata &&
       userdata.followers.includes(currentuserdata.uid) &&
-      currentuserdata.following.includes(userdata.uid)
+      currentuserdata.followers.includes(userdata.uid)
     ) {
       return true;
     } else return false;
   };
+  const handlestartchat = async () => {
+    router.push(`/feed/messages?chatwindow=${userdata.uid}`);
+  };
   return (
-    <div className="md:ml-5 w-full h-full">
+    <div className=" w-full h-full">
       <Toaster />
       {userdata &&
       currentuserdata &&
@@ -345,9 +348,9 @@ const Page = ({ params }) => {
             <Follower
               db={db}
               close={() => setFollowersbox(false)}
-              currentuserdata={currentuserdata}
+              currentuserdata={userdata}
               usermetadata={usermetadata}
-              userdata={userdata}
+              userdata={currentuserdata}
               enqueueUserMetadata={enqueueUserMetadata}
             />
           )}
@@ -355,8 +358,8 @@ const Page = ({ params }) => {
             <Following
               close={() => setfollowingbox(false)}
               db={db}
-              userdata={userdata}
-              currentuserdata={currentuserdata}
+              userdata={currentuserdata}
+              currentuserdata={userdata}
               usermetadata={usermetadata}
               enqueueUserMetadata={enqueueUserMetadata}
             />
@@ -376,7 +379,7 @@ const Page = ({ params }) => {
           )}
           {sharemenuopen && (
             <ShareMenuProfile
-              userdata={userdata}
+              userdata={currentuserdata}
               postid={postid}
               userName={userdata.userName}
               setSharemenu={setSharemenuopen}
@@ -436,7 +439,7 @@ const Page = ({ params }) => {
                     className="header  w-full  object-center "
                     style={{
                       backgroundImage: `url(${userdata.pfp})`,
-                      height: "350px",
+                      height: "400px",
                     }}
                   >
                     <div className="lsad backdrop-blur-lg bg-opacity-50   bg-black z-30 drop-shadow-xl h-full w-full">
@@ -445,7 +448,7 @@ const Page = ({ params }) => {
                           src={userdata.pfp}
                           width={500}
                           height={500}
-                          className="rounded-full mt-5 h-32 w-32  md:h-36 md:w-36 object-cover"
+                          className="rounded-full mt-5 h-32 w-32   md:h-36 md:w-36 object-cover"
                           alt="Profile Picture"
                         />
                       </div>
@@ -479,9 +482,7 @@ const Page = ({ params }) => {
                               <button
                                 className="py-2 px-4 my-2 ml-2 rounded-full bg-fuchsia-300 text-black font-semibold transition-colors duration-300 hover:bg-fuchsia-600"
                                 onClick={() => {
-                                  router.push(
-                                    `/feed/chat/${userdata.userName}`
-                                  );
+                                  handlestartchat();
                                 }}
                               >
                                 Message
@@ -666,6 +667,7 @@ const Page = ({ params }) => {
                                   alt={reel.caption}
                                   height={800}
                                   width={400}
+                                  className="object-cover w-full h-full rounded-md md:rounded-lg"
                                 />
                               </div>
                             ))}

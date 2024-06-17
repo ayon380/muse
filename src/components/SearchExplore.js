@@ -8,6 +8,7 @@ import {
   or,
   collection,
 } from "firebase/firestore";
+import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { debounce, set } from "lodash";
@@ -226,163 +227,172 @@ const SearchExplore = ({
     getpopularusers();
   }, []);
   return (
-    <div className="h-screen w-screen fixed top-0 left-0 z-10  overflow-y-auto px-5 justify-center bg-white dark:bg-black py-20">
-      {/* Search input */}
-      <input
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        type="text"
-        className="h-10 w-full px-4 my-5 rounded-full border-2 dark:bg-feedheader border-gray-300 focus:outline-none focus:border-blue-500 "
-        placeholder="Search for users or hashtags..."
-      />
+    <AnimatePresence>
+      <motion.div
+        key="searchexplore"
+        initial={{ opacity: 0, y: 50 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -50 }}
+        transition={{ duration: 0.6 }}
+        className="h-screen w-screen md:w-full md:right-0  top-0 z-10  overflow-y-auto px-5 justify-center bg-white dark:bg-black "
+      >
+        {/* Search input */}
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          type="text"
+          className="h-10 w-full px-4 my-5 rounded-full border-2 dark:bg-feedheader border-gray-300 focus:outline-none focus:border-blue-500 "
+          placeholder="Search for users or hashtags..."
+        />
 
-      {/* Container for results */}
-      {selectedhashtags && <>{}</>}
-      <div className="mb-20 ">
-        {searchResults.length > 0 ? (
-          <>
-            {searching ? (
-              <div className="text-xl p-4">Searching...</div>
-            ) : (
-              <div>
-                {" "}
-                {searchtype === "hashtags" ? (
-                  <div className="sd">
-                    {searchResults.map((result) => (
+        {/* Container for results */}
+        {selectedhashtags && <>{}</>}
+        <div className="mb-20 ">
+          {searchResults.length > 0 ? (
+            <>
+              {searching ? (
+                <div className="text-xl p-4">Searching...</div>
+              ) : (
+                <div>
+                  {" "}
+                  {searchtype === "hashtags" ? (
+                    <div className="sd">
+                      {searchResults.map((result) => (
+                        <div
+                          key={result.id}
+                          className="flex justify-between items-center p-4 border-b"
+                          onClick={() => {
+                            setexpllorepagestate([result.id]);
+                            setFromexplorescreen(true);
+                          }}
+                        >
+                          <div>{result.id}</div>
+                          <button
+                            onClick={() => {
+                              close();
+                              // enqueueUserMetadata();
+                            }}
+                            className="bg-blue-500 text-white px-4 py-2 rounded-full"
+                          >
+                            Go
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <>
+                      {searchResults.map((result) => (
+                        <div
+                          key={result.id}
+                          className="flex justify-between items-center p-4 border-b"
+                          onClick={() => {
+                            router.push(`/feed/profile/${result.userName}`);
+                          }}
+                        >
+                          <div>{result.userName}</div>
+                          <button className="bg-blue-500 text-white px-4 py-2 rounded-full">
+                            Profile
+                          </button>
+                        </div>
+                      ))}
+                    </>
+                  )}
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <div className=" w-full p-5 bg-white dark:bg-feedheader rounded-3xl shadow-lg">
+                {loadinghashtag ? (
+                  <div className="text-xl p-4">Loading hashtags...</div>
+                ) : (
+                  <div>
+                    <div className="flex border-b-2 p-2 border-fuchsia-50">
+                      <div className="sd h-1/2 text-xl mr-5 c:\Users\ayons\Downloads\badge.png">
+                        Trending{" "}
+                      </div>
+                      <Image
+                        className="h-7 w-7"
+                        src="/icons/trending.png"
+                        height={50}
+                        width={50}
+                        alt="trending"
+                      />
+                    </div>
+                    {hashtags.map((result) => (
                       <div
                         key={result.id}
-                        className="flex justify-between items-center p-4 border-b"
+                        className="flex  justify-between items-center p-2 "
                         onClick={() => {
                           setexpllorepagestate([result.id]);
                           setFromexplorescreen(true);
                         }}
                       >
-                        <div>{result.id}</div>
+                        <div className="w-1/3">{result.id}</div>
                         <button
                           onClick={() => {
                             close();
-                            // enqueueUserMetadata();
+                            enqueueUserMetadata(usermetadata, result);
                           }}
-                          className="bg-blue-500 text-white px-4 py-2 rounded-full"
+                          className="bg-fuchsia-500  text-black px-4 py-2 rounded-full"
                         >
-                          Go
+                          Posts
+                        </button>
+                        <button
+                          onClick={() => {
+                            router.push(`/feed/reels?hashtag=${result.id}`);
+                          }}
+                          className="bg-fuchsia-500  text-black px-4 py-2 rounded-full"
+                        >
+                          Reels
                         </button>
                       </div>
                     ))}
                   </div>
+                )}
+
+                {loadinguser ? (
+                  <div className="text-xl p-4">Loading users...</div>
                 ) : (
-                  <>
-                    {searchResults.map((result) => (
+                  <div>
+                    <div className="flex border-b-2 p-2 border-fuchsia-50 ">
+                      <div className="ss mr-5 text-xl">Top Creators</div>
+                      <Image
+                        className="h-7 w-7"
+                        src="/icons/badge.png"
+                        height={50}
+                        width={50}
+                        alt="trending"
+                      />
+                    </div>
+                    {users.map((result) => (
                       <div
                         key={result.id}
-                        className="flex justify-between items-center p-4 border-b"
+                        className="flex justify-between items-center p-2"
                         onClick={() => {
                           router.push(`/feed/profile/${result.userName}`);
                         }}
                       >
                         <div>{result.userName}</div>
-                        <button className="bg-blue-500 text-white px-4 py-2 rounded-full">
+                        <button
+                          onClick={() => {
+                            close();
+                            enqueueUserMetadata(usermetadata, result);
+                          }}
+                          className="bg-fuchsia-500 text-black px-4 py-2 rounded-full"
+                        >
                           Profile
                         </button>
                       </div>
                     ))}
-                  </>
+                  </div>
                 )}
               </div>
-            )}
-          </>
-        ) : (
-          <>
-            <div className="max-w-md w-full p-5 bg-white dark:bg-feedheader rounded-3xl shadow-lg">
-              {loadinghashtag ? (
-                <div className="text-xl p-4">Loading hashtags...</div>
-              ) : (
-                <div>
-                  <div className="flex border-b-2 p-2 border-fuchsia-50">
-                    <div className="sd h-1/2 text-xl mr-5 c:\Users\ayons\Downloads\badge.png">
-                      Trending{" "}
-                    </div>
-                    <Image
-                      className="h-7 w-7"
-                      src="/icons/trending.png"
-                      height={50}
-                      width={50}
-                      alt="trending"
-                    />
-                  </div>
-                  {hashtags.map((result) => (
-                    <div
-                      key={result.id}
-                      className="flex  justify-between items-center p-2 "
-                      onClick={() => {
-                        setexpllorepagestate([result.id]);
-                        setFromexplorescreen(true);
-                      }}
-                    >
-                      <div>{result.id}</div>
-                      <button
-                        onClick={() => {
-                          close();
-                          enqueueUserMetadata(usermetadata, result);
-                        }}
-                        className="bg-fuchsia-500 text-black px-4 py-2 rounded-full"
-                      >
-                        Posts
-                      </button>
-                      <button
-                        onClick={() => {
-                          router.push(`/feed/reels?hashtag=${result.id}`);
-                        }}
-                        className="bg-fuchsia-500 text-black px-4 py-2 rounded-full"
-                      >
-                        Reels
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {loadinguser ? (
-                <div className="text-xl p-4">Loading users...</div>
-              ) : (
-                <div>
-                  <div className="flex border-b-2 p-2 border-fuchsia-50 ">
-                    <div className="ss mr-5 text-xl">Top Creators</div>
-                    <Image
-                      className="h-7 w-7"
-                      src="/icons/badge.png"
-                      height={50}
-                      width={50}
-                      alt="trending"
-                    />
-                  </div>
-                  {users.map((result) => (
-                    <div
-                      key={result.id}
-                      className="flex justify-between items-center p-2"
-                      onClick={() => {
-                        router.push(`/feed/profile/${result.userName}`);
-                      }}
-                    >
-                      <div>{result.userName}</div>
-                      <button
-                        onClick={() => {
-                          close();
-                          enqueueUserMetadata(usermetadata, result);
-                        }}
-                        className="bg-fuchsia-500 text-black px-4 py-2 rounded-full"
-                      >
-                        Profile
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </>
-        )}
-      </div>
-    </div>
+            </>
+          )}
+        </div>
+      </motion.div>
+    </AnimatePresence>
   );
 };
 

@@ -44,8 +44,9 @@ const GroupChat = ({ userdata, onClose }) => {
     try {
       console.log("searchtext", searchtext);
       const userNameQuery = query(
-        collection(db, "username"),
+        collection(db, "users"),
         where("userName", ">=", searchtext),
+        where("followers", "array-contains", userdata.uid),
         orderBy("userName"),
         limit(5)
       );
@@ -54,6 +55,7 @@ const GroupChat = ({ userdata, onClose }) => {
       const fullNameQuery = query(
         collection(db, "username"),
         where("fullname", ">=", searchtext),
+        where("followers", "array-contains", userdata.uid),
         orderBy("fullname"),
         limit(5)
       );

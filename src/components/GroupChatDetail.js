@@ -24,7 +24,7 @@ const options = {
   useWebWorker: true,
 };
 import BottomSheet from "./BottomSheet";
-const GroupChatDetail = ({ onClose, roomdata, usernames, db }) => {
+const GroupChatDetail = ({ onClose, roomdata, usernames, db, userdata }) => {
   const router = useRouter();
   const [showModal, setShowModal] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -43,18 +43,20 @@ const GroupChatDetail = ({ onClose, roomdata, usernames, db }) => {
   const searchUsers = async () => {
     try {
       const userNameQuery = query(
-        collection(db, "username"),
+        collection(db, "users"),
         where("userName", ">=", searchtext),
-        where("userName", "<=", searchtext + "\uf8ff"),
+        // where("userName", "<=", searchtext + "\uf8ff"),
+        where("followers", "array-contains", userdata.uid),
         orderBy("userName"),
         limit(5)
       );
       const userNameSnapshot = await getDocs(userNameQuery);
 
       const fullNameQuery = query(
-        collection(db, "username"),
+        collection(db, "users"),
         where("fullname", ">=", searchtext),
-        where("fullname", "<=", searchtext + "\uf8ff"),
+        // where("fullname", "<=", searchtext + "\uf8ff"),
+        where("followers", "array-contains", userdata.uid),
         orderBy("fullname"),
         limit(5)
       );

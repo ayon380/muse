@@ -252,7 +252,7 @@ const FeedPost = ({
   return (
     <>
       <motion.div
-        className="z-10 justify-center bg-white  rounded-3xl w-full py-2 lg:px-64 md:px-24   dark:bg-black"
+        className="z-10 justify-center bg-white  rounded-3xl py-2  mx-auto md:px-24   dark:bg-black"
         key={postdata.id}
         initial="hidden"
         animate="visible"
@@ -335,7 +335,7 @@ const FeedPost = ({
                         height={500}
                         width={500}
                         alt=""
-                        className="rounded-xl max-h-96 object-cover"
+                        className="rounded-xl max-h-96 md:max-h-screen object-cover"
                       />
                     </>
                   )}
