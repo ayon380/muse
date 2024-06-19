@@ -207,8 +207,6 @@ const Explore = () => {
   }, [expllorepagestate]);
   return (
     <div className=" w-full h-full">
-      {loading && initialLoad && <MainLoading />}
-      {/* {expllorepagestate} */}
       {loading && !initialLoad && (
         <>
           <div className="main2 md:rounded-2xl bg-white dark:bg-black md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 border-black h-full overflow-y-auto">
@@ -280,7 +278,13 @@ const Explore = () => {
               >
                 <div>
                   <div className="dd mt-32">
-                    <button onClick={() => setFromexplorescreen(false)}>
+                    <button
+                      onClick={() => {
+                        setFromexplorescreen(false);
+                        setexpllorepagestate("");
+                        setPostId(-1);
+                      }}
+                    >
                       Back
                     </button>
                   </div>

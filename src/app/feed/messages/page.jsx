@@ -7,10 +7,8 @@ import { motion } from "framer-motion";
 import "../../styles/gradients.css";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import Link from "next/navigation";
-// import { useScroll } from '@react-hooks-library/core'
 import GifPicker from "gif-picker-react";
 import "../../styles/feed.css";
-import MyComponent from "@/components/MessageWindows";
 import SparklesText from "@/components/SparkleText";
 import {
   collection,
@@ -40,13 +38,11 @@ const MainLoading = dynamic(() => import("@/components/MainLoading"));
 const ChatDetail = dynamic(() => import("@/components/ChatDetail"));
 const GroupChatDetail = dynamic(() => import("@/components/GroupChatDetail"));
 import toast, { Toaster } from "react-hot-toast";
-
 const options = {
   maxSizeMB: 1,
   maxWidthOrHeight: 1920,
   useWebWorker: true,
 };
-const WINDOW_SiZE = 15;
 const Home = () => {
   const searchParams = useSearchParams();
   const room = searchParams.get("roomid") || "";
@@ -62,7 +58,7 @@ const Home = () => {
   const router = useRouter();
   const inputref = useRef(null);
   const [userdata, setUserData] = useState(null);
-  const [currentmsglength, setcurrentmsglength] = useState(WINDOW_SiZE);
+  const [currentmsglength, setcurrentmsglength] = useState(50);
   const messagesEndRef = React.useRef(null);
   const [chatuserdata, setChatuserdata] = useState("");
   const [maxlength, setmaxlength] = useState(0);
@@ -164,7 +160,7 @@ const Home = () => {
       const cw = searchParams.get("chatwindow") || "none";
       if (rid != "" && !chatopen) {
         console.log("Opening chat");
-        setcurrentmsglength(WINDOW_SiZE);
+        setcurrentmsglength(51);
         setchatopen(true);
       }
       if (rid == "" && chatopen) {
@@ -546,7 +542,6 @@ const Home = () => {
 
   useEffect(() => {
     let unsubscribe;
-    console.log(currentmsglength + "currentmsglength");
     const disc = async () => {
       if (userdata && roomid) {
         console.log("Displaying chat...");
@@ -567,7 +562,6 @@ const Home = () => {
             }
           });
           setMessages(messages.reverse());
-          setloadingold(false);
         });
       }
     };
@@ -583,9 +577,7 @@ const Home = () => {
       }
     };
   }, [roomid, currentmsglength]);
-  useEffect(() => {
-    console.log(currentmsglength + "currentmsglength");
-  }, [currentmsglength]);
+
   useEffect(() => {
     if (userdata && roomid) {
       const getlength = async () => {
@@ -596,10 +588,20 @@ const Home = () => {
         }
       };
       getlength();
-      setcurrentmsglength(WINDOW_SiZE);
+      setcurrentmsglength(50);
     }
   }, [roomid]);
 
+  useEffect(() => {
+    // Scroll to the bottom of the chat window when messages update
+    if (loadingold) console.log("loading older" + loadingold);
+    if (messages.length != 0 && !loadingold) {
+      messagesEndRef.current?.scrollIntoView();
+      // rm--;
+      // console.log(rm);
+    }
+    // if (rm == 0) setloadingold(false);
+  }, [messages]);
   const sendMesage = async () => {
     try {
       if (userdata) {
@@ -1010,16 +1012,10 @@ const Home = () => {
     setMediaViewerOpen(false);
     setmediaviewerfiles([]);
   };
-  const loadolder = () => {
-    console.log("Loading older messages...");
-    setcurrentmsglength((prev) => prev + WINDOW_SiZE);
-    setloadingold(true);
-  };
-
   return (
-    <div className=" w-full h-full overflow-hidden">
+    <div className="lg:ml-5 w-full h-full overflow-hidden">
       <Toaster />
-      {mainloading && initialLoad && <MainLoading />}
+     
       {mediaViewerOpen && mediaviewerfiles && (
         <MediaViewer
           mediaviewerfiles={mediaviewerfiles}
@@ -1029,7 +1025,7 @@ const Home = () => {
       )}
       {mainloading && !initialLoad && (
         <>
-          <div className="main2 md:rounded-2xl bg-white dark:bg-black shadow-2xl border-1 border-black h-full overflow-y-auto">
+          <div className="main2 md:rounded-2xl bg-white dark:bg-black md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 border-black h-full overflow-y-auto">
             <div className="flex justify-center items-center h-full">
               <div className="edwdw ">
                 {" "}
@@ -1051,7 +1047,7 @@ const Home = () => {
         </>
       )}
       {userdata && !mainloading && (
-        <div className="main2 w-full lg:rounded-2xl  dark:bg-black md:dark:bg-feedheader bg-white shadow-2xl border-1 border-black h-full">
+        <div className="main2 w-full lg:rounded-2xl  dark:bg-black md:dark:bg-gray-900 bg-white md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 border-black h-full">
           <div className="flex justify-between w-full h-full">
             {gifopen && (
               <div className="absolute right-0 bottom-4 z-40 mb-12 lg:mb-20 mr-1 lg:mr-10">
@@ -1166,7 +1162,7 @@ const Home = () => {
             )}
             {!checkchat("Q") && (
               <div
-                className="followingusers bg-white dark:bg-black w-full lg:w-1/3 rounded-tl-xl rounded-bl-xl overflow-y-auto"
+                className="followingusers bg-white dark:bg-black w-full lg:w-1/3 md:m-6 overflow-y-auto"
                 key={roomid}
               >
                 <div className="flex w-full rounded-b-3xl shadow-xl shadow-fuchsia-100 dark:bg-feedheader dark:shadow-none bg-white p-3 justify-between">
@@ -1292,9 +1288,9 @@ const Home = () => {
                               ? usermetadata[chat.participants[1]].userName
                               : usermetadata[chat.participants[0]].userName}
                             <div className="ds font-light opacity-75 text-sm">
-                              {chat?.lastMessage?.type === "text"
+                              {chat.lastMessage.type === "text"
                                 ? chat.lastMessage.text.substr(0, 40)
-                                : chat.lastMessage?.type === "media"
+                                : chat.lastMessage.type === "media"
                                 ? "Media"
                                 : "Gif"}
                             </div>
@@ -1364,12 +1360,12 @@ const Home = () => {
                   : roomdata.theme == "heaven"
                   ? "bg-[url('/chatbg/heaven.jpeg')]"
                   : "bg-fuchsia-100"
-              } dark:bg-black md:dark:bg-feedheader bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-10 shadow-2xl border-none  md:rounded-2xl h-full relative`}
+              } dark:bg-black md:dark:bg-gray-700  bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-10 shadow-2xl border-none  md:rounded-2xl h-full relative`}
               >
                 {roomid != "" && (
                   <>
                     <div className="overflow-y-auto h-full pb-20  pt-10 w-full">
-                      <div className="fixed top-0 left-0 right-0 rounded-b-3xl z-50 bg-white dark:bg-feedheader lg:rounded-2xl shadow-lg transition-all duration-300 ease-in-out">
+                      <div className="fixed top-0 left-0 right-0 rounded-b-3xl z-50 bg-white dark:bg-feedheader shadow-lg transition-all duration-300 ease-in-out">
                         <div className="container mx-auto px-4 py-3">
                           <div className="flex items-center justify-between">
                             <button
@@ -1446,40 +1442,478 @@ const Home = () => {
                         {currentmsglength < maxlength && (
                           <button
                             onClick={() => {
-                              loadolder();
+                              // rm = maxlength - currentmsglength;
+                              setcurrentmsglength(currentmsglength + 50);
+                              setloadingold(true);
                             }}
                           >
                             Load older Messages{maxlength - currentmsglength}
                           </button>
                         )}
                       </div>
-                      <div
-                        className="gfh mt-20"
-                        ref={messagesEndRef}
-                        // onScroll={handleScroll}
-                      >
-                        <MyComponent
-                          setshowaddfiles={setshowaddfiles}
-                          convertToChatTime={convertToChatTime}
-                          messages={messages}
-                          userdata={userdata}
-                          handleCopy={handleCopy}
-                          setMediaViewerOpen={setMediaViewerOpen}
-                          handleDelete={handleDelete}
-                          handledropdown={handledropdown}
-                          selectedMessage={selectedMessage}
-                          handlemessagereply={handlemessagereply}
-                          setloadingold={setloadingold}
-                          currentmsglength={currentmsglength}
-                          usermetadata={usermetadata}
-                          isDropdownOpen={isDropdownOpen}
-                          setgifopen={setgifopen}
-                          loadolder={loadolder}
-                          loadingold={loadingold}
-                          preventDefault={preventDefault}
-                        />
-                      </div>
-                      <div className="fixed bottom-0 left-0 right-0 rounded-t-3xl lg:rounded-br-xl bg-white dark:bg-feedheader shadow-lg p-4 transition-all duration-300 ease-in-out">
+
+                      {messages.map((message) => (
+                        <motion.div
+                          onClick={() => {
+                            setshowaddfiles(false);
+                            setgifopen(false);
+                          }}
+                          className="px-3 md:px-6 "
+                          key={
+                            message.timestamp + message.sender + message.text
+                          }
+                          initial={{ opacity: 0, y: 50 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.5 }}
+                        >
+                          {message.sender == userdata.uid ? (
+                            <div className="ko flex justify-end my-5 ml-28">
+                              <div
+                                className="e  text-right shadow-xl  bg-fuchsia-300 dark:bg-fuchsia-500 p-2 lg:p-5 rounded-2xl md:rounded-3xl rounded-tr-none cursor-pointer"
+                                onClick={() => handledropdown(message)}
+                              >
+                                <div className="lp">
+                                  <div className="flex justify-end">
+                                    <div className="time text-xs opacity-50 mr-2 mt-1">
+                                      {convertToChatTime(message.timestamp)}
+                                    </div>
+                                    {/* <div className="td text-sm font-bold">
+                                      {usernames[message.sender]}
+                                    </div> */}
+                                    <Image
+                                      className="rounded-full h-5 w-5 ml-1"
+                                      src={userdata.pfp}
+                                      alt="Profile Pic"
+                                      height={50}
+                                      width={50}
+                                    />
+                                  </div>
+                                  <div className="lp">
+                                    {message.type == "gif" && (
+                                      <>
+                                        {" "}
+                                        <Image
+                                          className=" rounded-xl text-center"
+                                          src={message.text}
+                                          alt=""
+                                          height={100}
+                                          width={100}
+                                        />
+                                      </>
+                                    )}
+                                    {message.type == "media" && (
+                                      <div
+                                        className="flex"
+                                        onClick={() => {
+                                          setMediaViewerOpen(true);
+                                          setmediaviewerfiles(message.text);
+                                        }}
+                                      >
+                                        {message.text.map((media, index) => (
+                                          <div key={index}>
+                                            {media.startsWith(
+                                              "https://firebasestorage"
+                                            ) &&
+                                              (media.includes("mp4") ||
+                                                media.includes("mov") ||
+                                                media.includes("mkv") ||
+                                                media.includes("hevc")) && (
+                                                <video
+                                                  loop
+                                                  src={media}
+                                                  alt=""
+                                                  controls
+                                                  className="rounded-xl h-36 w-36 m-2 object-cover"
+                                                />
+                                              )}
+                                            {media.startsWith(
+                                              "https://firebasestorage"
+                                            ) &&
+                                              (media.includes("jpg") ||
+                                                media.includes("heif") ||
+                                                media.includes("jpeg")) && (
+                                                <Image
+                                                  src={media}
+                                                  alt=""
+                                                  height={100}
+                                                  width={100}
+                                                  className="rounded-xl h-36 w-36 m-2 object-cover"
+                                                  onContextMenu={preventDefault} // Prevent right-click context menu
+                                                  onMouseDown={preventDefault} // Prevent drag start
+                                                  onDragStart={preventDefault} // Prevent drag
+                                                />
+                                              )}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+
+                                    {message.type == "text" &&
+                                      (message.text ? (
+                                        <span className="fg text-lg md:text-xl text-wrap">
+                                          {message.text
+                                            .split(/(@\S+|https?:\/\/\S+)/)
+                                            .map((part, index) => {
+                                              if (part.startsWith("@")) {
+                                                // If it's a mention, create a link
+                                                return (
+                                                  <a
+                                                    href={`/${part.slice(1)}`}
+                                                    key={index}
+                                                  >
+                                                    <strong>{part}</strong>
+                                                  </a>
+                                                );
+                                              } else if (
+                                                part.includes("muse.nofilter")
+                                              ) {
+                                                // If it's a Muse post, create a link
+                                                return (
+                                                  <a
+                                                    href={message.text}
+                                                    key={message.text}
+                                                  >
+                                                    <div className="flex items-center justify-center px-4 py-2 rounded-md bg-gradient-to-r from-purple-500 to-pink-600 text-white font-semibold hover:from-purple-600 hover:to-pink-700 transition duration-300">
+                                                      <span>See Post</span>
+                                                      <svg
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                        className="h-5 w-5 ml-2"
+                                                        viewBox="0 0 20 20"
+                                                        fill="currentColor"
+                                                      >
+                                                        <path
+                                                          fillRule="evenodd"
+                                                          d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+                                                          clipRule="evenodd"
+                                                        />
+                                                      </svg>
+                                                    </div>
+                                                  </a>
+                                                );
+                                              } else if (
+                                                part.startsWith("http")
+                                              ) {
+                                                // If it's a website link, create a link
+                                                return (
+                                                  <a href={part} key={index}>
+                                                    <strong>{part}</strong>
+                                                  </a>
+                                                );
+                                              } else {
+                                                // Otherwise, render it as plain text
+                                                return (
+                                                  <React.Fragment key={index}>
+                                                    {part}
+                                                  </React.Fragment>
+                                                );
+                                              }
+                                            })}
+                                        </span>
+                                      ) : (
+                                        <div className="fg text-xl">
+                                          {message.text}
+                                        </div>
+                                      ))}
+                                  </div>
+                                </div>
+                                {isDropdownOpen &&
+                                  selectedMessage == message && (
+                                    <motion.div
+                                      className="dropdown-menu  mt-4 flex"
+                                      initial={{ opacity: 0, height: 0 }}
+                                      animate={{
+                                        opacity: isDropdownOpen ? 1 : 0,
+                                        height: isDropdownOpen ? "auto" : 0,
+                                      }}
+                                      transition={{
+                                        duration: 0.3,
+                                        ease: "easeInOut",
+                                      }}
+                                      layoutTransition={{
+                                        type: "tween",
+                                        duration: 0.3,
+                                        ease: "easeInOut",
+                                      }}
+                                    >
+                                      <button
+                                        onClick={() =>
+                                          handlemessagereply(message)
+                                        }
+                                      >
+                                        <Image
+                                          className="h-5 w-5 rounded-full"
+                                          src="/icons/reply.png"
+                                          height={50}
+                                          width={50}
+                                          alt=""
+                                        />
+                                      </button>
+                                      {message.readstatus ? (
+                                        <>
+                                          {""}
+                                          <Image
+                                            className="w-5 h-5 
+                                            "
+                                            src="/icons/readt.png"
+                                            height={100}
+                                            width={100}
+                                            alt="delete"
+                                          />
+                                        </>
+                                      ) : (
+                                        <>
+                                          {" "}
+                                          <Image
+                                            className="w-5 h-5 "
+                                            src="/icons/read.png"
+                                            height={50}
+                                            width={50}
+                                            alt="delete"
+                                          />
+                                        </>
+                                      )}
+                                      <button
+                                        className=" ml-2 dropdown-item mr-2 disabled:hidden"
+                                        onClick={() => handleCopy(message.text)}
+                                        disabled={
+                                          message.type == "media" ||
+                                          message.type == "gif"
+                                        }
+                                      >
+                                        <Image
+                                          className="w-5 h-5 "
+                                          src="/icons/copy.png"
+                                          height={50}
+                                          width={50}
+                                          alt="delete"
+                                        />
+                                      </button>
+                                      <button
+                                        className="dropdown-item"
+                                        onClick={handleDelete}
+                                      >
+                                        <Image
+                                          className="w-5 h-5 "
+                                          src="/icons/delete.png"
+                                          height={50}
+                                          width={50}
+                                          alt="delete"
+                                        />
+                                      </button>
+                                      {/* Delete button */}
+                                    </motion.div>
+                                  )}
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <div className="ko  flex right-0 my-5">
+                                <div
+                                  className="e bg-purple-300 dark:bg-purple-500 p-2 lg:p-5 shadow-xl rounded-2xl  md:rounded-3xl rounded-tl-none"
+                                  onClick={() => handledropdown(message)}
+                                >
+                                  <div className="lp">
+                                    <div className="flex">
+                                      {/* {console.log(pfps[message.sender])} */}
+                                      {usermetadata[message.sender] && (
+                                        <Image
+                                          src={usermetadata[message.sender].pfp}
+                                          className="rounded-full h-5 w-5 mr-1"
+                                          alt="Profile Pic"
+                                          height={50}
+                                          width={50}
+                                        />
+                                      )}
+
+                                      <div className="time text-xs ml-1  opacity-50">
+                                        {convertToChatTime(message.timestamp)}
+                                      </div>
+                                    </div>
+                                    {message.type == "gif" && (
+                                      <>
+                                        {" "}
+                                        <Image
+                                          className=" rounded-xl text-center"
+                                          src={message.text}
+                                          alt=""
+                                          height={100}
+                                          width={100}
+                                        />
+                                      </>
+                                    )}
+                                    {message.type == "media" && (
+                                      <div
+                                        className="flex"
+                                        onClick={() => {
+                                          setmediaviewerfiles(message.text);
+                                          setMediaViewerOpen(true);
+                                        }}
+                                      >
+                                        {message.text.map((media, index) => (
+                                          <div key={index}>
+                                            {media.startsWith(
+                                              "https://firebasestorage"
+                                            ) &&
+                                              (media.includes("mp4") ||
+                                                media.includes("mov") ||
+                                                media.includes("mkv") ||
+                                                media.includes("hevc")) && (
+                                                <video
+                                                  loop
+                                                  src={media}
+                                                  alt=""
+                                                  controls
+                                                  className="rounded-xl h-36 w-36 m-2 object-cover"
+                                                />
+                                              )}
+                                            {media.startsWith(
+                                              "https://firebasestorage"
+                                            ) &&
+                                              (media.includes("jpg") ||
+                                                media.includes("heif") ||
+                                                media.includes("jpeg")) && (
+                                                <Image
+                                                  src={media}
+                                                  alt=""
+                                                  height={100}
+                                                  width={100}
+                                                  className="rounded-xl h-36 w-36 m-2 object-cover"
+                                                />
+                                              )}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    )}
+                                    {message.type == "text" &&
+                                      (message.text ? (
+                                        <span className="fg text-lg md:text-xl text-wrap">
+                                          {message.text
+                                            .split(/(@\S+|https?:\/\/\S+)/)
+                                            .map((part, index) => {
+                                              if (part.startsWith("@")) {
+                                                // If it's a mention, create a link
+                                                return (
+                                                  <a
+                                                    href={`/${part.slice(1)}`}
+                                                    key={index}
+                                                  >
+                                                    <strong>{part}</strong>
+                                                  </a>
+                                                );
+                                              } else if (
+                                                part.includes("muse.nofilter")
+                                              ) {
+                                                // If it's a Muse post, create a link
+                                                return (
+                                                  <a
+                                                    href={message.text}
+                                                    key={message.text}
+                                                  >
+                                                    <div className="flex items-center justify-center px-4 py-2 rounded-md bg-gradient-to-r from-purple-500 to-pink-600 text-white font-semibold hover:from-purple-600 hover:to-pink-700 transition duration-300">
+                                                      <span>See Post</span>
+                                                      <svg
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                        className="h-5 w-5 ml-2"
+                                                        viewBox="0 0 20 20"
+                                                        fill="currentColor"
+                                                      >
+                                                        <path
+                                                          fillRule="evenodd"
+                                                          d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+                                                          clipRule="evenodd"
+                                                        />
+                                                      </svg>
+                                                    </div>
+                                                  </a>
+                                                  // <>Muse Post</>
+                                                );
+                                              } else if (
+                                                part.startsWith("http")
+                                              ) {
+                                                // If it's a website link, create a link
+                                                return (
+                                                  <a href={part} key={index}>
+                                                    <strong>{part}</strong>
+                                                  </a>
+                                                );
+                                              } else {
+                                                // Otherwise, render it as plain text
+                                                return (
+                                                  <React.Fragment key={index}>
+                                                    {part}
+                                                  </React.Fragment>
+                                                );
+                                              }
+                                            })}
+                                        </span>
+                                      ) : (
+                                        <div className="fg text-xl">
+                                          {message.text}
+                                        </div>
+                                      ))}
+                                  </div>
+                                  {isDropdownOpen &&
+                                    selectedMessage == message && (
+                                      <motion.div
+                                        className="dropdown-menu  mt-4 flex"
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{
+                                          opacity: isDropdownOpen ? 1 : 0,
+                                          height: isDropdownOpen ? "auto" : 0,
+                                        }}
+                                        transition={{
+                                          duration: 0.3,
+                                          ease: "easeInOut",
+                                        }}
+                                        layoutTransition={{
+                                          type: "tween",
+                                          duration: 0.3,
+                                          ease: "easeInOut",
+                                        }}
+                                      >
+                                        <button
+                                          onClick={() =>
+                                            handlemessagereply(message)
+                                          }
+                                        >
+                                          <Image
+                                            className="h-5 w-5 rounded-full"
+                                            src="/icons/reply.png"
+                                            height={50}
+                                            width={50}
+                                            alt=""
+                                          />
+                                        </button>
+
+                                        <button
+                                          className=" ml-2 dropdown-item mr-2 disabled:hidden"
+                                          onClick={() =>
+                                            handleCopy(message.text)
+                                          }
+                                          disabled={
+                                            message.type == "media" ||
+                                            message.type == "gif"
+                                          }
+                                        >
+                                          <Image
+                                            className="w-5 h-5 "
+                                            src="/icons/copy.png"
+                                            height={50}
+                                            width={50}
+                                            alt="delete"
+                                          />
+                                        </button>
+                                      </motion.div>
+                                    )}
+                                </div>
+                              </div>
+                            </>
+                          )}
+                        </motion.div>
+                      ))}
+
+                      <div ref={messagesEndRef} />
+                      <div className="fixed bottom-0 left-0 right-0 rounded-t-3xl bg-white dark:bg-feedheader shadow-lg p-4 transition-all duration-300 ease-in-out">
                         <div className="container mx-auto">
                           <div className="flex items-center space-x-2">
                             <div className="flex-grow">

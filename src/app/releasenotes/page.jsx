@@ -4,6 +4,14 @@ import React from "react";
 const ReleaseNotes = () => {
   const releaseNotes = [
     {
+      version: "v0.91",
+      descriptions:[
+        "Refresh Bug Fixed in this Update",
+        "Bug Fixes",
+        "Improved Explore"
+      ]
+    },
+    {
       version: "v0.89",
       descriptions: [
         "All new Notification Panel UI",

@@ -2,6 +2,7 @@
 import React, { useEffect, useMemo, useState, useRef } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
+import useInfiniteScroll from "react-easy-infinite-scroll-hook";
 const MyComponent = ({
   messages,
   userdata,
@@ -15,71 +16,26 @@ const MyComponent = ({
   loadolder,
   setMediaViewerOpen,
   loadingold,
+  maxlength,
   handledropdown,
   selectedMessage,
   handlemessagereply,
   preventDefault,
 }) => {
-  const divRef = React.useRef(null);
-  const [loadingolder, setloadingolder] = useState(false);
   const scrollContainerRef = useRef(null);
-  const handleScroll = useMemo(() => {
-    if (!scrollContainerRef.current) return null;
-
-    return () => {
-      const scrollContainer = scrollContainerRef.current;
-      if (scrollContainer.scrollTop === 0 && !loadingolder) {
-        const previousScrollHeight = scrollContainer.scrollHeight;
-        console.log(previousScrollHeight + "previousScrollHeight");
-        setloadingolder(true);
-        loadolder();
-
-        // Delay execution to allow DOM updates
-        setTimeout(() => {
-          const newScrollHeight = scrollContainer.scrollHeight;
-          const heightDifference = newScrollHeight - previousScrollHeight;
-
-          // Set the scroll position to maintain the user's view
-          scrollContainer.scrollTop = heightDifference;
-          setloadingolder(false);
-        }, 3000); // Adjust the delay as necessary
-      }
-    };
-  }, [loadolder, loadingolder]);
-
   useEffect(() => {
     const scrollContainer = scrollContainerRef.current;
-    const handleScrollEvent = handleScroll;
+    const lastMessageElement = scrollContainer?.lastElementChild;
 
-    if (handleScrollEvent) {
-      scrollContainer.addEventListener("scroll", handleScrollEvent);
+    if (lastMessageElement) {
+      lastMessageElement.scrollIntoView({ behavior: "smooth" });
     }
-
-    return () => {
-      if (handleScrollEvent) {
-        scrollContainer.removeEventListener("scroll", handleScrollEvent);
-      }
-    };
-  }, [handleScroll]);
-  const messagesEndRef = useRef(null);
-
-  useEffect(() => {
-    if (loadingolder) {
-      return;
-    }
-    const scrollToBottom = () => {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    };
-
-    scrollToBottom();
-  }, [messages, loadingolder]);
-
+  }, [messages]);
   return (
     <div className="text-white">
       <div
         ref={scrollContainerRef}
-        style={{ overflowY: "scroll", height: "90vh" }}
-        // onScroll={handleScroll}
+        style={{ overflowY: "auto", height: "50vh" }}
       >
         {messages.map((message) => (
           <div
@@ -489,10 +445,8 @@ const MyComponent = ({
             )}
           </div>
         ))}
-        <div ref={messagesEndRef} />
-        {/* ... */}
       </div>
-      {/* <p>Scroll position: {scrollPosition}</p> */}
+      {/* ... */}
     </div>
   );
 };

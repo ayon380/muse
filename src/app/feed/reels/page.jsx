@@ -44,11 +44,35 @@ const Reels = () => {
     toggleload,
     usermetadata,
     enqueueUserMetadata,
+    unread,
   } = useSidebarStore();
   const toggleGlobalMute = () => {
     setIsGlobalMuted((prevState) => !prevState);
   };
-
+  const fetchreelbyhash = async () => {
+    console.log("fetching reels by hash");
+    try {
+      const q = query(
+        collection(db, "reels"),
+        where("hashtags", "array-contains", hash),
+        orderBy("timestamp", "desc"),
+        limit(20)
+      );
+      const res = await getDocs(q);
+      let rls = [];
+      res.forEach((doc) => {
+        enqueueUserMetadata(doc.data().uid);
+        rls.push({ ...doc.data(), id: doc.id });
+      });
+      setReels(rls);
+      setReelsloading(false);
+    } catch (err) {
+      console.log("Error" + err.message);
+    }
+  };
+  useEffect(() => {
+    if (userdata) fetchreelbyhash();
+  }, [hash, userdata]);
   const [reel, setReel] = useState(null);
   const getuserdata = async (currentUser) => {
     const userRef = doc(db, "users", currentUser.email);
@@ -119,7 +143,7 @@ const Reels = () => {
   };
 
   useEffect(() => {
-    if (currentreel > reels.length - 3 && reels.length > 0) {
+    if (currentreel > reels.length - 3 && reels.length > 0 && hash == NULL) {
       fetchReels();
       console.log("fetching more reels");
     }
@@ -152,7 +176,6 @@ const Reels = () => {
   }, [reelsloading]);
   return (
     <div className=" w-full h-full">
-      {reelsloading && initialLoad && <MainLoading />}
       {reelsloading && !initialLoad && (
         <>
           <div className="main2 md:rounded-2xl bg-slate-100 dark:bg-black md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl dark:shadow-none border-1 border-black h-full overflow-y-auto">
@@ -223,27 +246,11 @@ const Reels = () => {
                       className="mt-2 mr-2 h-7 w-7"
                       alt="SidebAr"
                     />
+                    <span className="absolute top-3 right-5 bg-red-500 text-white rounded-full px-1 text-xs">
+                      {unread}
+                    </span>
                   </button>
                 </div>
-                <button onClick={toggleGlobalMute} className="">
-                  {isGlobalMuted ? (
-                    <Image
-                      src="/icons/soundon.png"
-                      className="dark:invert h-7 w-7"
-                      height={50}
-                      width={50}
-                      alt="sound on"
-                    />
-                  ) : (
-                    <Image
-                      className="dark:invert h-7 w-7"
-                      src="/icons/mute.png"
-                      height={50}
-                      width={50}
-                      alt="sound off"
-                    />
-                  )}
-                </button>
               </div>
             </div>
             <div className="fl flex justify-center">
@@ -265,6 +272,7 @@ const Reels = () => {
                       setCurrentReel={setCurrentReel}
                       userdata={userdata}
                       isGlobalMuted={isGlobalMuted}
+                      toggleGlobalMute={toggleGlobalMute}
                     />
                   </div>
                 ))}

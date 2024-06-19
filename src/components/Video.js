@@ -27,6 +27,7 @@ const Reel = ({
   idx,
   setCurrentReel,
   setSharemenu,
+  toggleGlobalMute,
   usermetadata,
   setShowComments,
   enqueueUserMetadata,
@@ -36,6 +37,7 @@ const Reel = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const db = getFirestore(app);
+  const [pendingUpdate, setPendingUpdate] = useState(null);
   const [reeldata, setReeldata] = useState(reel);
   const router = useRouter();
   const [liked, setLiked] = useState(false);
@@ -83,25 +85,72 @@ const Reel = ({
     }
   };
   const handleLike = async () => {
+    const newLikedState = !liked;
+    console.log(newLikedState + "newLikedState");
+    setLiked(newLikedState);
+    setReeldata({
+      ...reeldata,
+      likecount: reeldata.likecount + (newLikedState ? +1 : -1),
+    });
     if (userdata) {
       const postRef = doc(db, "reels", reeldata.id);
-      if (liked) {
-        setLiked(false);
-        await updateDoc(postRef, {
-          likes: arrayRemove(userdata.uid),
-          likecount: increment(-1),
-        });
-      } else {
-        setLiked(true);
+      const usernameRef = doc(db, "username", userdata.uid);
+      // Update the local state immediately
+
+      // Debounce the database update
+      clearTimeout(pendingUpdate); // Cancel any previously debounced calls
+      setPendingUpdate(
+        setTimeout(updateLike, 5000, postRef, usernameRef, newLikedState)
+      );
+    }
+  };
+
+  const updateLike = async (postRef, usernameRef, newLikedState) => {
+    try {
+      if (newLikedState) {
         await updateDoc(postRef, {
           likes: arrayUnion(userdata.uid),
           likecount: increment(1),
         });
-        sendNotification(reeldata);
+        await updateDoc(usernameRef, {
+          score: increment(1),
+        });
+        sendNotification(postdata);
+        const hashtags = postdata.hashtags;
+        hashtags.forEach(async (hashtag) => {
+          const hashtagRef = doc(db, "hashtags", hashtag);
+          const hashtagDoc = await getDoc(hashtagRef);
+
+          if (hashtagDoc.exists()) {
+            // Hashtag document exists, increment the count
+            await updateDoc(hashtagRef, {
+              count: increment(1),
+            });
+          } else {
+            // Hashtag document doesn't exist, create it with count set to 1
+            await setDoc(hashtagRef, {
+              count: 1,
+              tag: hashtag.toLowerCase(),
+            });
+          }
+        });
+      } else {
+        await updateDoc(postRef, {
+          likes: arrayRemove(userdata.uid),
+          likecount: increment(-1),
+        });
+        await updateDoc(usernameRef, {
+          score: increment(-1),
+        });
       }
-      refetchReel();
+    } catch (error) {
+      console.error("Error updating post or username:", error);
     }
   };
+
+  useEffect(() => {
+    return () => clearTimeout(pendingUpdate);
+  }, [pendingUpdate]);
   useEffect(() => {
     const reel = reelRef.current;
     const handlePlayPause = () => {
@@ -355,34 +404,25 @@ const Reel = ({
           <div className="flex justify-between">
             <div className="lp flex ">
               <div className="btnl text-4xl h-10 w-10 " onClick={handleLike}>
-                <CoolMode
-                  options={{
-                    size: 30,
-                    particleCount: 50,
-                    speedHorz: 5,
-                    speedUp: 10,
-                  }}
-                >
-                  <button>
-                    {!liked ? (
-                      <Image
-                        src="/icons/notliked.png"
-                        alt="Not Liked"
-                        className="h-7 dark:invert w-7"
-                        height={50}
-                        width={50}
-                      />
-                    ) : (
-                      <Image
-                        src="/icons/liked.png"
-                        alt="Liked"
-                        className="h-7 w-7"
-                        height={50}
-                        width={50}
-                      />
-                    )}
-                  </button>
-                </CoolMode>
+                <button>
+                  {!liked ? (
+                    <Image
+                      src="/icons/notliked.png"
+                      alt="Not Liked"
+                      className="h-7 invert w-7"
+                      height={50}
+                      width={50}
+                    />
+                  ) : (
+                    <Image
+                      src="/icons/liked.png"
+                      alt="Liked"
+                      className="h-7 w-7"
+                      height={50}
+                      width={50}
+                    />
+                  )}
+                </button>
                 <div />
               </div>
               <div
@@ -403,17 +443,33 @@ const Reel = ({
                 <Image
                   src="/icons/feedsend.png"
                   alt="Share"
-                  className="invert h-7 w-7 mr-4"
+                  className="invert h-7 w-7 mr-2"
                   height={50}
                   width={50}
                 />
               </button>
-              <button className="report-button" onClick={Reportposttt}>
-                <MdOutlineReportGmailerrorred />
+              <button onClick={toggleGlobalMute} className="">
+                {isGlobalMuted ? (
+                  <Image
+                    src="/icons/soundon.png"
+                    className="invert h-7 w-7"
+                    height={50}
+                    width={50}
+                    alt="sound on"
+                  />
+                ) : (
+                  <Image
+                    className="invert h-7 w-7"
+                    src="/icons/mute.png"
+                    height={50}
+                    width={50}
+                    alt="sound off"
+                  />
+                )}
               </button>
             </div>
           </div>
-          <div className="caption opacity-75">{reeldata.caption}</div>
+          <div className="caption opacity-90">{reeldata.caption}</div>
 
           <button
             className="show-comments-button opacity-50"
@@ -427,215 +483,7 @@ const Reel = ({
           </button>
         </div>
 
-        {/* {showComments && (
-          <div
-            className="comments-menu rounded-t-xl bg-white bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-20 shadow-2xl border-1 border-black w-full  z-10  overflow-y-auto "
-            style={{
-              width: "100%",
-              height: "60vh",
-              position: "absolute",
-              bottom: 0,
-              left: 0,
-              transition: "height 0.5s",
-            }}
-          >
-            <div className="lp w-full flex justify-center">
-              <button className="my-3" onClick={() => setShowComments(false)}>
-                ⬇️
-              </button>
-            </div>
-            <div
-              className="comments-list p-4 overflow-y-auto"
-              style={{ height: "50vh" }}
-            >
-              {commentList.map((comment) => (
-                <div
-                  key={comment.timestamp + Math.random()}
-                  className="comment transition transform-gpu rounded-xl bg-gray-600 my-5 p-5 mx-5 bg-opacity-10"
-                >
-                  <div className="flex z-20">
-                    {usermetadata[comment.uid] ? (
-                      <Link href={`/${usermetadata[comment.uid].userName}`}>
-                        <div className="flex ">
-                          <Image
-                            className="rounded-full h-6 w-6 "
-                            src={usermetadata[comment.uid].pfp}
-                            height={50}
-                            width={50}
-                            alt="Commenter Profile Pic"
-                          />
-
-                          <div
-                            className="hy text-xs w-24 opacity-80 ml-2"
-                            style={{ marginTop: "2px" }}
-                          >
-                            {usermetadata[comment.uid].userName}
-                          </div>
-                        </div>
-                      </Link>
-                    ) : (
-                      <>Loading..</>
-                    )}
-                    <div
-                      className="time text-xs opacity-60"
-                      style={{ marginTop: "2px" }}
-                    >
-                      {comment.timestamp}
-                    </div>
-                    <div
-                      className="btnl text-2xl  ml-10 "
-                      onClick={() => handleCommentLike(comment.id)}
-                    >
-                      {!commentlikes[comment.id] ? (
-                        <div className="lp text-xl">
-                          <FaRegHeart />
-                        </div>
-                      ) : (
-                        <TiHeartFullOutline style={{ color: "red" }} />
-                      )}
-                      <div />
-                    </div>
-                  </div>
-                  <p>{comment.content}</p>
-                  <div className="flex">
-                    <div className="lieks opacity-75 mr-5 text-xs">
-                      {comment.likecount} likes
-                    </div>
-                    <div
-                      className="reply opacity-75 cursor-pointer text-xs"
-                      onClick={() => {
-                        getReplies(comment);
-                        setCommentreply((prevCommentreply) => ({
-                          ...prevCommentreply,
-                          [comment.id]: !commentreply[comment.id],
-                        }));
-                      }}
-                    >
-                      {commentreply[comment.id] ? "" : "Show Replies"}
-                    </div>
-                    {commentreply[comment.id] && (
-                      <div className="q">
-                        {replies[comment.id] &&
-                          (replies[comment.id].length > 0 ? (
-                            <>
-                              {replies[comment.id].map((reply) => (
-                                <>
-                                  <div
-                                    className="flex z-20 my-3"
-                                    key={reply.id}
-                                  >
-                                    {usermetadata[comment.uid] ? (
-                                      <Link
-                                        href={`/${usermetadata[reply.uid].userName
-                                          }`}
-                                      >
-                                        <div className="flex ">
-                                          <Image
-                                            className="rounded-full h-6 w-6 "
-                                            src={usermetadata[reply.uid].pfp}
-                                            height={50}
-                                            width={50}
-                                            alt="Commenter Profile Pic"
-                                          />
-
-                                          <div
-                                            className="hy text-xs w-24 opacity-80 ml-2"
-                                            style={{ marginTop: "2px" }}
-                                          >
-                                            {usermetadata[reply.uid].userName}
-                                          </div>
-                                        </div>
-                                      </Link>
-                                    ) : (
-                                      <>Loading..</>
-                                    )}
-                                    <div
-                                      className="time text-xs opacity-60"
-                                      style={{ marginTop: "2px" }}
-                                    >
-                                      {reply.timestamp}
-                                    </div>
-                                  </div>
-                                  <p className="-mt-2 mb-2">{reply.content}</p>
-                                </>
-                              ))}
-                            </>
-                          ) : (
-                            <div className="flex justify-center w-full mt-20">
-                              No Replies Yet
-                            </div>
-                          ))}
-                        <div className="lp flex">
-                          <input
-                            type="text"
-                            className="text-sm text-black w-5/6 rounded-2xl leading-6 px-2 py-1 transition duration-100 border border-gray-300 bg-gray-200 block h-9 focus:border-purple-600 focus:bg-white"
-                            placeholder="Reply"
-                            value={reply}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                handleReplySubmit(comment);
-                              }
-                            }}
-                            onChange={(e) => setReply(e.target.value)}
-                            autoFocus
-                            autoComplete=""
-                            autoCorrect="" // Prevent event propagation
-                          />
-
-                          <button
-                            className="ml-5 btn px-10"
-                            // onClick={handleCommentSubmit}
-                            onClick={() => {
-                              handleReplySubmit(comment);
-                            }}
-                          >
-                            Reply
-                          </button>
-                          <button
-                            className="btn ml-5 px-10"
-                            onClick={() =>
-                              setCommentreply((prevCommentreply) => {
-                                return {
-                                  ...prevCommentreply,
-                                  [comment.id]: !commentreply[comment.id],
-                                };
-                              })
-                            }
-                          >
-                            Close
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-              {commentList.length === 0 && (
-                <div className="flex justify-center w-full mt-20">
-                  No Comments Yet
-                </div>
-              )}
-            </div>
-            <div className="comment-section flex sticky bottom-0 p-4">
-              <input
-                type="text"
-                class="text-sm text-black w-5/6 rounded-2xl leading-6 px-2 py-1 transition duration-100 border border-gray-300 bg-gray-200 block h-9 hover:border-gray-400 focus:border-purple-600 focus:bg-white"
-                placeholder="Add a comment emoji 😀"
-                value={comment}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    handleCommentSubmit();
-                  }
-                }}
-                onChange={(e) => setComment(e.target.value)}
-              />
-
-              <button className="ml-5 btn px-10" onClick={handleCommentSubmit}>
-                Comment
-              </button>
-            </div>
-          </div>
-        )} */}
+       
       </div>
       <Toaster />
     </div>

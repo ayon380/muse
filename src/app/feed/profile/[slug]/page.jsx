@@ -53,7 +53,8 @@ const Page = ({ params }) => {
   const [followersbox, setFollowersbox] = React.useState();
   const [followingbox, setfollowingbox] = React.useState();
   const [sharemenuopen, setSharemenuopen] = React.useState(false);
-  const { usermetadata, enqueueUserMetadata } = useSidebarStore();
+  const { usermetadata, enqueueUserMetadata, initialLoad, toggleload } =
+    useSidebarStore();
   const checkfollow = () => {
     console.log(userdata.followers);
     console.log(currentuserdata.uid);
@@ -142,6 +143,7 @@ const Page = ({ params }) => {
       console.log(temp);
     }
     setPosts(temp);
+    toggleload();
   };
   // console.log(user);
   const emaillookup = async () => {
@@ -332,6 +334,25 @@ const Page = ({ params }) => {
   const handlestartchat = async () => {
     router.push(`/feed/messages?chatwindow=${userdata.uid}`);
   };
+  function formatFirebaseTimestamp(timestamp) {
+    const { seconds, nanoseconds } = timestamp;
+
+    // Convert the seconds and nanoseconds to milliseconds
+    const milliseconds = seconds * 1000 + nanoseconds / 1000000;
+
+    // Create a new Date object using the milliseconds
+    const date = new Date(milliseconds);
+
+    // Format the date into a readable string for social media posts
+    const options = {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    };
+    const readableDate = date.toLocaleString("en-US", options);
+
+    return readableDate;
+  }
   return (
     <div className=" w-full h-full">
       <Toaster />
@@ -757,6 +778,61 @@ const Page = ({ params }) => {
                             No Saved Posts Yet
                           </div>
                         )}
+                      </div>
+                    )}
+                    {pagestate === 4 && (
+                      <div className="text m-4 flex justify-center items-center w-full h-full">
+                        <div className="df rounded-lg shadow-lg p-6 ">
+                          {userdata && (
+                            <>
+                              {/* Display user's date of birth */}
+                              <p className="mb-2">
+                                <span className="font-semibold">
+                                  Date of Birth:
+                                </span>{" "}
+                                {formatFirebaseTimestamp(userdata.dob)}
+                              </p>
+
+                              {/* Display user's gender */}
+                              <p className="mb-2">
+                                <span className="font-semibold">Gender:</span>{" "}
+                                {userdata.gender}
+                              </p>
+
+                              {/* Display user's organization */}
+                              <p className="mb-2">
+                                <span className="font-semibold">
+                                  Organization:
+                                </span>{" "}
+                                {userdata.org}
+                              </p>
+
+                              {/* Display user's profession */}
+                              <p className="mb-2">
+                                <span className="font-semibold">
+                                  Profession:
+                                </span>{" "}
+                                {userdata.profession}
+                              </p>
+
+                              {/* Display user's public/private status */}
+                              <p className="mb-2">
+                                <span className="font-semibold">
+                                  Public/Private:
+                                </span>{" "}
+                                {userdata.pubpriv}
+                              </p>
+
+                              {/* Display user's state and city (commented out) */}
+                              {/* <p className="mb-2">
+                              <span className="font-semibold">State:</span> {userdata.state}
+                            </p>
+                            <p className="mb-2">
+                              <span className="font-semibold">City:</span> {userdata.city}
+                            </p> */}
+                            </>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>

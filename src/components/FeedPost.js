@@ -50,7 +50,6 @@ import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 const Modal = dynamic(() => import("./Modal"));
 const EditPost = dynamic(() => import("./EditPost"));
-import { CoolMode } from "@/components/Coolmode";
 const SimpleVideoPlayer = dynamic(() => import("./SimpleVideoPlayer"));
 const FeedPost = ({
   db,

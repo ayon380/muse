@@ -12,7 +12,7 @@ html {
   /* border-radius: 20px; */
   /* background-color: white; */
   overflow: scroll;
-  scroll-padding-bottom: 6vh;
+  scroll-padding-bottom: 8vh;
   scroll-snap-type: y mandatory;
 }
 

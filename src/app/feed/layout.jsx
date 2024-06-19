@@ -6,6 +6,7 @@ import app from "@/lib/firebase/firebaseConfig";
 import SideBar from "../../components/SideBar";
 import Bottomnav from "../../components/Bottomnav";
 import Notification from "../../components/Notification";
+import MainLoading from "@/components/MainLoading";
 import { getFirestore } from "firebase/firestore";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import {
@@ -19,7 +20,7 @@ import { useSidebarStore } from "../store/zustand";
 
 const Layout = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
-  const { enqueueUserMetadata } = useSidebarStore();
+  const { enqueueUserMetadata,initialLoad } = useSidebarStore();
   const [nottype, setNottype] = useState(false);
   const [notysound, setNotysound] = useState(null);
 
@@ -30,7 +31,9 @@ const Layout = ({ children }) => {
 
   const playSound = () => {
     if (notysound) {
-      notysound.play().catch((error) => console.log("Error playing sound:", error));
+      notysound
+        .play()
+        .catch((error) => console.log("Error playing sound:", error));
     }
   };
 
@@ -104,8 +107,9 @@ const Layout = ({ children }) => {
   }, [enqueueUserMetadata]);
 
   return (
-    <div className="h-dvh overflow-hidden w-screen flex items-center font-rethink relative text-black">
-      <div className="main tndmain w-screen bg-transparent dark:bg-transparent dark:text-white rounded-2xl lg:mx-4 align-middle max-w-none">
+    <div className="h-dvh  w-screen flex items-center font-rethink relative text-black">
+      {initialLoad && <MainLoading />}
+      <div className="main tndmain overflow-hidden w-screen max-h-dvh bg-transparent dark:bg-transparent dark:text-white rounded-2xl lg:mx-4 align-middle max-w-none">
         <div className="flex h-full">
           <SideBar usage={"feed"} />
           <Bottomnav />

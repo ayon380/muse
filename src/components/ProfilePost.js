@@ -484,7 +484,7 @@ const FeedPost = ({
                       onClick={() => setShowedit(true)}
                     />
                     <Image
-                      className="dark:invert h-7 w-7"
+                      className=" h-7 w-7"
                       src="/icons/delete.png"
                       height={50}
                       width={50}

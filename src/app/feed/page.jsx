@@ -82,6 +82,7 @@ const Home = () => {
 
     try {
       if (userdata && userdata.following) {
+        setPostLoading(true);
         const w = query(
           collection(db, "posts"),
           where("uid", "in", userdata.following),
@@ -97,9 +98,9 @@ const Home = () => {
           enqueueUserMetadata(doc.data().uid);
         });
         setPosts(data);
+        setPostLoading(false);
         // console.log(userData);
       }
-      setPostLoading(false);
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -236,7 +237,7 @@ const Home = () => {
           />
         </div>
       )}
-      {postloading && initialLoad && <MainLoading />}
+    
       {postloading && !initialLoad && (
         <>
           <div className="main2 md:rounded-2xl bg-white dark:bg-black shadow-2xl border-1 border-black h-full overflow-y-auto">

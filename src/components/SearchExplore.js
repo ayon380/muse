@@ -85,13 +85,13 @@ const SearchExplore = ({
       console.log("Searching for users with username:", search);
       const usersCollectionRef = collection(db, "username");
       const text = search.toLowerCase();
-
+      console.log(text);
       // Query for usernames
       const usersQuery = query(
         usersCollectionRef,
         where("userName", ">=", text),
         where("userName", "<=", text + "\uf8ff"),
-        limit(10)
+        limit(1)
       );
 
       const usernameQuerySnapshot = await getDocs(usersQuery);
@@ -106,7 +106,7 @@ const SearchExplore = ({
         usersCollectionRef,
         where("fullname", ">=", text),
         where("fullname", "<=", text + "\uf8ff"),
-        limit(10)
+        limit(1)
       );
 
       const fullnameQuerySnapshot = await getDocs(fullnameQuery);
@@ -136,16 +136,6 @@ const SearchExplore = ({
     }
   };
 
-  const debounceSearch = useCallback(
-    debounce((value) => {
-      if (value.length > 0) {
-        searchUsers();
-      } else {
-        setSearchResults([]);
-      }
-    }, 300),
-    []
-  );
   const searchHashtags = async () => {
     try {
       setSearching(true);
@@ -173,15 +163,25 @@ const SearchExplore = ({
     }
   };
   useEffect(() => {
-    if (search.startsWith("#")) {
-      setSearchtype("hashtags");
-      console.log(search);
-      setTimeout(() => {
-        searchHashtags();
-        clearInterval();
-      }, 300);
-    } else debounceSearch(search);
-  }, [search, debounceSearch]);
+    if (search.trim().length > 0) {
+      if (search.startsWith("#")) {
+        setSearchtype("hashtags");
+        console.log(search);
+        setTimeout(() => {
+          searchHashtags();
+          clearInterval();
+        }, 300);
+      } else {
+        setSearchtype("users");
+        setTimeout(() => {
+          searchUsers();
+          clearInterval();
+        }, 300);
+      }
+    } else {
+      setSearchResults([]);
+    }
+  }, [search]);
   const fetchposts = async (hashtag) => {
     const postsCollectionRef = collection(db, "posts");
     const postsQuery = query(
@@ -289,7 +289,16 @@ const SearchExplore = ({
                             router.push(`/feed/profile/${result.userName}`);
                           }}
                         >
-                          <div>{result.userName}</div>
+                          <div className="flex">
+                            <Image
+                              src={result.pfp}
+                              height={100}
+                              width={100}
+                              className="h-10 w-10 rounded-full"
+                              alt=""
+                            />
+                            <div className="ml-1 mt-1.5">{result.userName}</div>
+                          </div>
                           <button className="bg-blue-500 text-white px-4 py-2 rounded-full">
                             Profile
                           </button>
@@ -373,7 +382,16 @@ const SearchExplore = ({
                           router.push(`/feed/profile/${result.userName}`);
                         }}
                       >
-                        <div>{result.userName}</div>
+                        <div className="flex">
+                          <Image
+                            src={result.pfp}
+                            height={100}
+                            width={100}
+                            className="h-10 w-10 rounded-full"
+                            alt=""
+                          />
+                          <div className="ml-1 mt-1.5">{result.userName}</div>
+                        </div>
                         <button
                           onClick={() => {
                             close();

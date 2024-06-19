@@ -375,8 +375,10 @@ const SideBar = ({ usage, data, currentuserdata }) => {
         }`}
         onAnimationEnd={handleAnimationEnd}
       >
-        <div className="bg-white pt-5 h-full z-50 pb-24 oveflow-hidden  dark:bg-black rounded-xl 
-        shadow-2xl border-1 border-black lpo">
+        <div
+          className="bg-white pt-5 h-full z-50 pb-24 oveflow-hidden  dark:bg-black rounded-xl 
+        shadow-2xl border-1 border-black lpo"
+        >
           <div className="md:hidden">
             <div className="flex justify-between mt-5 mx-2">
               <div className="bg-gradient-to-r from-purple-500 via-fuchsia-400 to-pink-400 text-4xl inline-block text-transparent bg-clip-text font-lucy">
@@ -848,11 +850,17 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                   </div>
                 </div>
                 <div
-                  className="pl text-xs text-center cursor-pointer mb-4"
+                  className="pl text-xs text-center cursor-pointer "
                   onClick={() => router.push("/releasenotes")}
                 >
                   Muse v{process.env.NEXT_PUBLIC_VERSION} beta @NoFilter LLC
                   2024-2025
+                </div>
+                <div
+                  className="sdwef cursor-pointer underline text-center text-xs"
+                  onClick={() => router.push("/tcs")}
+                >
+                  Terms and Conditions
                 </div>
               </div>
             </div>
