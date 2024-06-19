@@ -258,6 +258,19 @@ const Reel = ({
         }));
       }
     };
+    console.log(reeldata.thumbnail, "reeldata thumbnail");
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: reeldata.caption,
+      artist: usermetadata[reeldata.uid]?.userName,
+      album: "Muse Reels",
+      artwork: [
+        {
+          src: '/thumbnail.png',
+          sizes: "512x512",
+          type: "image/jpg",
+        },
+      ],
+    });
     reel.addEventListener("timeupdate", handleTimeUpdate);
     return () => {
       reel.removeEventListener("timeupdate", handleTimeUpdate);
@@ -342,7 +355,10 @@ const Reel = ({
       toast.error("Error posting comment: " + error.message);
     }
   };
+  // useEffect(() => {
+  //   if (userdata && reeldata)
 
+  // }, [userdata, reeldata]);
   return (
     <div
       className="text-white bg-black rounded-3xl   b"
@@ -351,6 +367,8 @@ const Reel = ({
       <video
         className="reel snap-center rounded-3xl bg-black text-white"
         ref={reelRef}
+        title={reeldata.caption}
+        poster={reeldata.thumbnail}
         src={reeldata.mediaFiles}
         loop
         controls={false}
@@ -482,8 +500,6 @@ const Reel = ({
             {reeldata.commentcount} Comments
           </button>
         </div>
-
-       
       </div>
       <Toaster />
     </div>
