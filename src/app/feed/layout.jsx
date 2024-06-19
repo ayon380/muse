@@ -109,7 +109,7 @@ const Layout = ({ children }) => {
   return (
     <div className="h-dvh  w-screen flex items-center font-rethink relative text-black">
       {initialLoad && <MainLoading />}
-      <div className="main tndmain overflow-hidden w-screen max-h-dvh bg-transparent dark:bg-transparent dark:text-white rounded-2xl lg:mx-4 align-middle max-w-none">
+      <div className="main tndmain overflow-hidden w-screen max-h-dvh bg-transparent dark:bg-transparent dark:text-white md:rounded-2xl lg:mx-4 align-middle max-w-none">
         <div className="flex h-full">
           <SideBar usage={"feed"} />
           <Bottomnav />
