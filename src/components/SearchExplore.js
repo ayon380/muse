@@ -234,7 +234,7 @@ const SearchExplore = ({
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -50 }}
         transition={{ duration: 0.6 }}
-        className="h-screen w-screen md:w-full md:right-0  top-0 z-10  overflow-y-auto px-5 justify-center bg-white dark:bg-black "
+        className="h-screen fixed pt-20 w-screen md:w-full md:right-0  top-0 z-10  overflow-y-auto px-5 justify-center bg-white dark:bg-black "
       >
         {/* Search input */}
         <input

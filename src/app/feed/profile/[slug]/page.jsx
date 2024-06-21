@@ -3,7 +3,7 @@ import { getAuth, signOut } from "firebase/auth";
 import React, { useEffect } from "react";
 import app from "@/lib/firebase/firebaseConfig";
 import { collection, getFirestore, query } from "firebase/firestore";
-import { doc, getDoc, getDocs, updateDoc, where } from "firebase/firestore";
+import { doc, getDoc, getDocs, updateDoc, where,addDoc } from "firebase/firestore";
 import { arrayUnion, arrayRemove } from "firebase/firestore";
 import { increment } from "firebase/firestore";
 // import { get } from "http";
@@ -213,17 +213,41 @@ const Page = ({ params }) => {
 
       if (f) {
         console.log("adding follow");
-        await updateDoc(userRef, {
-          followers: arrayUnion(currentuserdata.uid),
-          followerscount: increment(1),
-        });
-        await updateDoc(user1ref, {
-          score: increment(5),
-        });
-        await updateDoc(currentuserRef, {
-          following: arrayUnion(userdata.uid),
-          followingcount: increment(1),
-        });
+        if (userdata.pubpriv == "Private") {
+          try {
+            const notificationData = {
+              id: "",
+              sender: currentuserdata.uid,
+              type: "Follow",
+              receiver: userdata.uid,
+              timestamp: Date.now(),
+            };
+            console.log(notificationData);
+            const notificationRef = collection(db, "notifications");
+            const notificationDoc = await addDoc(
+              notificationRef,
+              notificationData
+            );
+            await updateDoc(doc(notificationRef, notificationDoc.id), {
+              id: notificationDoc.id,
+            });
+            console.log("Notification sent");
+          } catch (error) {
+            console.error("Error sending notification:", error);
+          }
+        } else {
+          await updateDoc(userRef, {
+            followers: arrayUnion(currentuserdata.uid),
+            followerscount: increment(1),
+          });
+          await updateDoc(user1ref, {
+            score: increment(5),
+          });
+          await updateDoc(currentuserRef, {
+            following: arrayUnion(userdata.uid),
+            followingcount: increment(1),
+          });
+        }
       } else {
         console.log("removing follow");
         await updateDoc(userRef, {
@@ -554,288 +578,298 @@ const Page = ({ params }) => {
                       </div>
                     </div>
                   </div>
-                  <div className="flex justify-center my-4">
-                    <div className="flex items-center  bg-gradient-to-r from-purple-400 to-pink-500 rounded-full overflow-hidden">
-                      <button
-                        className={`px-4 py-2 w-20 text-sm text-white transition-colors duration-300 ${
-                          pagestate === 0
-                            ? "bg-purple-600 hover:bg-purple-700"
-                            : "hover:bg-purple-600"
-                        }`}
-                        onClick={() => setPageState(0)}
-                      >
-                        Posts
-                      </button>
-                      <button
-                        className={`px-4 py-2 w-20 text-sm text-white transition-colors duration-300 ${
-                          pagestate === 1
-                            ? "bg-purple-600 hover:bg-purple-700"
-                            : "hover:bg-purple-600"
-                        }`}
-                        onClick={() => setPageState(1)}
-                      >
-                        Reels
-                      </button>
-                      <button
-                        className={`px-4 py-2 w-20 text-sm text-white transition-colors duration-300 ${
-                          pagestate === 2
-                            ? "bg-purple-600 hover:bg-purple-700"
-                            : "hover:bg-purple-600"
-                        }`}
-                        onClick={() => {
-                          setPageState(2);
-                          getTaggedPosts();
-                        }}
-                      >
-                        Tagged
-                      </button>
-                      <button
-                        className={`px-4 py-2 w-20 text-sm text-white transition-colors duration-300 ${
-                          pagestate === 4
-                            ? "bg-purple-600 hover:bg-purple-700"
-                            : "hover:bg-purple-600"
-                        }`}
-                        onClick={() => {
-                          setPageState(4);
-                          // getTaggedPosts();
-                        }}
-                      >
-                        More
-                      </button>
-                      {currentuserdata &&
-                        currentuserdata.email === userdata.email && (
+                  {currentuserdata?.following?.includes(userdata.uid) ? (
+                    <div className="df">
+                      <div className="flex justify-center my-4">
+                        <div className="flex items-center  bg-gradient-to-r from-purple-400 to-pink-500 rounded-full overflow-hidden">
                           <button
-                            className={`px-4 py-2 text-sm text-white transition-colors duration-300 ${
-                              pagestate === 3
+                            className={`px-4 py-2 w-20 text-sm text-white transition-colors duration-300 ${
+                              pagestate === 0
+                                ? "bg-purple-600 hover:bg-purple-700"
+                                : "hover:bg-purple-600"
+                            }`}
+                            onClick={() => setPageState(0)}
+                          >
+                            Posts
+                          </button>
+                          <button
+                            className={`px-4 py-2 w-20 text-sm text-white transition-colors duration-300 ${
+                              pagestate === 1
+                                ? "bg-purple-600 hover:bg-purple-700"
+                                : "hover:bg-purple-600"
+                            }`}
+                            onClick={() => setPageState(1)}
+                          >
+                            Reels
+                          </button>
+                          <button
+                            className={`px-4 py-2 w-20 text-sm text-white transition-colors duration-300 ${
+                              pagestate === 2
                                 ? "bg-purple-600 hover:bg-purple-700"
                                 : "hover:bg-purple-600"
                             }`}
                             onClick={() => {
-                              setPageState(3);
-                              getSavedPosts();
+                              setPageState(2);
+                              getTaggedPosts();
                             }}
                           >
-                            Saved
+                            Tagged
                           </button>
-                        )}
-                    </div>
-                  </div>
-                  <div className="postsxs w-full pb-40 ">
-                    {pagestate === 0 && (
-                      <>
-                        {posts.length === 0 ? (
-                          <div className="text-2xl m-4 flex justify-center items-center w-full h-full">
-                            No Posts Yet
-                          </div>
-                        ) : (
-                          <div className="grid grid-cols-3 md:grid-cols-4 gap-1 p-1">
-                            {posts.map((post, index) => (
-                              <div
-                                key={index}
-                                className="relative h-52"
+                          <button
+                            className={`px-4 py-2 w-20 text-sm text-white transition-colors duration-300 ${
+                              pagestate === 4
+                                ? "bg-purple-600 hover:bg-purple-700"
+                                : "hover:bg-purple-600"
+                            }`}
+                            onClick={() => {
+                              setPageState(4);
+                              // getTaggedPosts();
+                            }}
+                          >
+                            More
+                          </button>
+                          {currentuserdata &&
+                            currentuserdata.email === userdata.email && (
+                              <button
+                                className={`px-4 py-2 text-sm text-white transition-colors duration-300 ${
+                                  pagestate === 3
+                                    ? "bg-purple-600 hover:bg-purple-700"
+                                    : "hover:bg-purple-600"
+                                }`}
                                 onClick={() => {
-                                  router.push(
-                                    `/feed/profile/${userdata.userName}?postid=${post.id}`
-                                  );
+                                  setPageState(3);
+                                  getSavedPosts();
                                 }}
                               >
-                                {isVideoFile(post.mediaFiles[0]) ? (
-                                  <>
-                                    <video
-                                      src={post.mediaFiles[0]}
-                                      className="w-full h-full object-cover rounded-md lg:rounded-lg "
-                                    ></video>
-                                  </>
-                                ) : (
-                                  <>
-                                    <Image
-                                      src={post.mediaFiles[0]}
-                                      alt=""
-                                      width={300}
-                                      height={300}
-                                      className="w-full rounded-md md:rounded-lg h-full object-cover"
-                                    />
-                                  </>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </>
-                    )}
-                    {pagestate === 1 && (
-                      <>
-                        {reels.length === 0 ? (
-                          <div className="text-2xl m-4 flex justify-center items-center w-full h-full">
-                            No Reels Yet
-                          </div>
-                        ) : (
-                          <div className="grid grid-cols-3 md:grid-cols-4 gap-1 p-1">
-                            {reels.map((reel, index) => (
-                              <div
-                                key={index}
-                                onClick={() => {
-                                  router.push(`/feed/reels?reelid=${reel.id}`);
-                                }}
-                                className="relative h-52 "
-                              >
-                                <Image
-                                  src={
-                                    reel.thumbnail
-                                      ? reel.thumbnail
-                                      : "/thumbnail.png"
-                                  }
-                                  alt={reel.caption}
-                                  height={800}
-                                  width={400}
-                                  className="object-cover w-full h-full rounded-md md:rounded-lg"
-                                />
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </>
-                    )}
-                    {pagestate === 2 && (
-                      <div className="text-2xl m-4 flex justify-center items-center w-full h-full">
-                        {taggedPosts.length > 0 ? (
-                          <div className="grid grid-cols-3 md:grid-cols-4 gap-4 p-4">
-                            {taggedPosts.map((post, index) => (
-                              <div
-                                key={index}
-                                className="relative h-full"
-                                onClick={() => {
-                                  router.push(
-                                    `/feed/profile/${userdata.userName}?postid=${post.id}`
-                                  );
-                                }}
-                              >
-                                {isVideoFile(post.mediaFiles[0]) ? (
-                                  <>
-                                    <video
-                                      src={post.mediaFiles[0]}
-                                      className="w-full h-full object-cover rounded-md lg:rounded-lg "
-                                    ></video>
-                                  </>
-                                ) : (
-                                  <>
-                                    <Image
-                                      src={post.mediaFiles[0]}
-                                      alt=""
-                                      width={100}
-                                      height={100}
-                                      className="w-full rounded-md md:rounded-lg h-full object-cover"
-                                    />
-                                  </>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="text-2xl m-4 flex justify-center items-center w-full h-full">
-                            No Tagged Posts Yet
-                          </div>
-                        )}
+                                Saved
+                              </button>
+                            )}
+                        </div>
                       </div>
-                    )}
-                    {pagestate === 3 && (
-                      <div className="text-2xl m-4 flex justify-center w-full h-full">
-                        {savedPosts.length > 0 ? (
-                          <div className="grid grid-cols-3 md:grid-cols-4 gap-4 p-4">
-                            {savedPosts.map((post, index) => (
-                              <div
-                                key={index}
-                                className="relative h-full"
-                                onClick={() => {
-                                  router.push(
-                                    `/feed/profile/${userdata.userName}?postid=${post.id}`
-                                  );
-                                }}
-                              >
-                                {isVideoFile(post.mediaFiles[0]) ? (
-                                  <>
-                                    <video
-                                      src={post.mediaFiles[0]}
-                                      className="w-full h-full object-cover rounded-md lg:rounded-lg "
-                                    ></video>
-                                  </>
-                                ) : (
-                                  <>
-                                    <Image
-                                      src={post.mediaFiles[0]}
-                                      alt=""
-                                      width={100}
-                                      height={100}
-                                      className="w-full rounded-md md:rounded-lg h-36 object-cover"
-                                    />
-                                  </>
-                                )}
+                      <div className="postsxs w-full pb-40 ">
+                        {pagestate === 0 && (
+                          <>
+                            {posts.length === 0 ? (
+                              <div className="text-2xl m-4 flex justify-center items-center w-full h-full">
+                                No Posts Yet
                               </div>
-                            ))}
-                          </div>
-                        ) : (
+                            ) : (
+                              <div className="grid grid-cols-3 md:grid-cols-4 gap-1 p-1">
+                                {posts.map((post, index) => (
+                                  <div
+                                    key={index}
+                                    className="relative h-52"
+                                    onClick={() => {
+                                      router.push(
+                                        `/feed/profile/${userdata.userName}?postid=${post.id}`
+                                      );
+                                    }}
+                                  >
+                                    {isVideoFile(post.mediaFiles[0]) ? (
+                                      <>
+                                        <video
+                                          src={post.mediaFiles[0]}
+                                          className="w-full h-full object-cover rounded-md lg:rounded-lg "
+                                        ></video>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Image
+                                          src={post.mediaFiles[0]}
+                                          alt=""
+                                          width={300}
+                                          height={300}
+                                          className="w-full rounded-md md:rounded-lg h-full object-cover"
+                                        />
+                                      </>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </>
+                        )}
+                        {pagestate === 1 && (
+                          <>
+                            {reels.length === 0 ? (
+                              <div className="text-2xl m-4 flex justify-center items-center w-full h-full">
+                                No Reels Yet
+                              </div>
+                            ) : (
+                              <div className="grid grid-cols-3 md:grid-cols-4 gap-1 p-1">
+                                {reels.map((reel, index) => (
+                                  <div
+                                    key={index}
+                                    onClick={() => {
+                                      router.push(
+                                        `/feed/reels?reelid=${reel.id}`
+                                      );
+                                    }}
+                                    className="relative h-52 "
+                                  >
+                                    <Image
+                                      src={
+                                        reel.thumbnail
+                                          ? reel.thumbnail
+                                          : "/thumbnail.png"
+                                      }
+                                      alt={reel.caption}
+                                      height={800}
+                                      width={400}
+                                      className="object-cover w-full h-full rounded-md md:rounded-lg"
+                                    />
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </>
+                        )}
+                        {pagestate === 2 && (
                           <div className="text-2xl m-4 flex justify-center items-center w-full h-full">
-                            No Saved Posts Yet
+                            {taggedPosts.length > 0 ? (
+                              <div className="grid grid-cols-3 md:grid-cols-4 gap-4 p-4">
+                                {taggedPosts.map((post, index) => (
+                                  <div
+                                    key={index}
+                                    className="relative h-full"
+                                    onClick={() => {
+                                      router.push(
+                                        `/feed/profile/${userdata.userName}?postid=${post.id}`
+                                      );
+                                    }}
+                                  >
+                                    {isVideoFile(post.mediaFiles[0]) ? (
+                                      <>
+                                        <video
+                                          src={post.mediaFiles[0]}
+                                          className="w-full h-full object-cover rounded-md lg:rounded-lg "
+                                        ></video>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Image
+                                          src={post.mediaFiles[0]}
+                                          alt=""
+                                          width={100}
+                                          height={100}
+                                          className="w-full rounded-md md:rounded-lg h-full object-cover"
+                                        />
+                                      </>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="text-2xl m-4 flex justify-center items-center w-full h-full">
+                                No Tagged Posts Yet
+                              </div>
+                            )}
                           </div>
                         )}
-                      </div>
-                    )}
-                    {pagestate === 4 && (
-                      <div className="text m-4 flex justify-center items-center w-full h-full">
-                        <div className="df rounded-lg shadow-lg p-6 ">
-                          {userdata && (
-                            <>
-                              {/* Display user's date of birth */}
-                              <p className="mb-2">
-                                <span className="font-semibold">
-                                  Date of Birth:
-                                </span>{" "}
-                                {formatFirebaseTimestamp(userdata.dob)}
-                              </p>
+                        {pagestate === 3 && (
+                          <div className="text-2xl m-4 flex justify-center w-full h-full">
+                            {savedPosts.length > 0 ? (
+                              <div className="grid grid-cols-3 md:grid-cols-4 gap-4 p-4">
+                                {savedPosts.map((post, index) => (
+                                  <div
+                                    key={index}
+                                    className="relative h-full"
+                                    onClick={() => {
+                                      router.push(
+                                        `/feed/profile/${userdata.userName}?postid=${post.id}`
+                                      );
+                                    }}
+                                  >
+                                    {isVideoFile(post.mediaFiles[0]) ? (
+                                      <>
+                                        <video
+                                          src={post.mediaFiles[0]}
+                                          className="w-full h-full object-cover rounded-md lg:rounded-lg "
+                                        ></video>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <Image
+                                          src={post.mediaFiles[0]}
+                                          alt=""
+                                          width={100}
+                                          height={100}
+                                          className="w-full rounded-md md:rounded-lg h-36 object-cover"
+                                        />
+                                      </>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="text-2xl m-4 flex justify-center items-center w-full h-full">
+                                No Saved Posts Yet
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        {pagestate === 4 && (
+                          <div className="text m-4 flex justify-center items-center w-full h-full">
+                            <div className="df rounded-lg shadow-lg p-6 ">
+                              {userdata && (
+                                <>
+                                  {/* Display user's date of birth */}
+                                  <p className="mb-2">
+                                    <span className="font-semibold">
+                                      Date of Birth:
+                                    </span>{" "}
+                                    {formatFirebaseTimestamp(userdata.dob)}
+                                  </p>
 
-                              {/* Display user's gender */}
-                              <p className="mb-2">
-                                <span className="font-semibold">Gender:</span>{" "}
-                                {userdata.gender}
-                              </p>
+                                  {/* Display user's gender */}
+                                  <p className="mb-2">
+                                    <span className="font-semibold">
+                                      Gender:
+                                    </span>{" "}
+                                    {userdata.gender}
+                                  </p>
 
-                              {/* Display user's organization */}
-                              <p className="mb-2">
-                                <span className="font-semibold">
-                                  Organization:
-                                </span>{" "}
-                                {userdata.org}
-                              </p>
+                                  {/* Display user's organization */}
+                                  <p className="mb-2">
+                                    <span className="font-semibold">
+                                      Organization:
+                                    </span>{" "}
+                                    {userdata.org}
+                                  </p>
 
-                              {/* Display user's profession */}
-                              <p className="mb-2">
-                                <span className="font-semibold">
-                                  Profession:
-                                </span>{" "}
-                                {userdata.profession}
-                              </p>
+                                  {/* Display user's profession */}
+                                  <p className="mb-2">
+                                    <span className="font-semibold">
+                                      Profession:
+                                    </span>{" "}
+                                    {userdata.profession}
+                                  </p>
 
-                              {/* Display user's public/private status */}
-                              <p className="mb-2">
-                                <span className="font-semibold">
-                                  Public/Private:
-                                </span>{" "}
-                                {userdata.pubpriv}
-                              </p>
+                                  {/* Display user's public/private status */}
+                                  <p className="mb-2">
+                                    <span className="font-semibold">
+                                      Public/Private:
+                                    </span>{" "}
+                                    {userdata.pubpriv}
+                                  </p>
 
-                              {/* Display user's state and city (commented out) */}
-                              {/* <p className="mb-2">
+                                  {/* Display user's state and city (commented out) */}
+                                  {/* <p className="mb-2">
                               <span className="font-semibold">State:</span> {userdata.state}
                             </p>
                             <p className="mb-2">
                               <span className="font-semibold">City:</span> {userdata.city}
                             </p> */}
-                            </>
-                          )}
-                        </div>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
+                    </div>
+                  ) : (
+                    <div>Private Account </div>
+                  )}
                 </div>
               </div>
             )}

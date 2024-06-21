@@ -1,6 +1,7 @@
 "use client";
 import app from "@/lib/firebase/firebaseConfig";
 import Link from "next/navigation";
+import { motion } from "framer-motion";
 import React, { use, useEffect, useState } from "react";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import {
@@ -41,12 +42,16 @@ const SideBar = ({ usage, data, currentuserdata }) => {
   const auth = getAuth(app);
   console.log("Current UserData", currentuserdata);
   const [userdata, setUserData] = useState(null);
+  const [activeFilter, setActiveFilter] = useState("All");
   const router = useRouter();
   const [logoutmodal, setlogoutmodal] = useState(false);
   const [createreelopen, setcreatereelOpen] = useState(false);
   const [createpostopen, setcreatepostOpen] = useState(false);
   const [notifications, setnotificationOpen] = useState([]);
   const [follow, setFollow] = React.useState(false);
+  const [notificationfilter, setnotificationfilter] = useState("All");
+  const [displayedNotifications, setDisplayedNotifications] = useState([]);
+  // all, like, comment, follow, message, reel
   const db = getFirestore(app);
   const {
     isOpen,
@@ -244,6 +249,8 @@ const SideBar = ({ usage, data, currentuserdata }) => {
     );
   };
   useEffect(() => {
+    setDisplayedNotifications(notifications);
+    setnotificationfilter("All");
     console.log("Notifications: ", notifications);
     const sortedNotifications = [...notifications].sort(
       (a, b) => b.timestamp - a.timestamp
@@ -353,6 +360,49 @@ const SideBar = ({ usage, data, currentuserdata }) => {
     }
     console.log(isAnimationComplete + " " + isOpen);
   }, [isOpen, isAnimationComplete]);
+  useEffect(() => {
+    console.log("Notification Filter: ", notificationfilter);
+    setDisplayedNotifications(
+      notifications.filter((notification) => {
+        if (notificationfilter === "All") return true;
+        if (notificationfilter === "Like" && notification.type === "like")
+          return true;
+        if (notificationfilter === "Comment" && notification.type === "comment")
+          return true;
+        if (notificationfilter === "Follow" && notification.type === "Follow")
+          return true;
+        if (notificationfilter === "Message" && notification.type === "message")
+          return true;
+        if (notificationfilter === "Reel" && notification.type === "reellike")
+          return true;
+        return false;
+      })
+    );
+  }, [notificationfilter]);
+  const filters = [
+    { name: "All", icon: "M4 6h16M4 12h16M4 18h16" },
+    {
+      name: "Like",
+      icon: "M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z",
+    },
+    {
+      name: "Comment",
+      icon: "M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z",
+    },
+    {
+      name: "Follow",
+      icon: "M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z",
+    },
+    {
+      name: "Message",
+      icon: "M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z",
+    },
+    {
+      name: "Reel",
+      icon: "M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z",
+    },
+  ];
+  const handlenotifollow = async (notification, action) => {};
   return (
     <>
       {/* {open && ( */}
@@ -613,14 +663,47 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                           </div>
                         )}
                       </div>
+                      <div className="flex justify-center mt-4 space-x-5 rounded-lg ">
+                        {filters.map((filter) => (
+                          <motion.div
+                            key={filter.name}
+                            className={`flex items-center space-x-2  cursor-pointer p-2 rounded-full ${
+                              notificationfilter === filter.name
+                                ? "bg-fuchsia-500 text-white"
+                                : "bg-neutral-100 dark:bg-feedheader"
+                            }`}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => setnotificationfilter(filter.name)}
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-6 w-6"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d={filter.icon}
+                              />
+                            </svg>
+                            {/* <span className="text-sm font-medium">
+                              {filter.name}
+                            </span> */}
+                          </motion.div>
+                        ))}
+                      </div>
                     </div>
-                    <div className="flex flex-col bg-slate-100 dark:bg-feedheader p-2 rounded-3xl mt-10 h-4/5 md:h-3/5 scroll-smooth  overflow-y-auto">
-                      {notifications.length == 0 && (
+                    <div className="flex flex-col bg-slate-100 dark:bg-feedheader p-2 rounded-3xl mt-4 h-4/5 md:h-3/5 scroll-smooth  overflow-y-auto">
+                      {displayedNotifications.length == 0 && (
                         <div className="text-center mt-10">
                           No Notifications
                         </div>
                       )}
-                      {notifications.map((notification) => (
+                      {displayedNotifications.map((notification) => (
                         <div
                           key={notification.id}
                           className="cursor-pointer  bg-white dark:bg-black shadow-xl dark:shadow shadow-fuchsia-200 justify-between rounded-3xl bg-transparent p-5 my-2"
@@ -652,6 +735,37 @@ const SideBar = ({ usage, data, currentuserdata }) => {
 
                                   {usermetadata[notification.sender] && (
                                     <div>
+                                      {notification.type == "Follow" && (
+                                        <div>
+                                          {
+                                            usermetadata[notification.sender]
+                                              .userName
+                                          }{" "}
+                                          has requested to follow you.
+                                          <div
+                                            className="btn"
+                                            onClick={() =>
+                                              handlenotifollow(
+                                                notification,
+                                                "confirm"
+                                              )
+                                            }
+                                          >
+                                            Confirm
+                                          </div>
+                                          <div
+                                            className="btn"
+                                            onClick={() =>
+                                              handlenotifollow(
+                                                notification,
+                                                "reject"
+                                              )
+                                            }
+                                          >
+                                            Reject
+                                          </div>
+                                        </div>
+                                      )}
                                       {notification.type == "message" &&
                                         notification.messagetype == "media" && (
                                           <div

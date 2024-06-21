@@ -19,6 +19,7 @@ import {
   orderBy,
   limit,
   getDocs,
+  startAfter,
 } from "firebase/firestore";
 const MainLoading = dynamic(() => import("../../../components/MainLoading"));
 const ProfilePost = dynamic(() => import("../../../components/ProfilePost"));
@@ -31,7 +32,6 @@ const PostCommentProfile = dynamic(
     ssr: false,
   }
 );
-import SparklesText from "@/components/SparkleText";
 const ShareMenuProfile = dynamic(() => import("@/components/ShareMenuProfile"));
 const TaggedUserProfile = dynamic(() =>
   import("@/components/TaggedUserProfile")
@@ -55,6 +55,10 @@ const Explore = () => {
   const [fromexplorescreen, setFromexplorescreen] = React.useState(false);
   const [searchopen, setSearchopen] = React.useState(false);
   const [taggeduseropen, setTaggeduseropen] = React.useState(false);
+  const [hasMore, setHasMore] = React.useState(true);
+  const [morepostsloading, setMorepostsloading] = React.useState(false);
+  const [lastpostdoc, setlastpostdoc] = useState(null);
+  const [lastreeldoc, setlastreeldoc] = useState(null);
   const db = getFirestore(app);
   const getuserdata = async (currentUser) => {
     const userRef = doc(db, "users", currentUser.email);
@@ -89,34 +93,106 @@ const Explore = () => {
       enqueueUserMetadata(uid);
     }
   }, [postid]);
-
-  useEffect(() => {
-    const fetchexplore = async () => {
-      if (user) {
-        const response = await fetch("/api/explore", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${await gettoken()}`,
-            email: user.email,
-          },
-        });
-        const data = await response.json();
-        if (data.status === "true") {
-          data.fdata.posts.map((post) => {
-            post.type = "post";
-          });
-          data.fdata.reels.map((reel) => {
-            reel.type = "reel";
-          });
-          setPosts(data.fdata.posts);
-          setReels(data.fdata.reels);
-        }
-        setloading(false);
+  const fetchexplore = async (isInitial = true) => {
+    if (user) {
+      let q, w;
+      if (isInitial) {
+        q = query(
+          collection(db, "posts"),
+          where("uid", "!=", user.uid),
+          orderBy("likecount", "desc"),
+          orderBy("timestamp", "desc"),
+          limit(10)
+        );
+        w = query(
+          collection(db, "reels"),
+          where("uid", "!=", user.uid),
+          orderBy("likecount", "desc"),
+          orderBy("timestamp", "desc"),
+          limit(10)
+        );
+      } else {
+        setMorepostsloading(true);
+        q = query(
+          collection(db, "posts"),
+          where("uid", "!=", user.uid),
+          orderBy("likecount", "desc"),
+          orderBy("timestamp", "desc"),
+          limit(10),
+          startAfter(lastpostdoc)
+        );
+        w = query(
+          collection(db, "reels"),
+          where("uid", "!=", user.uid),
+          orderBy("likecount", "desc"),
+          orderBy("timestamp", "desc"),
+          limit(10),
+          startAfter(lastreeldoc)
+        );
       }
-    };
+
+      const po = await getDocs(q);
+      let nd = [];
+      po.forEach((doc) => {
+        nd.push({ ...doc.data(), id: doc.id, type: "post" });
+        enqueueUserMetadata(doc.data().uid);
+      });
+
+      const re = await getDocs(w);
+      re.forEach((doc) => {
+        nd.push({ ...doc.data(), id: doc.id, type: "reel" });
+        enqueueUserMetadata(doc.data().uid);
+      });
+      if (po.length < 10) {
+        setHasMore(false);
+      }
+      if (isInitial) setPosts(nd);
+      else {
+        setPosts((prevPosts) => {
+          const existingIds = new Set(prevPosts.map((post) => post.id));
+
+          // Filter out any new posts that already exist in prevPosts
+          const uniqueNewPosts = nd.filter((post) => !existingIds.has(post.id));
+          return [...prevPosts, ...uniqueNewPosts];
+        });
+      }
+      setlastpostdoc(po.docs[po.docs.length - 1]);
+      setlastreeldoc(re.docs[re.docs.length - 1]);
+      setMorepostsloading(false);
+      console.log("posts" + nd);
+      setloading(false);
+    }
+  };
+  const loadMorePosts = () => {
+    if (hasMore && !loading) {
+      console.log("Loading more posts...");
+      fetchexplore(false);
+    }
+  };
+  useEffect(() => {
     fetchexplore();
   }, [user]);
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore) {
+          loadMorePosts();
+        }
+      },
+      { threshold: 1 }
+    );
+
+    const sentinel = document.querySelector("#sentinel");
+    if (sentinel) {
+      observer.observe(sentinel);
+    }
+
+    return () => {
+      if (sentinel) {
+        observer.unobserve(sentinel);
+      }
+    };
+  }, [hasMore, loading]);
   // const
   useEffect(() => {
     if (expllorepagestate) {
@@ -205,6 +281,7 @@ const Explore = () => {
   useEffect(() => {
     fetchposts();
   }, [expllorepagestate]);
+  const memoizedFeed = React.useMemo(() => feed, [feed]);
   return (
     <div className=" w-full h-full">
       {loading && !initialLoad && (
@@ -421,9 +498,9 @@ const Explore = () => {
                 setexpllorepagestate={setexpllorepagestate}
               />
             )}
-            <ResponsiveMasonry columnsCountBreakPoints={{ 350: 3 }}>
+            <ResponsiveMasonry columnsCountBreakPoints={{ 350: 2 }}>
               <Masonry>
-                {feed.map((post) => (
+                {memoizedFeed.map((post) => (
                   <div key={post.id} className="m-0.5 md:m-2">
                     {post.type == "post" ? (
                       <div className="">
@@ -438,7 +515,7 @@ const Explore = () => {
                             alt=""
                             width={300}
                             height={300}
-                            className="md:rounded-3xl rounded-xl w-full"
+                            className="md:rounded-3xl rounded w-full"
                           />
                         ) : (
                           <Image
@@ -451,7 +528,7 @@ const Explore = () => {
                             alt=""
                             width={300}
                             height={300}
-                            className="md:rounded-3xl rounded-xl w-full"
+                            className="md:rounded-3xl rounded w-full"
                           />
                         )}
                       </div>
@@ -467,7 +544,7 @@ const Explore = () => {
                             alt=""
                             width={300}
                             height={300}
-                            className="md:rounded-2xl rounded-lg w-full"
+                            className="md:rounded-2xl rounded w-full"
                           />
                         ) : (
                           <>
@@ -476,7 +553,7 @@ const Explore = () => {
                               alt=""
                               width={300}
                               height={300}
-                              className="md:rounded-2xl rounded-lg w-full"
+                              className="md:rounded-2xl rounded w-full"
                             />{" "}
                           </>
                         )}
@@ -486,6 +563,21 @@ const Explore = () => {
                 ))}
               </Masonry>
             </ResponsiveMasonry>
+            {
+              <div className="flex justify-center items-center  ">
+                {morepostsloading && (
+                  <div className="flex justify-center items-center h-40">
+                    <Image
+                      src="/loading.gif"
+                      height={50}
+                      width={50}
+                      alt="Loading"
+                    />
+                  </div>
+                )}
+              </div>
+            }
+            {hasMore && <div id="sentinel" className="h-52"></div>}
           </div>
         </div>
       )}

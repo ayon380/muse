@@ -23,17 +23,17 @@ const Follower = ({
   const [following, setfollowing] = React.useState(currentuserdata.following);
   const [isOpen, setIsOpen] = React.useState(true);
   const Router = useRouter();
-  console.log(currentuserdata.email + " " + userdata.email);
   const handleremove = async (follower) => {
     try {
       const uref = doc(db, "users", currentuserdata.email);
       const pref = doc(db, "users", usermetadata[follower].email);
+      console.log(usermetadata[follower].email);
       await updateDoc(uref, {
         following: arrayRemove(follower),
         followingcount: increment(-1),
       });
       await updateDoc(pref, {
-        followers: arrayRemove(follower),
+        followers: arrayRemove(currentuserdata.uid),
         followerscount: increment(-1),
       });
       setfollowing(following.filter((fol) => fol !== follower));
@@ -62,7 +62,6 @@ const Follower = ({
   return (
     <BottomSheet show={isOpen} heading="Following" onClose={close}>
       <div className="p-5">
-        <Toaster />
         {following.map((follower) => {
           if (usermetadata[follower]) {
             return (

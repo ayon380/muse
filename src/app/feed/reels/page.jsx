@@ -93,7 +93,7 @@ const Reels = () => {
       console.log("Document data:", docSnap.data());
       enqueueUserMetadata(docSnap.data().uid);
       setReel(docSnap.data());
-      setReels((prevReels) => [...prevReels, ...[docSnap.data()]]);
+
     } else {
       console.log("No such document!");
       // Handle the case where user data doesn't exist
@@ -258,6 +258,24 @@ const Reels = () => {
                 className=" video-container rounded-xl w-auto  relative "
                 id="video-container "
               >
+                {reel && (
+                  <div className="pk mb-5" play={reel.id} key={reel.id}>
+                    <Video
+                      reel={reel}
+                      setSharemenu={setSharemenu}
+                      idx={0}
+                      setselectedReelid={setselectedReelid}
+                      setShowComments={setShowComments}
+                      usermetadata={usermetadata}
+                      enqueueUserMetadata={enqueueUserMetadata}
+                      currentreel={currentreel}
+                      setCurrentReel={setCurrentReel}
+                      userdata={userdata}
+                      isGlobalMuted={isGlobalMuted}
+                      toggleGlobalMute={toggleGlobalMute}
+                    />
+                  </div>
+                )}
                 {reels.map((reel, idx) => (
                   <div className="pk  mb-5 " play={reel.id} key={reel.id + idx}>
                     <Video

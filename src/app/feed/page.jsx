@@ -22,6 +22,7 @@ import {
   limit,
   query,
   where,
+  startAfter,
   orderBy,
 } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
@@ -32,6 +33,7 @@ import { useSidebarStore } from "../store/zustand";
 import dynamic from "next/dynamic";
 import FeedPost from "@/components/FeedPost";
 import SparklesText from "@/components/SparkleText";
+import { set } from "lodash";
 const MainLoading = dynamic(() => import("@/components/MainLoading"));
 const ShareMenu = dynamic(() => import("@/components/ShareMenu"));
 const PostComment = dynamic(() => import("@/components/PostComment"));
@@ -45,6 +47,8 @@ const Home = () => {
   const [userdata, setUserData] = useState(null);
   const db = getFirestore(app);
   const [posts, setPosts] = useState([]);
+  const [hasMore, setHasMore] = useState(true);
+  const [lastDoc, setLastDoc] = useState(null);
   const [postloading, setPostLoading] = useState(true);
   const [searchResults, setSearchResults] = useState([]);
   const [searchtext, setSearchtext] = useState("");
@@ -53,6 +57,7 @@ const Home = () => {
   const [sharepostdata, setSharepostdata] = useState(null);
   const [commentpostdata, setCommentpostdata] = useState(null);
   const [showComments, setShowComments] = useState(false);
+  const [morepostsloading, setmorepostsloading] = useState(false);
   const {
     isOpen,
     toggle,
@@ -77,78 +82,91 @@ const Home = () => {
   useEffect(() => {
     updateThemeColor();
   }, []);
-  async function fetchData() {
-    // const idToken = await gettoken();
-
+  async function fetchData(isInitial = true) {
     try {
       if (userdata && userdata.following) {
-        setPostLoading(true);
-        const w = query(
-          collection(db, "posts"),
-          where("uid", "in", userdata.following),
-          where("uid", "!=", userdata.uid),
-          limit(10),
-          orderBy("timestamp", "desc")
-        );
-        const response = await getDocs(w);
-        console.log(response + "response");
-        const data = [];
+        let q;
+        if (isInitial) {
+          setPostLoading(true);
+          q = query(
+            collection(db, "posts"),
+            where("uid", "in", userdata.following),
+            where("uid", "!=", userdata.uid),
+            orderBy("timestamp", "desc"),
+            limit(5)
+          );
+        } else {
+          setmorepostsloading(true);
+          q = query(
+            collection(db, "posts"),
+            where("uid", "in", userdata.following),
+            where("uid", "!=", userdata.uid),
+            orderBy("timestamp", "desc"),
+            startAfter(lastDoc),
+            limit(5)
+          );
+        }
+
+        const response = await getDocs(q);
+        const newData = [];
         response.forEach((doc) => {
-          data.push({ ...doc.data(), id: doc.id });
+          newData.push({ ...doc.data(), id: doc.id });
           enqueueUserMetadata(doc.data().uid);
         });
-        setPosts(data);
+
+        if (newData.length < 5) {
+          setHasMore(false);
+        }
+
+        if (isInitial) {
+          setPosts(newData);
+        } else {
+          setPosts((prevPosts) => {
+            // Create a Set of existing post IDs for efficient lookup
+            const existingIds = new Set(prevPosts.map((post) => post.id));
+
+            // Filter out any new posts that already exist in prevPosts
+            const uniqueNewPosts = newData.filter(
+              (post) => !existingIds.has(post.id)
+            );
+
+            return [...prevPosts, ...uniqueNewPosts];
+          });
+        }
+
+        setLastDoc(response.docs[response.docs.length - 1]);
         setPostLoading(false);
-        // console.log(userData);
+        setmorepostsloading(false);
       }
     } catch (error) {
       console.error("Error fetching data:", error);
+      setPostLoading(false);
     }
   }
   useEffect(() => {
     fetchData();
   }, [userdata]);
-  const searchUsers = async () => {
-    try {
-      console.log("Searching users..." + searchtext);
-
-      // Query for userName
-      const userNameQuery = query(
-        collection(db, "username"),
-        where("userName", ">=", searchtext),
-        orderBy("userName"),
-        limit(5)
-      );
-      const userNameSnapshot = await getDocs(userNameQuery);
-
-      // Query for fullname
-      const fullNameQuery = query(
-        collection(db, "username"),
-        where("fullname", ">=", searchtext),
-        orderBy("fullname"),
-        limit(5)
-      );
-      const fullNameSnapshot = await getDocs(fullNameQuery);
-
-      // Combine results
-      const results = [];
-      userNameSnapshot.forEach((doc) => {
-        results.push({ ...doc.data() });
-      });
-      fullNameSnapshot.forEach((doc) => {
-        const data = doc.data();
-        if (!results.some((result) => result.userName === data.userName)) {
-          results.push(data);
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore) {
+          loadMorePosts();
         }
-      });
+      },
+      { threshold: 1 }
+    );
 
-      console.log("Search results:", results);
-      setSearchResults(results);
-    } catch (error) {
-      console.error("Error searching users:", error);
+    const sentinel = document.querySelector("#sentinel");
+    if (sentinel) {
+      observer.observe(sentinel);
     }
-  };
 
+    return () => {
+      if (sentinel) {
+        observer.unobserve(sentinel);
+      }
+    };
+  }, [hasMore, postloading]);
   const getuserdata = async (currentUser) => {
     const userRef = doc(db, "users", currentUser.email);
     const docSnap = await getDoc(userRef);
@@ -163,6 +181,11 @@ const Home = () => {
   const handleCreatePost = () => {
     setcreatepostmenu(!createpostmenu);
   };
+  const loadMorePosts = () => {
+    if (hasMore && !postloading) {
+      fetchData(false);
+    }
+  };
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
@@ -176,13 +199,6 @@ const Home = () => {
 
     return () => unsubscribe();
   }, [auth, router]);
-  useEffect(() => {
-    if (searchtext.length > 0) {
-      searchUsers();
-    } else {
-      setSearchResults([]);
-    }
-  }, [searchtext]);
   useEffect(() => {
     if (!postloading) {
       toggleload();
@@ -237,7 +253,7 @@ const Home = () => {
           />
         </div>
       )}
-    
+
       {postloading && !initialLoad && (
         <>
           <div className="main2 md:rounded-2xl bg-white dark:bg-black shadow-2xl border-1 border-black h-full overflow-y-auto">
@@ -305,25 +321,44 @@ const Home = () => {
               </div>
             )}
             <div className="pol font-rethink ">
-              <div className="feed  h-full overflow-y-auto">
-                <div className="buf h-5  bg-white dark:bg-black"></div>
+              <div className="feed h-full overflow-y-auto pb-20">
+                <div className="buf h-5 bg-white dark:bg-black"></div>
                 {posts && posts.length > 0 ? (
-                  posts.map((post) => (
-                    <FeedPost
-                      key={post.id}
-                      post={post}
-                      userdata={userdata}
-                      setSharemenu={setSharemenu}
-                      setSharepostdata={setSharepostdata}
-                      enqueueUserMetadata={enqueueUserMetadata}
-                      usermetadata={usermetadata}
-                      setTaggedusermenu={setTaggedusermenu}
-                      db={db}
-                      showComments={showComments}
-                      setCommentpostdata={setCommentpostdata}
-                      setShowComments={setShowComments}
-                    />
-                  ))
+                  <>
+                    {posts.map((post) => (
+                      <FeedPost
+                        key={post.id}
+                        post={post}
+                        userdata={userdata}
+                        setSharemenu={setSharemenu}
+                        setSharepostdata={setSharepostdata}
+                        enqueueUserMetadata={enqueueUserMetadata}
+                        usermetadata={usermetadata}
+                        setTaggedusermenu={setTaggedusermenu}
+                        db={db}
+                        showComments={showComments}
+                        setCommentpostdata={setCommentpostdata}
+                        setShowComments={setShowComments}
+                      />
+                    ))}
+                    {
+                      <div className="flex justify-center items-center  ">
+                        {morepostsloading && (
+                          <div className="flex justify-center items-center h-40">
+                            <Image
+                              src="/loading.gif"
+                              height={50}
+                              width={50}
+                              alt="Loading"
+                            />
+                          </div>
+                        )}
+                      </div>
+                    }
+                    {hasMore && (
+                      <div id="sentinel" style={{ height: "1px" }}></div>
+                    )}
+                  </>
                 ) : (
                   <div className="flex justify-center items-center h-96 w-full text-3xl font-bold">
                     No posts to show

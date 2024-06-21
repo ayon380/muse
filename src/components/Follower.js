@@ -25,13 +25,13 @@ const Follower = ({
   const handleremove = async (follower) => {
     try {
       const uref = doc(db, "users", currentuserdata.email);
-      const pref = doc(db, "users", usermetadata[follower].email);
+      const pref = doc(db, "users", usermetadata[follozwer].email);
       await updateDoc(uref, {
         followers: arrayRemove(follower),
         followerscount: increment(-1),
       });
       await updateDoc(pref, {
-        following: arrayRemove(follower),
+        following: arrayRemove(currentuserdata.uid),
         followingcount: increment(-1),
       });
       setfollowers(followers.filter((fol) => fol !== follower));
