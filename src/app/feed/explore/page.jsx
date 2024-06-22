@@ -277,7 +277,10 @@ const Explore = () => {
       console.log(JSON.stringify(hashposts) + " Hashposts");
     }
   }, [hashposts]);
-
+  useEffect(() => {
+    console.log("Feed Length", feed.length);
+    console.log("Feed", feed);
+  }, [feed]);
   useEffect(() => {
     fetchposts();
   }, [expllorepagestate]);
@@ -454,7 +457,7 @@ const Explore = () => {
           )}
           <div className="main2 md:rounded-2xl dark:bg-black bg-white md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 border-black  overflow-y-auto">
             <div className="flex justify-between pt-3 px-2 pb-4 bg-white rounded-b-3xl dark:bg-feedheader shadow-xl  dark:shadow-none  sticky top-0 z-20 ">
-              <h1 class="bg-gradient-to-r from-purple-500 via-fuchsia-400 to-pink-400 text-4xl inline-block text-transparent bg-clip-text">
+              <h1 className="bg-gradient-to-r from-purple-500 via-fuchsia-400 to-pink-400 text-4xl inline-block text-transparent bg-clip-text">
                 Explore
               </h1>
               <div className="s mt-2">
@@ -498,7 +501,7 @@ const Explore = () => {
                 setexpllorepagestate={setexpllorepagestate}
               />
             )}
-            <ResponsiveMasonry columnsCountBreakPoints={{ 350: 2 }}>
+            <ResponsiveMasonry columnsCountBreakPoints={{ 350: 2,700:3 }}>
               <Masonry>
                 {memoizedFeed.map((post) => (
                   <div key={post.id} className="m-0.5 md:m-2">

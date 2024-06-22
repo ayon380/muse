@@ -83,7 +83,6 @@ const Notification = ({ data, onDismiss, unread }) => {
       router.push(
         `/feed/messages?roomid=${notification.roomid}&chattype=g&chatwindow=${notification.title}`
       );
-
     } else {
       router.push(
         `/feed/messages?roomid=${notification.roomid}&chattype=p&chatwindow=${notification.sender}`

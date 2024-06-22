@@ -3,7 +3,14 @@ import { getAuth, signOut } from "firebase/auth";
 import React, { useEffect } from "react";
 import app from "@/lib/firebase/firebaseConfig";
 import { collection, getFirestore, query } from "firebase/firestore";
-import { doc, getDoc, getDocs, updateDoc, where,addDoc } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  getDocs,
+  updateDoc,
+  where,
+  addDoc,
+} from "firebase/firestore";
 import { arrayUnion, arrayRemove } from "firebase/firestore";
 import { increment } from "firebase/firestore";
 // import { get } from "http";
@@ -53,9 +60,10 @@ const Page = ({ params }) => {
   const [followersbox, setFollowersbox] = React.useState();
   const [followingbox, setfollowingbox] = React.useState();
   const [sharemenuopen, setSharemenuopen] = React.useState(false);
+  const [followstatus, setFollowstatus] = React.useState("Follow");
   const { usermetadata, enqueueUserMetadata, initialLoad, toggleload } =
     useSidebarStore();
-  const checkfollow = () => {
+  const checkfollow = async () => {
     console.log(userdata.followers);
     console.log(currentuserdata.uid);
     if (
@@ -64,8 +72,24 @@ const Page = ({ params }) => {
       userdata.followers.includes(currentuserdata.uid)
     ) {
       console.log("checkfollow running..." + true);
-      return true;
-    } else return false;
+      setFollowstatus("Following");
+    } else {
+      const notrf = collection(db, "notifications");
+      const q = query(
+        notrf,
+        where("receiver", "==", userdata.uid),
+        where("sender", "==", currentuserdata.uid),
+        // where("text", "==", notification.text),
+        where("type", "==", "Follow")
+      );
+      const docSnap = await getDocs(q);
+      console.log(docSnap.docs.length + "requested");
+      if (docSnap.docs.length > 0) {
+        setFollowstatus("Requested");
+      } else {
+        setFollowstatus("Follow");
+      }
+    }
   };
   const checkrestrict = () => {
     console.log(userdata.blocked);
@@ -107,10 +131,9 @@ const Page = ({ params }) => {
   const [follow, setFollow] = React.useState(false);
   useEffect(() => {
     if (userdata && currentuserdata) {
-      const q = checkfollow();
       const r = checkrestrict();
+      checkfollow();
       setRestrict(r);
-      setFollow(q);
       setRestrictChecking(false);
     }
   }, [userdata, currentuserdata]);
@@ -203,8 +226,8 @@ const Page = ({ params }) => {
   }, [user, userdata, currentuserdata]);
 
   const handlefollow = async () => {
-    const q = follow;
-    setFollow(!follow); // Update follow state using the functional form
+    const q = userdata.followers.includes(currentuserdata.uid);
+    setFollowstatus(q && "Follow");
     try {
       const userRef = doc(db, "users", userdata.email);
       const currentuserRef = doc(db, "users", user.email);
@@ -215,10 +238,12 @@ const Page = ({ params }) => {
         console.log("adding follow");
         if (userdata.pubpriv == "Private") {
           try {
+            setFollowstatus("Requested");
             const notificationData = {
               id: "",
               sender: currentuserdata.uid,
               type: "Follow",
+              text: "Started following you",
               receiver: userdata.uid,
               timestamp: Date.now(),
             };
@@ -236,6 +261,7 @@ const Page = ({ params }) => {
             console.error("Error sending notification:", error);
           }
         } else {
+          setFollowstatus("Following");
           await updateDoc(userRef, {
             followers: arrayUnion(currentuserdata.uid),
             followerscount: increment(1),
@@ -513,9 +539,10 @@ const Page = ({ params }) => {
                             <>
                               <button
                                 className="py-2 px-4 my-2 rounded-full bg-fuchsia-300 text-black font-semibold transition-colors duration-300 hover:bg-fuchsia-600"
+                                disabled={followstatus == "Requested"}
                                 onClick={handlefollow}
                               >
-                                {follow ? "Following" : "Follow"}
+                                {followstatus}
                               </button>
                             </>
                           )}
@@ -578,14 +605,15 @@ const Page = ({ params }) => {
                       </div>
                     </div>
                   </div>
-                  {currentuserdata?.following?.includes(userdata.uid) ? (
+                  {currentuserdata?.following?.includes(userdata.uid) ||
+                  currentuserdata?.email == userdata?.email ? (
                     <div className="df">
                       <div className="flex justify-center my-4">
-                        <div className="flex items-center  bg-gradient-to-r from-purple-400 to-pink-500 rounded-full overflow-hidden">
+                        <div className="flex items-center  bg-feedheader rounded-full overflow-hidden">
                           <button
                             className={`px-4 py-2 w-20 text-sm text-white transition-colors duration-300 ${
                               pagestate === 0
-                                ? "bg-purple-600 hover:bg-purple-700"
+                                ? "bg-fuchsia-400 hover:bg-purple-700"
                                 : "hover:bg-purple-600"
                             }`}
                             onClick={() => setPageState(0)}

@@ -35,10 +35,13 @@ const PostComment = ({
   const [replies, setReplies] = useState({});
   const [commentreply, setCommentreply] = useState({});
   const [isOpen, setIsOpen] = useState(true);
+  const [reeldata, setreeldata] = useState({});
+
   // const [reply, setReply] = useState("");
   // const [comment, setComment] = useState("");
   const inputref = useRef();
   const replyref = useRef();
+
   const limit = 50;
   const { setpostdataupdate } = useSidebarStore();
   console.log(postid);
@@ -263,43 +266,76 @@ const PostComment = ({
   };
 
   const handleCommentSubmit = async () => {
-    try {
-      comment = inputref.current.value;
-      if (comment.trim() === "") {
-        return;
-      }
+    // try {
+    let comment = inputref.current.value;
+    if (comment.trim() === "") {
+      return;
+    }
 
-      const commentRef = collection(db, "comments");
-      const commentData = {
-        content: comment,
-        likecount: 0,
-        uid: uid,
-        likes: [],
-        replies: [],
-        timestamp: new Date(),
+    const commentRef = collection(db, "comments");
+    const commentData = {
+      content: comment,
+      likecount: 0,
+      uid: uid,
+      likes: [],
+      replies: [],
+      timestamp: new Date(),
+    };
+    const q = await addDoc(commentRef, commentData);
+    const postRef = doc(db, "reels", postid);
+    await updateDoc(postRef, {
+      commentcount: increment(1),
+      comments: arrayUnion(q.id),
+    });
+    await updateDoc(doc(commentRef, q.id), {
+      id: q.id,
+    });
+    commentData.timestamp = formatTimestamp(commentData.timestamp);
+    setCommentList((prevState) => [...prevState, commentData]);
+    // setComment("");
+
+    inputref.current.value = "";
+    sendNotification("commentpost");
+    //   setpostdataupdate(post);
+    toast.success("Comment posted successfully");
+    //   } catch (error) {
+    //     toast.error("Error posting comment: " + error.message);
+    //   }
+  };
+  const sendNotification = async (type) => {
+    try {
+      const notificationData = {
+        id: "",
+        sender: userdata.uid,
+        postid: postid,
+        type: "comment",
+        subtype: type,
+        receiver: reeldata.uid,
+        timestamp: Date.now(),
       };
-      const q = await addDoc(commentRef, commentData);
-      const postRef = doc(db, "reels", postid);
-      await updateDoc(postRef, {
-        commentcount: increment(1),
-        comments: arrayUnion(q.id),
+      console.log(notificationData);
+      const notificationRef = collection(db, "notifications");
+      const notificationDoc = await addDoc(notificationRef, notificationData);
+      await updateDoc(doc(notificationRef, notificationDoc.id), {
+        id: notificationDoc.id,
       });
-      await updateDoc(doc(commentRef, q.id), {
-        id: q.id,
-      });
-      commentData.timestamp = formatTimestamp(commentData.timestamp);
-      setCommentList((prevState) => [...prevState, commentData]);
-      setComment("");
-      //   setpostdataupdate(post);
-      toast.success("Comment posted successfully");
+      console.log("Notification sent");
     } catch (error) {
-      toast.error("Error posting comment: " + error.message);
+      console.error("Error sending notification:", error);
     }
   };
-
+  const getreeldata = async () => {
+    try {
+      const q = await getDoc(doc(db, "reels", postid));
+      setreeldata(q.data());
+    } catch (error) {
+      console.error("Error fetching reel data:", error);
+    }
+  };
   useEffect(() => {
     setTimeout(() => {
       getComments();
+      getreeldata();
     }, 1000);
   }, []);
 

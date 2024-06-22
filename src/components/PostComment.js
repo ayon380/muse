@@ -182,13 +182,14 @@ const PostComment = ({
           likecount: newLikeCount,
         });
       }
+      // sendNotification(postdata, "commentlike");
       toast.success("Comment liked successfully");
     }
   };
 
   const handleReplySubmit = async (comment) => {
     try {
-      let rtxt= replyref.current.value;
+      let rtxt = replyref.current.value;
       if (rtxt.trim() === "") {
         return;
       }
@@ -263,7 +264,7 @@ const PostComment = ({
 
   const handleCommentSubmit = async () => {
     try {
-      let comment= inputref.current.value;
+      let comment = inputref.current.value;
       if (comment.trim() === "") {
         return;
       }
@@ -288,6 +289,7 @@ const PostComment = ({
       commentData.timestamp = formatTimestamp(commentData.timestamp);
       setCommentList((prevState) => [...prevState, commentData]);
       // setComment("");
+      sendNotification(postdata, "commentpost");
       inputref.current.value = "";
       setpostdataupdate(postdata.id);
       toast.success("Comment posted successfully");
@@ -295,7 +297,29 @@ const PostComment = ({
       toast.error("Error posting comment: " + error.message);
     }
   };
-
+  const sendNotification = async (postdata, type) => {
+    try {
+      const notificationData = {
+        id: "",
+        sender: userdata.uid,
+        owner: postdata.uid,
+        postid: postdata.id,
+        type: "comment",
+        subtype: type,
+        receiver: postdata.uid,
+        timestamp: Date.now(),
+      };
+      console.log(notificationData);
+      const notificationRef = collection(db, "notifications");
+      const notificationDoc = await addDoc(notificationRef, notificationData);
+      await updateDoc(doc(notificationRef, notificationDoc.id), {
+        id: notificationDoc.id,
+      });
+      console.log("Notification sent");
+    } catch (error) {
+      console.error("Error sending notification:", error);
+    }
+  };
   useEffect(() => {
     setTimeout(() => {
       getComments();
@@ -462,7 +486,9 @@ const PostComment = ({
                           {reply.timestamp}
                         </span>
                       </div>
-                      <div className="dark:text-gray-300 text">{reply.content}</div>
+                      <div className="dark:text-gray-300 text">
+                        {reply.content}
+                      </div>
                     </motion.div>
                   ))}
               </div>

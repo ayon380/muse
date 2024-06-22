@@ -25,7 +25,7 @@ const Follower = ({
   const handleremove = async (follower) => {
     try {
       const uref = doc(db, "users", currentuserdata.email);
-      const pref = doc(db, "users", usermetadata[follozwer].email);
+      const pref = doc(db, "users", usermetadata[follower].email);
       await updateDoc(uref, {
         followers: arrayRemove(follower),
         followerscount: increment(-1),

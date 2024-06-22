@@ -69,7 +69,8 @@ const Reel = ({
         id: "",
         sender: userdata.uid,
         reelid: reeldata.id,
-        type: "reellike",
+        type: "like",
+        subtype:"reellike",
         receiver: reeldata.uid,
         timestamp: Date.now(),
       };
@@ -115,8 +116,8 @@ const Reel = ({
         await updateDoc(usernameRef, {
           score: increment(1),
         });
-        sendNotification(postdata);
-        const hashtags = postdata.hashtags;
+        sendNotification(reeldata);
+        const hashtags = reeldata.hashtags;
         hashtags.forEach(async (hashtag) => {
           const hashtagRef = doc(db, "hashtags", hashtag);
           const hashtagDoc = await getDoc(hashtagRef);

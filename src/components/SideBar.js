@@ -72,12 +72,6 @@ const SideBar = ({ usage, data, currentuserdata }) => {
     }
   }, []);
 
-  const checkfollow = () => {
-    if (userdata && data && userdata.followers.includes(profileData.uid)) {
-      console.log("checkfollow running..." + true);
-      return true;
-    } else return false;
-  };
   const [user, setUser] = useState(auth.currentUser);
   useEffect(() => {
     const getuserdata = async (userEmail, num) => {
@@ -114,36 +108,6 @@ const SideBar = ({ usage, data, currentuserdata }) => {
 
     return () => unsubscribe();
   }, [auth, router, db, user, data]);
-  useEffect(() => {
-    const hjk = async () => {
-      if (userdata && profileData && userdata.email != profileData.email) {
-        const userref = doc(db, "users", userdata.email);
-        const temp = await getDoc(userref);
-        const profileref = doc(db, "users", profileData.email);
-        const temp1 = await getDoc(profileref);
-        if (temp.exists()) {
-          setUserData(temp.data());
-        }
-        if (temp1.exists()) {
-          setProfileData(temp1.data());
-        }
-        // const arr=analyzeColors(userdata.pfp);
-        // console.log(arr);
-      }
-    };
-    hjk();
-  }, [follow]);
-  useEffect(() => {
-    if (userdata && profileData) {
-      setFollow(checkfollow());
-    }
-  }, [userdata, profileData]);
-  const handleLogout = () => {
-    auth.signOut().then(() => {
-      // Sign-out successful.
-      router.push("/login");
-    });
-  };
 
   useEffect(() => {
     if (userdata) {
@@ -159,38 +123,27 @@ const SideBar = ({ usage, data, currentuserdata }) => {
       };
     }
   }, [userdata]);
-  const handlefollow = async () => {
+  const handlefollow = async (notification) => {
     // Update follow state using the functional form
     try {
-      const f = !follow;
-      const userRef = doc(db, "users", userdata.email);
-      const currentuserRef = doc(db, "users", user.email);
+      const userRef = doc(db, "users", user.email);
+      const currentuserRef = doc(
+        db,
+        "users",
+        usermetadata[notification.sender].email
+      );
 
       // Calculate f based on the previous state
 
-      if (f) {
-        console.log("adding follow");
-        await updateDoc(userRef, {
-          followers: arrayUnion(profileData.uid),
-          followerscount: increment(1),
-        });
-        await updateDoc(currentuserRef, {
-          following: arrayUnion(userdata.uid),
-          followingcount: increment(1),
-        });
-      } else {
-        console.log("removing follow");
-        await updateDoc(userRef, {
-          followers: arrayRemove(profileData.uid),
-          followerscount: increment(-1),
-        });
-        await updateDoc(currentuserRef, {
-          following: arrayRemove(userdata.uid),
-          followingcount: increment(-1),
-        });
-      }
-      console.log(f);
-      setFollow(f);
+      console.log("adding follow");
+      await updateDoc(userRef, {
+        followers: arrayUnion(notification.sender),
+        followerscount: increment(1),
+      });
+      await updateDoc(currentuserRef, {
+        following: arrayUnion(userdata.uid),
+        followingcount: increment(1),
+      });
     } catch (error) {
       console.error("Error updating follow status:", error);
       // Handle error appropriately, e.g., show error message to the user
@@ -373,8 +326,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
           return true;
         if (notificationfilter === "Message" && notification.type === "message")
           return true;
-        if (notificationfilter === "Reel" && notification.type === "reellike")
-          return true;
+
         return false;
       })
     );
@@ -397,12 +349,13 @@ const SideBar = ({ usage, data, currentuserdata }) => {
       name: "Message",
       icon: "M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z",
     },
-    {
-      name: "Reel",
-      icon: "M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z",
-    },
   ];
-  const handlenotifollow = async (notification, action) => {};
+  const handlenotifollow = async (notification, action) => {
+    if (action == "confirm") {
+      await handlefollow(notification);
+    }
+    handledismissnotification(notification);
+  };
   return (
     <>
       {/* {open && ( */}
@@ -482,9 +435,10 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                   <div className="flex justify-center">
                     <div className="pfp my-4">
                       <Image
-                        onClick={() =>
-                          router.push(`/feed/profile/${userdata.userName}`)
-                        }
+                        onClick={() => {
+                          toggle();
+                          router.push(`/feed/profile/${userdata.userName}`);
+                        }}
                         className="rounded-full h-24 object-cover w-24 cursor-pointer hover:opacity-80"
                         src={userdata.pfp}
                         width={100}
@@ -506,9 +460,10 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                   <div className="flex justify-center">
                     <div className="pfp my-4">
                       <Image
-                        onClick={() =>
-                          router.push(`/feed/profile/${userdata.userName}`)
-                        }
+                        onClick={() => {
+                          toggle();
+                          router.push(`/feed/profile/${userdata.userName}`);
+                        }}
                         className="rounded-full h-24 object-cover w-24 mr-5 cursor-pointer hover:opacity-80"
                         src={userdata.pfp}
                         width={100}
@@ -841,7 +796,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                                           <div className="text-xs"></div>
                                         </div>
                                       )}
-                                      {notification.type == "reellike" && (
+                                      {notification.subtype == "reellike" && (
                                         <div
                                           className="q"
                                           onClick={() =>
@@ -867,6 +822,66 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                                           )}
                                         </div>
                                       )}
+                                      {notification.type == "comment" &&
+                                        notification.subtype ==
+                                          "reelcomment" && (
+                                          <div
+                                            className="q"
+                                            onClick={() =>
+                                              router.push(
+                                                `/feed/reels?reelid=${notification.reelid}`
+                                              )
+                                            }
+                                          >
+                                            {usermetadata[
+                                              notification.sender
+                                            ] && (
+                                              <>
+                                                <div className="text-sm">
+                                                  {
+                                                    usermetadata[
+                                                      notification.sender
+                                                    ].userName
+                                                  }{" "}
+                                                  commented on your Reel
+                                                </div>
+                                                <div className="text-xs"></div>
+                                              </>
+                                            )}
+                                          </div>
+                                        )}
+                                      {notification.type == "comment" &&
+                                        notification.subtype ==
+                                          "commentpost" && (
+                                          <div
+                                            className="q"
+                                            onClick={() =>
+                                              router.push(
+                                                `/feed/profile/${
+                                                  usermetadata[
+                                                    notification?.owner
+                                                  ].userName
+                                                }?postid=${notification.postid}`
+                                              )
+                                            }
+                                          >
+                                            {usermetadata[
+                                              notification.sender
+                                            ] && (
+                                              <>
+                                                <div className="text-sm">
+                                                  {
+                                                    usermetadata[
+                                                      notification.sender
+                                                    ].userName
+                                                  }{" "}
+                                                  commented on your Post
+                                                </div>
+                                                <div className="text-xs"></div>
+                                              </>
+                                            )}
+                                          </div>
+                                        )}
                                     </div>
                                   )}
                                 </div>
@@ -897,7 +912,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                                           src="/icons/comment.png"
                                           alt="Comment"
                                           height={50}
-                                          className="dark:invert h-10 w-10"
+                                          className=" h-10 w-10"
                                           width={50}
                                         />
                                       </div>
@@ -921,17 +936,6 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                                           className="dark:invert h-10 w-10"
                                           width={50}
                                           alt="Message"
-                                        />
-                                      </div>
-                                    )}
-                                    {notification.type == "reellike" && (
-                                      <div className="text-xs">
-                                        <Image
-                                          src="/icons/like.png"
-                                          alt=""
-                                          className="dark:invert h-10 w-10"
-                                          height={50}
-                                          width={50}
                                         />
                                       </div>
                                     )}

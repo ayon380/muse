@@ -139,7 +139,8 @@ const FeedPost = ({
         id: "",
         sender: uid,
         postid: postdata.id,
-        type: "postlike",
+        type: "like",
+        subtype:"postlike",
         receiver: postdata.uid,
         timestamp: Date.now(),
       };

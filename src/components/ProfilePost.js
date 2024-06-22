@@ -253,7 +253,7 @@ const FeedPost = ({
     <>
       <motion.div
         className="z-10 justify-center bg-white  rounded-3xl py-2  mx-auto md:px-24   dark:bg-black"
-        key={postdata.id}
+        key={postdata?.id}
         initial="hidden"
         animate="visible"
         // onClick={() => onclose()}
@@ -282,7 +282,7 @@ const FeedPost = ({
           />
         )}
         <div className="df bg-white   dark:bg-black bg-opacity-40 rounded-2xl m-2">
-          {usermetadata && usermetadata[postdata.uid] && (
+          {usermetadata && postdata && usermetadata[postdata?.uid] && (
             <div className="header flex justify-between pt-2 px-1">
               <Link
                 href={`/feed/profile/${usermetadata[postdata.uid].userName}`}
@@ -383,7 +383,7 @@ const FeedPost = ({
                   </motion.div>
                   <div className="flex  ml-2 ">
                     <div className="count text-2xl font-bold mr-1">
-                      {postdata.likecount ? postdata.likecount : 0}
+                      {postdata?.likecount ? postdata?.likecount : 0}
                     </div>
                     <div className="likes text-sm mt-2 opacity-75 ">likes</div>
                   </div>
@@ -419,7 +419,7 @@ const FeedPost = ({
                       className="dark:invert"
                     />
                     <div className="asd text-sm -mt-2 text-red-500 font-bold ">
-                      {postdata.taggedUsers.length}
+                      {postdata?.taggedUsers.length}
                     </div>
                   </div>
                   <div className="sad mr-1" onClick={handleSave}>
@@ -446,7 +446,7 @@ const FeedPost = ({
                 </div>
               </div>
 
-              {postdata.caption && (
+              {postdata?.caption && (
                 <div className="caption mt-1 mb-2 w-full opacity-80">
                   {postdata.caption}
                 </div>
