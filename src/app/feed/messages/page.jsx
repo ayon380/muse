@@ -1013,9 +1013,9 @@ const Home = () => {
     setmediaviewerfiles([]);
   };
   return (
-    <div className="lg:ml-5 w-full h-full overflow-hidden">
+    <div className=" w-full h-full overflow-hidden">
       <Toaster />
-     
+
       {mediaViewerOpen && mediaviewerfiles && (
         <MediaViewer
           mediaviewerfiles={mediaviewerfiles}
@@ -1025,7 +1025,7 @@ const Home = () => {
       )}
       {mainloading && !initialLoad && (
         <>
-          <div className="main2 md:rounded-2xl bg-white dark:bg-black md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 border-black h-full overflow-y-auto">
+          <div className="main2 md:rounded-2xl bg-white dark:bg-black  shadow-2xl border-1 border-black h-full overflow-y-auto">
             <div className="flex justify-center items-center h-full">
               <div className="edwdw ">
                 {" "}
@@ -1047,7 +1047,7 @@ const Home = () => {
         </>
       )}
       {userdata && !mainloading && (
-        <div className="main2 w-full lg:rounded-2xl  dark:bg-black md:dark:bg-gray-900 bg-white md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl md:bg-opacity-20 shadow-2xl border-1 border-black h-full">
+        <div className="main2 w-full lg:rounded-2xl  dark:bg-black md:dark:bg-gray-900 bg-white  shadow-2xl border-1 border-black h-full">
           <div className="flex justify-between w-full h-full">
             {gifopen && (
               <div className="absolute right-0 bottom-4 z-40 mb-12 lg:mb-20 mr-1 lg:mr-10">
@@ -1091,7 +1091,7 @@ const Home = () => {
               />
             )}
             {showaddfiles && (
-              <div className="absolute right-0 w-full bottom-4 z-40 mb-14 lg:mb-20 lg:mr-10  bg-white text-black dark:bg-feedheader dark:text-white rounded-t-3xl p-4">
+              <div className="absolute md:rounded-2xl right-0 w-full shadow-xl md:w-1/4 bottom-4 z-40 mb-14 lg:mb-20 lg:mr-10  bg-white text-black dark:bg-feedheader dark:text-white rounded-t-3xl p-4">
                 <div className="mb-4">
                   <label className="block text font-bold mb-2">
                     Upload Photos or Videos (up to 10)
@@ -1162,10 +1162,10 @@ const Home = () => {
             )}
             {!checkchat("Q") && (
               <div
-                className="followingusers bg-white dark:bg-black w-full lg:w-1/3 md:m-6 overflow-y-auto"
+                className="followingusers rounded-xl bg-white dark:bg-black w-full lg:w-1/3  overflow-y-auto"
                 key={roomid}
               >
-                <div className="flex w-full rounded-b-3xl shadow-xl shadow-fuchsia-100 dark:bg-feedheader dark:shadow-none bg-white p-3 justify-between">
+                <div className="flex w-full rounded-b-3xl rounded-t-md shadow-xl shadow-fuchsia-100 dark:bg-feedheader dark:shadow-none bg-white p-3 justify-between">
                   <h1 class="bg-gradient-to-r from-purple-500 via-fuchsia-400 to-pink-400 text-4xl inline-block text-transparent bg-clip-text">
                     Messages
                   </h1>
@@ -1200,7 +1200,7 @@ const Home = () => {
                         alt="Sidebar"
                         height={50}
                       />
-                      <span className="absolute top-4 right-2 bg-red-500 text-white rounded-full px-1 text-xs">
+                      <span className="absolute md:hidden top-4 right-2 bg-red-500 text-white rounded-full px-1 text-xs">
                         {unread}
                       </span>
                     </button>
@@ -1214,6 +1214,29 @@ const Home = () => {
                     />
                   )}
                 </div>
+                {roomid == "" && chatwindow != "none" && (
+                  <div className="df">
+                    <div className="pfp ml-2 cursor-pointer">
+                      <Image
+                        className="h-10 w-10 rounded-full"
+                        src={usermetadata[chatwindow].pfp}
+                        height={50}
+                        width={50}
+                        alt={chatwindow}
+                      ></Image>
+                    </div>
+                    <div className="username text-2xl mt-2 ml-2">
+                      {usermetadata[chatwindow].userName}
+                    </div>
+                    {!chprevchat ? (
+                      <button onClick={startchat}>
+                        Start Chat with {usermetadata[chatwindow].userName}
+                      </button>
+                    ) : (
+                      <></>
+                    )}
+                  </div>
+                )}
                 {chats &&
                   chats.map((chat, index) =>
                     chat.type == "p" ? (
@@ -1288,9 +1311,10 @@ const Home = () => {
                               ? usermetadata[chat.participants[1]].userName
                               : usermetadata[chat.participants[0]].userName}
                             <div className="ds font-light opacity-75 text-sm">
-                              {chat.lastMessage.type === "text"
+                              {chat.lastMessage &&
+                              chat.lastMessage?.type === "text"
                                 ? chat.lastMessage.text.substr(0, 40)
-                                : chat.lastMessage.type === "media"
+                                : chat.lastMessage?.type === "media"
                                 ? "Media"
                                 : "Gif"}
                             </div>
@@ -1438,7 +1462,7 @@ const Home = () => {
                           </div>
                         </div>
                       </div>
-                      <div className="flex mt-10 justify-center">
+                      <div className="flex mt-10 md:mt-20 justify-center">
                         {currentmsglength < maxlength && (
                           <button
                             onClick={() => {
@@ -2018,29 +2042,7 @@ const Home = () => {
                   </div>
                 </>
               )} */}
-                {roomid == "" && chatwindow != "none" && (
-                  <div className="df">
-                    <div className="pfp ml-2 cursor-pointer">
-                      <Image
-                        className="h-10 w-10 rounded-full"
-                        src={usermetadata[chatwindow].pfp}
-                        height={50}
-                        width={50}
-                        alt={chatwindow}
-                      ></Image>
-                    </div>
-                    <div className="username text-2xl mt-2 ml-2">
-                      {usermetadata[chatwindow].userName}
-                    </div>
-                    {!chprevchat ? (
-                      <button onClick={startchat}>
-                        Start Chat with {usermetadata[chatwindow].userName}
-                      </button>
-                    ) : (
-                      <></>
-                    )}
-                  </div>
-                )}
+
                 {!roomid && (
                   <div className="text-3xl text-center align-middle mt-56 my-10">
                     Select a chat to start messaging

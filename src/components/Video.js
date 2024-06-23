@@ -7,6 +7,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { collection, getDoc, query, setDoc } from "firebase/firestore";
 import { CoolMode } from "./Coolmode";
+import StyledCaption from "./StyledCaption";
 import toast, { Toaster } from "react-hot-toast";
 import {
   getFirestore,
@@ -70,7 +71,7 @@ const Reel = ({
         sender: userdata.uid,
         reelid: reeldata.id,
         type: "like",
-        subtype:"reellike",
+        subtype: "reellike",
         receiver: reeldata.uid,
         timestamp: Date.now(),
       };
@@ -266,7 +267,7 @@ const Reel = ({
       album: "Muse Reels",
       artwork: [
         {
-          src: '/thumbnail.png',
+          src: "/thumbnail.png",
           sizes: "512x512",
           type: "image/jpg",
         },
@@ -488,7 +489,9 @@ const Reel = ({
               </button>
             </div>
           </div>
-          <div className="caption opacity-90">{reeldata.caption}</div>
+          <div className="caption opacity-90">
+            <StyledCaption caption={reeldata.caption} />
+          </div>
 
           <button
             className="show-comments-button opacity-50"

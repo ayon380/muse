@@ -344,7 +344,10 @@ const PostComment = ({
   }, []);
 
   const close = () => {
-    setShowComments(false);
+    setIsOpen(false);
+    setTimeout(() => {
+      setShowComments(false);
+    }, 300);
   };
 
   return (

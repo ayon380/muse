@@ -3,7 +3,7 @@ import "../styles/tcs.css";
 import Link from "next/link";
 const Home = () => {
   return (
-    <div className="dark:bg-black dark:text-white flex justify-center">
+    <div className="dark:bg-black maindiv dark:text-white flex justify-center">
       <div className="pk mx-5 lg:w-1/2 my-10 rounded-2xl parent-container p-10 md:w-2/3  ">
         <div className="main bg-opacity-10 p-10 child-container rounded-2xl bg-white shadow-2xl border-1 border-black ">
           <div className="backdrop-filter backdrop-blur-md bg-opacity-30">

@@ -1,5 +1,5 @@
 "use client";
-import "../styles/gradients.css";
+// import "../styles/grad.css";
 import Link from "next/link";
 import {
   getAuth,
@@ -70,9 +70,9 @@ const Home = () => {
   };
 
   return (
-    <div className="root hl h-screen">
+    <div className="root hl h-screen  pt-52 maindiv">
       <Toaster />
-      <div className=" mt-52 mx-12 md:mx-96 bg-gray-700 rounded-md bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-10 shadow-2xl border-1 border-black">
+      <div className="  mx-12 md:mx-96 bg-gray-700 rounded-md bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-10 shadow-2xl border-1 border-black">
         <div className="f1 font-lucy text-8xl lg:text-9xl pt-10   text-center">
           <Link href="/">Muse</Link>
         </div>

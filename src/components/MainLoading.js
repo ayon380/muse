@@ -4,7 +4,7 @@ import SparklesText from "./SparkleText";
 
 const MainLoading = () => {
   return (
-    <div className="w-screen bg-white dark:bg-black h-screen fixed top-0 left-0 flex flex-col items-center justify-center mainloading text-white z-50">
+    <div className="w-screen mainloading bg-white dark:bg-black h-screen fixed top-0 left-0 flex flex-col items-center justify-center mainloading text-white z-50">
       <div className="flex flex-col items-center mb-12">
         <SparklesText text="Muse" textSize="text-7xl" />
       </div>

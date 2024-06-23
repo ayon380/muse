@@ -59,7 +59,7 @@ const ChatDetail = ({
             height={100}
             width={500}
             alt="854"
-            className="rounded-md h-60 object-scale-down "
+            className="rounded-md h-60 object-cover w-full "
           />
 
           <div className="lp p-8">
@@ -71,7 +71,7 @@ const ChatDetail = ({
               }`}
             >
               <p className="font-bold text-center text-xl mb-2">
-                {roomdata.participants[0] != userdata.uid
+                @{roomdata.participants[0] != userdata.uid
                   ? usermetadata[roomdata.participants[0]].userName
                   : usermetadata[roomdata.participants[1]].userName}
               </p>

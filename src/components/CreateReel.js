@@ -212,9 +212,24 @@ const CreatePost = ({ onClose, userdata }) => {
   return (
     <BottomSheet show={isOpen} onClose={handleClose} heading="Create Reel">
       <div className="bg-white dark:bg-black p-5">
-       
         <div className="mb-4">
-          <label className="block text font-bold mb-2">Caption</label>
+          <label className="block text-xl font-bold mb-2">Caption</label>
+          <div className="flex">
+            <Image
+              src="/icons/info.png"
+              alt="info"
+              width={20}
+              height={20}
+              className="mr-2 dark:invert mt-1 h-5 w-5"
+            />
+            <div className="df text-xs opacity-75 mb-2">
+              <p>
+                Add a caption to your video. You can also add hashtags to make
+                your video more discoverable. Add Hashtags like #nature #beauty
+                #travel
+              </p>
+            </div>
+          </div>
           <textarea
             className="resize-none text border active:border-2 active:border-cyan-100 rounded w-full py-2 px-3 bg-transparent text-opacity-75"
             rows="3"
@@ -259,7 +274,7 @@ const CreatePost = ({ onClose, userdata }) => {
             <h2 className="text-lg font-semibold mb-2">Uploading...</h2>
             <div className="w-full bg-gray-200 rounded-full dark:bg-gray-700">
               <div
-                className="bg-blue-500 text-xs font-medium text-blue-100 text-center p-0.5 leading-none rounded-full"
+                className="bg-fuchsia-500 text-xs font-medium text-fuchsia-100 text-center p-2 leading-none rounded-full"
                 style={{ width: `${uploadProgress}%` }}
               >
                 {uploadProgress.toFixed(2)}%
@@ -272,13 +287,22 @@ const CreatePost = ({ onClose, userdata }) => {
         )}
         <div className="flex items-center justify-between mt-4">
           <button
-            className="text-blue-500 hover:underline focus:outline-none"
+            className="text-fuchsia-500 bg-fuchsia-100 px-3 py-1 rounded-full
+    transition-all duration-300 ease-in-out dark:bg-fuchsia-500 dark:text-fuchsia-100
+    hover:scale-110 hover:bg-fuchsia-200
+    active:scale-90 active:bg-fuchsia-300
+    cursor-pointer"
             onClick={handleClose}
           >
             Cancel
           </button>
           <button
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold disabled:opacity-50 py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            className=" text-fuchsia-500 bg-fuchsia-100 px-3 py-1 rounded-full
+            disabled:text-gray-500 dark:bg-fuchsia-500 dark:text-fuchsia-100
+    transition-all duration-300 ease-in-out
+    hover:scale-110 hover:bg-fuchsia-200
+    active:scale-90 active:bg-fuchsia-300
+    cursor-pointer"
             onClick={handleSubmit}
             disabled={submitting || !mediaFile || !caption}
           >

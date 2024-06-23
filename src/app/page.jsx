@@ -132,6 +132,17 @@ const SparklesPreview = () => {
           >
             Muse
           </motion.button>
+          <motion.div variants={itemVariants} className="flex">
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={handleClick}
+              className="transition-colors duration-300 hover:text-blue-500"
+            >
+              {loggedin ? "Go to Feed" : "Login"}
+            </motion.button>
+          </motion.div>
+
           <motion.div variants={itemVariants} className="dede flex">
             <motion.button
               whileHover={{ scale: 1.1 }}

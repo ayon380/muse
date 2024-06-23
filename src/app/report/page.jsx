@@ -29,7 +29,7 @@ const ReportPage = () => {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className=" mx-auto p-4 h-dvh overflow-y-auto"
+      className=" mx-auto maindiv p-4 h-dvh overflow-y-auto"
     >
       <div className="muse font-lucy text-center text-5xl md:text-8xl my-4 md:my-10 font-bold text-opacity-60">Muse</div>
       <div className="dds text-center text-sm mb-10">Muse: Where creativity thrives, and your safety is our utmost priority.</div>

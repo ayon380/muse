@@ -1,6 +1,7 @@
 "use client";
 import app from "@/lib/firebase/firebaseConfig";
 import Link from "next/navigation";
+import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import React, { use, useEffect, useState } from "react";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
@@ -34,10 +35,37 @@ const CreatePost = dynamic(() => import("@/components/Createpost"), {
 const CreateReel = dynamic(() => import("@/components/CreateReel"), {
   ssr: false,
 });
+const navItems = [
+  {
+    icon: "M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z",
+    label: "Feed",
+    href: "/feed",
+  },
+  {
+    icon: "M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7",
+    label: "Explore",
+    href: "/feed/explore",
+  },
+  {
+    icon: "M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z",
+    label: "Reels",
+    href: "/feed/reels",
+  },
+  {
+    icon: "M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z",
+    label: "Messages",
+    href: "/feed/messages",
+  },
+  {
+    icon: "M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z",
+    label: "Settings",
+    href: "/feed/settings",
+  },
+];
 const Notification = dynamic(() => import("@/components/Notification"));
 const SideBar = ({ usage, data, currentuserdata }) => {
   // console.log("Sidebaropen", open);
-
+  const currentRoute = usePathname();
   const [profileData, setProfileData] = useState(null);
   const auth = getAuth(app);
   console.log("Current UserData", currentuserdata);
@@ -371,15 +399,15 @@ const SideBar = ({ usage, data, currentuserdata }) => {
         />
       )}
       <div
-        className={`lp w-screen  h-dvh lg:h-full lg:mr-5   lg:w-1/3 z-50 ${
-          ismobile && "absolute"
+        className={`lp w-screen   overflow-hidden  h-dvh lg:h-full lg:mr-5 b  lg:w-1/3 sidebar ${
+          ismobile && "fixed top-0"
         } ${isOpen ? "slide-in-right " : "slide-out-right "} ${
           !isAnimationComplete && !isOpen && "hidden"
         }`}
         onAnimationEnd={handleAnimationEnd}
       >
         <div
-          className="bg-white pt-5 h-full z-50 pb-24 oveflow-hidden  dark:bg-black rounded-xl 
+          className="bg-white pt-5 h-full z-50 pb-24 backdrop-blur-md   oveflow-hidden  dark:bg-black rounded-xl 
         shadow-2xl border-1 border-black lpo"
         >
           <div className="md:hidden">
@@ -515,7 +543,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                 )}
               {usage == "feed" && (
                 <div className="h-full w-full ">
-                  <div className="options hidden md:flex mb-5 justify-evenly items-center flex-auto mt-10">
+                  {/* <div className="options hidden md:flex mb-5 justify-evenly items-center flex-auto mt-10">
                     <div className="explore">
                       <div
                         className="text-2xl text-left dark:invert font-bold transform-gpu hover:scale-110 cursor-pointer"
@@ -588,7 +616,65 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                         />
                       </div>
                     </div>
-                  </div>
+                  </div> */}
+                  <nav
+                    className={`hidden md:flex  bg-white dark:bg-black z-40`}
+                  >
+                    <div className="w-full px-10">
+                      <div className="flex justify-between py-3">
+                        {navItems.map((item) => {
+                          const isActive = currentRoute === item.href;
+                          return (
+                            <motion.div
+                              key={item.label}
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              <button
+                                key={item.label}
+                                onClick={() => {
+                                  router.push(item.href);
+                                }}
+                                className={`flex rounded-full  group focus:outline-none ${
+                                  isActive
+                                    ? "bg-fuchsia-500 "
+                                    : "bg-neutral-100 dark:bg-feedheader"
+                                }`}
+                                aria-label={item.label}
+                              >
+                                <div
+                                  className={`p-2 rounded-full bg-transparent ${
+                                    isActive
+                                      ? "bg-fuchsia-100 dark:bg-fuchsia-500"
+                                      : "group-hover:bg-gray-100 dark:group-hover:bg-gray-800"
+                                  } transition duration-200`}
+                                >
+                                  <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className={`h-7 w-7 transition duration-200 ${
+                                      isActive
+                                        ? "text-white dark:text-white"
+                                        : "text-gray-500 dark:text-gray-400 group-hover:text-fuchsia-400 dark:group-hover:text-fuchsia-500"
+                                    }`}
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d={item.icon}
+                                    />
+                                  </svg>
+                                </div>
+                              </button>
+                            </motion.div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </nav>
                   <div className="notif p-2 h-4/5  scroll-smooth  ">
                     <div
                       className="heading sticky top-0 
@@ -625,7 +711,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                             className={`flex items-center space-x-2  cursor-pointer p-2 rounded-full ${
                               notificationfilter === filter.name
                                 ? "bg-fuchsia-500 text-white"
-                                : "bg-neutral-100 dark:bg-feedheader"
+                                : "bg-neutral-100  dark:text-gray-400 dark:bg-feedheader"
                             }`}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
@@ -652,7 +738,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                         ))}
                       </div>
                     </div>
-                    <div className="flex flex-col bg-slate-100 dark:bg-feedheader p-2 rounded-3xl mt-4 h-4/5 md:h-3/5 scroll-smooth  overflow-y-auto">
+                    <div className="flex flex-col shadow-md bg-slate-100 dark:bg-feedheader p-2 rounded-3xl mt-4 h-4/5 md:h-3/5 scroll-smooth  overflow-y-auto">
                       {displayedNotifications.length == 0 && (
                         <div className="text-center mt-10">
                           No Notifications
@@ -901,7 +987,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                                           src="/icons/like.png"
                                           height={50}
                                           width={50}
-                                          className="dark:invert h-10 w-10"
+                                          className="dark:invert h-7 w-10 "
                                           alt="Like"
                                         />
                                       </div>
@@ -912,7 +998,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                                           src="/icons/comment.png"
                                           alt="Comment"
                                           height={50}
-                                          className=" h-10 w-10"
+                                          className=" h-7 w-10"
                                           width={50}
                                         />
                                       </div>
@@ -953,11 +1039,19 @@ const SideBar = ({ usage, data, currentuserdata }) => {
               <div className="s fixed bottom-0 opacity-75 md:opacity-95">
                 <div className="okedoesd flex w-full justify-evenly  text-sm">
                   <div
-                    className=" font-bold text-center cursor-pointer "
+                    className="md:-ml-5 font-bold text-center cursor-pointer "
                     onClick={() => router.push("/contactus")}
                   >
                     Contact Us
                   </div>
+                  {!ismobile && (
+                    <div
+                      className="font-bold text-center cursor-pointer"
+                      onClick={logout}
+                    >
+                      Logout
+                    </div>
+                  )}
                   <div className="about">
                     <div
                       className=" font-bold text-center cursor-pointer"

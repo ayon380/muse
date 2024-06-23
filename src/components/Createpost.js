@@ -3,6 +3,7 @@ import { doc } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import imageCompression from "browser-image-compression";
 import { ref, uploadBytes, getDownloadURL, getStorage } from "firebase/storage";
+import { motion } from "framer-motion";
 import Image from "next/image";
 import {
   getFirestore,
@@ -156,6 +157,9 @@ const CreatePost = ({ onClose, userdata }) => {
           });
         }
       }
+      taggedUsers.forEach(async (taggedUser) => {
+        sendNotification(newPostRef.id, taggedUser);
+      });
       await updateDoc(newPostRef, { id: newPostRef.id });
       tagpersons(newPostRef.id);
       setCaption("");
@@ -204,7 +208,28 @@ const CreatePost = ({ onClose, userdata }) => {
       console.error("Error searching users:", error);
     }
   };
-
+  const sendNotification = async (postid, userid) => {
+    try {
+      const notificationData = {
+        id: "",
+        sender: userdata.uid,
+        type: "Follow",
+        subtype: "Tagged",
+        text: "Tagged you in a post",
+        receiver: userid,
+        timestamp: Date.now(),
+      };
+      console.log(notificationData);
+      const notificationRef = collection(db, "notifications");
+      const notificationDoc = await addDoc(notificationRef, notificationData);
+      await updateDoc(doc(notificationRef, notificationDoc.id), {
+        id: notificationDoc.id,
+      });
+      console.log("Notification sent");
+    } catch (error) {
+      console.error("Error sending notification:", error);
+    }
+  };
   const handleAddParticipant = (participant) => {
     if (taggedUsers.includes(participant.uid)) {
       return;
@@ -224,7 +249,21 @@ const CreatePost = ({ onClose, userdata }) => {
     <BottomSheet show={true} onClose={handleClose} heading="Create Post">
       <div className="p-5 bg-white dark:bg-black">
         <div className="mb-4  ">
-          <label className="block text font-bold mb-2">Caption</label>
+          <label className="block text-xl font-bold mb-2">Caption</label>
+          <div className="flex">
+            <Image
+              src="/icons/info.png"
+              alt="info"
+              width={20}
+              height={20}
+              className="mr-2 dark:invert mt-1 h-5 w-5"
+            />
+            <div className="df text-xs opacity-75 mb-2">
+              Add a caption to your post Make the caption interesting and
+              engaging and use hashtags to make it more discoverable. Add
+              Hashtags like #travel #food #nature.
+            </div>
+          </div>
           <textarea
             className="resize-none text border active:border-2 active:border-cyan-100 rounded w-full py-2 px-3 bg-transparent text-opacity-75"
             rows="3"
@@ -234,9 +273,23 @@ const CreatePost = ({ onClose, userdata }) => {
         </div>
 
         <div className="mb-4">
-          <label className="block text font-bold mb-2">
+          <label className="block text-xl font-bold mb-2">
             Upload Photos or Videos (up to 10)
           </label>
+
+          <div className="flex my-1">
+            <Image
+              src="/icons/info.png"
+              alt="info"
+              width={20}
+              height={20}
+              className="mr-2 dark:invert  h-5 w-5"
+            />
+            <div className="df text-xs opacity-75 mb-2">
+              Images preferably upto 5:3 ratio, and max size 20MB. Videos upto 1
+              minute, max size 20MB.
+            </div>
+          </div>
           <input
             className="file:mr-4 file:py-2 file:px-4
             file:rounded-full file:border-0
@@ -297,7 +350,7 @@ const CreatePost = ({ onClose, userdata }) => {
           />
         </div>
         <label className="mb-4 block">
-          Tag Users:
+          <div className="d text-xl font-bold">Tag Users:</div>
           {usernames.map((participant) => (
             <li key={participant}>{participant.userName}</li>
           ))}
@@ -305,7 +358,7 @@ const CreatePost = ({ onClose, userdata }) => {
             type="text"
             value={searchtext}
             onChange={(e) => setSearchtext(e.target.value)}
-            className={`border  rounded-lg p-2 w-full mt-2`}
+            className={` rounded-full dark:bg-feedheader bg-fuchsia-100 px-4 focus:border-none focus:shadow-lg py-2 w-full mt-2`}
             placeholder="Search"
           />
           {searchResults.length > 0 && searchtext.length > 0 && (
@@ -325,19 +378,27 @@ const CreatePost = ({ onClose, userdata }) => {
           )}
         </label>
         <div className="flex items-center justify-between mt-4">
-          <button
-            className="text-blue-500 hover:underline focus:outline-none"
+          <div
+            className=" text-fuchsia-500 dark:bg-fuchsia-500 dark:text-fuchsia-100 bg-fuchsia-100 px-3 py-1 rounded-full
+    transition-all duration-300 ease-in-out
+    hover:scale-110 hover:bg-fuchsia-200
+    active:scale-90 active:bg-fuchsia-300
+    cursor-pointer"
             onClick={handleClose}
           >
             Cancel
-          </button>
+          </div>
           <button
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 disabled:opacity-50 rounded focus:outline-none focus:shadow-outline"
+            className=" text-fuchsia-500 bg-fuchsia-100 px-3 py-1 rounded-full dark:bg-fuchsia-500 dark:text-fuchsia-100
+            disabled:text-gray-500
+    transition-all duration-300 ease-in-out
+    hover:scale-110 hover:bg-fuchsia-200
+    active:scale-90 active:bg-fuchsia-300
+    cursor-pointer"
             onClick={handleSubmit}
             disabled={
               mediaFiles.length === 0 || submitting || caption.length === 0
             }
-            
           >
             {submitting ? "Posting..." : "Post"}
           </button>

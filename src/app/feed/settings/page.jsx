@@ -303,9 +303,9 @@ const Home = () => {
     }
   };
   return (
-    <div className={`${ismobile ? "" : "ml-5"} w-full dark:bg-black`}>
+    <div className={`w-full dark:bg-black`}>
       <Toaster />
-      <div className="flex w-full rounded-b-3xl shadow-xl shadow-fuchsia-100 dark:bg-feedheader dark:shadow-none bg-white p-3 justify-between">
+      <div className="flex w-full rounded-b-3xl md:rounded-t-xl shadow-xl shadow-fuchsia-100 dark:bg-feedheader dark:shadow-none bg-white p-3 justify-between">
         <h1 class="bg-gradient-to-r from-purple-500 via-fuchsia-400 to-pink-400 text-4xl inline-block text-transparent bg-clip-text">
           Settings
         </h1>
@@ -318,7 +318,7 @@ const Home = () => {
               alt="Sidebar"
               height={50}
             />
-            <span className="absolute top-3 right-5 bg-red-500 text-white rounded-full px-1 text-xs">
+            <span className="absolute md:hidden top-3 right-5 bg-red-500 text-white rounded-full px-1 text-xs">
               {unread}
             </span>
           </button>
@@ -328,7 +328,7 @@ const Home = () => {
         className={`main2 rounded-2xl overflow-y-auto bg-white ${
           ismobile
             ? " dark:bg-black"
-            : "bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-20 shadow-2xl"
+            : " shadow-2xl"
         } border-1 border-black p-6`}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}

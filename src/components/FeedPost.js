@@ -10,7 +10,7 @@ import Link from "next/link";
 import { WriteBatch } from "firebase/firestore";
 import toast, { Toaster } from "react-hot-toast";
 import { useSidebarStore } from "@/app/store/zustand";
-import { debounce } from "lodash";
+import StyledCaption from "./StyledCaption";
 import {
   getFirestore,
   updateDoc,
@@ -140,7 +140,7 @@ const FeedPost = ({
         sender: uid,
         postid: postdata.id,
         type: "like",
-        subtype:"postlike",
+        subtype: "postlike",
         receiver: postdata.uid,
         timestamp: Date.now(),
       };
@@ -278,7 +278,7 @@ const FeedPost = ({
   return (
     <>
       <motion.div
-        className="z-10 justify-center bg-white relative w-full py-2 lg:px-96 md:px-24  dark:bg-black"
+        className="z-10 justify-center  bg-white relative w-full py-2 lg:px-96 md:px-24  dark:bg-black"
         key={postdata.id}
         initial="hidden"
         animate="visible"
@@ -307,7 +307,7 @@ const FeedPost = ({
             content="Are you sure you want to delete this post?"
           />
         )}
-        <div className="df bg-white dark:bg-black bg-opacity-40 rounded-2xl m-2">
+        <div className="df bg-white md:bg-fuchsia-50 md:p-2 md:shadow-md md:dark:bg-feedheader bg-opacity-40 rounded-2xl m-2">
           {usermetadata && usermetadata[postdata.uid] && (
             <div className="header flex justify-between pt-2 px-1">
               <Link
@@ -316,14 +316,14 @@ const FeedPost = ({
                 <div className="flex items-center">
                   {/* <div className="profile-pic bg-gradient-to-r from-purple-500 to-blue-500 h-10 w-10 rounded-full p-2 md:h-20 md:w-20"> */}
                   <Image
-                    className="rounded-full h-12 w-12  md:h-16 md:w-16 object-cover "
+                    className="rounded-full h-12 w-12  md:h-14 md:w-14 object-cover "
                     src={usermetadata[postdata.uid].pfp}
                     width={100}
                     height={100}
                     alt="Profile Picture"
                   />
                   {/* </div> */}
-                  <div className="username ml-2 text-xl md:text-3xl">
+                  <div className="username ml-2 text-xl md:text-2xl">
                     {usermetadata[postdata.uid].userName}
                   </div>
                 </div>
@@ -471,11 +471,7 @@ const FeedPost = ({
                 </div>
               </div>
 
-              {postdata.caption && (
-                <div className="caption mt-1 mb-2 w-full opacity-80">
-                  {postdata.caption}
-                </div>
-              )}
+              {postdata.caption && <StyledCaption caption={postdata.caption} />}
 
               <div className="comments flex justify-between mb-1">
                 <div
