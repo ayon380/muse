@@ -407,7 +407,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
         onAnimationEnd={handleAnimationEnd}
       >
         <div
-          className="bg-white pt-5 h-full z-50 pb-24 backdrop-blur-md   oveflow-hidden  dark:bg-black rounded-xl 
+          className="bg-white -mt-5  h-full z-50 pb-24 backdrop-blur-md   oveflow-hidden  dark:bg-black rounded-xl 
         shadow-2xl border-1 border-black lpo"
         >
           <div className="md:hidden">

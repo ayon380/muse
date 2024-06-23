@@ -307,7 +307,7 @@ const FeedPost = ({
             content="Are you sure you want to delete this post?"
           />
         )}
-        <div className="df bg-white md:bg-fuchsia-50 md:p-2 md:shadow-md md:dark:bg-feedheader bg-opacity-40 rounded-2xl m-2">
+        <div className="df bg-white md:bg-fuchsia-50 md:p-2 md:shadow-md dark:bg-black rounded-2xl m-2">
           {usermetadata && usermetadata[postdata.uid] && (
             <div className="header flex justify-between pt-2 px-1">
               <Link
