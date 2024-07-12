@@ -179,7 +179,9 @@ const SideBar = ({ usage, data, currentuserdata }) => {
   };
   const handlemessagerouting = (notification) => {
     handledismissnotification(notification);
-    toggle();
+    if (ismobile) {
+      toggle();
+    }
     if (notification.chattype == "g") {
       router.push(
         `/feed/messages?roomid=${notification.roomid}&chattype=g&chatwindow=${notification.title}`
@@ -407,7 +409,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
         onAnimationEnd={handleAnimationEnd}
       >
         <div
-          className="bg-white -mt-5  h-full z-50 pb-24 backdrop-blur-md   oveflow-hidden  dark:bg-black rounded-xl 
+          className="bg-white -mt-5 md:mt-0  h-full z-50 pb-24 backdrop-blur-md   oveflow-hidden  dark:bg-black rounded-xl 
         shadow-2xl border-1 border-black lpo"
         >
           <div className="md:hidden">
@@ -464,7 +466,9 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                     <div className="pfp my-4">
                       <Image
                         onClick={() => {
-                          toggle();
+                          if (ismobile) {
+                            toggle();
+                          }
                           router.push(`/feed/profile/${userdata.userName}`);
                         }}
                         className="rounded-full h-24 object-cover w-24 cursor-pointer hover:opacity-80"
@@ -489,7 +493,9 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                     <div className="pfp my-4">
                       <Image
                         onClick={() => {
-                          toggle();
+                          if (ismobile) {
+                            toggle();
+                          }
                           router.push(`/feed/profile/${userdata.userName}`);
                         }}
                         className="rounded-full h-24 object-cover w-24 mr-5 cursor-pointer hover:opacity-80"
@@ -543,80 +549,6 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                 )}
               {usage == "feed" && (
                 <div className="h-full w-full ">
-                  {/* <div className="options hidden md:flex mb-5 justify-evenly items-center flex-auto mt-10">
-                    <div className="explore">
-                      <div
-                        className="text-2xl text-left dark:invert font-bold transform-gpu hover:scale-110 cursor-pointer"
-                        onClick={() => router.push("/feed")}
-                      >
-                        <Image
-                          className="h-8 w-8"
-                          src="/icons/category.png"
-                          width={100}
-                          height={100}
-                          alt=""
-                        />
-                      </div>
-                    </div>
-                    <div className="explore">
-                      <div
-                        className="text-2xl font-bold cursor-pointer transform-gpu hover:scale-110 dark:invert"
-                        onClick={() => router.push("/feed/explore")}
-                      >
-                        <Image
-                          className="h-8 w-8"
-                          src="/icons/direction.png"
-                          width={100}
-                          height={100}
-                          alt=""
-                        />
-                      </div>
-                    </div>
-                    <div className="Reels">
-                      <div
-                        className="text-2xl cursor-pointer font-bold transform-gpu hover:scale-110 text-center dark:invert"
-                        onClick={() => router.push("/feed/reels")}
-                      >
-                        <Image
-                          className="h-8 w-8"
-                          src="/icons/video.png"
-                          width={100}
-                          height={100}
-                          alt=""
-                        />
-                      </div>
-                    </div>
-                    <div className="messages">
-                      <div
-                        className="text-2xl font-bold text-center transform-gpu hover:scale-110 cursor-pointer dark:invert"
-                        onClick={() => {
-                          router.push("/feed/messages");
-                        }}
-                      >
-                        <Image
-                          className="h-8 w-8"
-                          src="/icons/conversation.png"
-                          width={100}
-                          height={100}
-                          alt=""
-                        />
-                      </div>
-                    </div>
-                    <div className="settings cursor-pointer">
-                      <div
-                        className="text-2xl font-bold cursor-pointer transform-gpu hover:scale-110 text-center dark:invert"
-                        onClick={() => router.push("/feed/settings")}
-                      >
-                        <Image
-                          className="h-8 w-8"
-                          src="/icons/setting.png"
-                          width={100}
-                          height={100}
-                          alt=""
-                        />
-                      </div>
-                    </div>
-                  </div> */}
                   <nav
                     className={`hidden md:flex  bg-white dark:bg-black z-40`}
                   >
@@ -757,7 +689,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                                   width={50}
                                   height={50}
                                   alt="profile"
-                                  className="rounded-full h-10 w-12"
+                                  className="rounded-full  object-cover h-10 w-10"
                                 />
                                 <div className="dfdsf px-5 w-full">
                                   <div className="flex justify-between w-full">
@@ -783,27 +715,29 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                                               .userName
                                           }{" "}
                                           has requested to follow you.
-                                          <div
-                                            className="btn"
-                                            onClick={() =>
-                                              handlenotifollow(
-                                                notification,
-                                                "confirm"
-                                              )
-                                            }
-                                          >
-                                            Confirm
-                                          </div>
-                                          <div
-                                            className="btn"
-                                            onClick={() =>
-                                              handlenotifollow(
-                                                notification,
-                                                "reject"
-                                              )
-                                            }
-                                          >
-                                            Reject
+                                          <div className="flex text-white">
+                                            <div
+                                              className=" bg-fuchsia-400 dark:bg-fuchsia-600 shadow-xl  rounded-2xl mr-5 text-center w-20 px-2 py-1"
+                                              onClick={() =>
+                                                handlenotifollow(
+                                                  notification,
+                                                  "confirm"
+                                                )
+                                              }
+                                            >
+                                              Confirm
+                                            </div>
+                                            <div
+                                              className="bg-fuchsia-400 dark:bg-fuchsia-600 shadow-xl text-center rounded-2xl w-20 px-2 py-1"
+                                              onClick={() =>
+                                                handlenotifollow(
+                                                  notification,
+                                                  "reject"
+                                                )
+                                              }
+                                            >
+                                              Reject
+                                            </div>
                                           </div>
                                         </div>
                                       )}
@@ -987,7 +921,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                                           src="/icons/like.png"
                                           height={50}
                                           width={50}
-                                          className="dark:invert h-7 w-10 "
+                                          className="dark:invert opacity-70 h-7 w-10 "
                                           alt="Like"
                                         />
                                       </div>
@@ -998,7 +932,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                                           src="/icons/comment.png"
                                           alt="Comment"
                                           height={50}
-                                          className=" h-7 w-10"
+                                          className=" h-7 opacity-70 w-10"
                                           width={50}
                                         />
                                       </div>
@@ -1009,7 +943,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                                           src="/icons/add.png"
                                           height={50}
                                           width={50}
-                                          className="dark:invert h-10 w-10"
+                                          className="dark:invert opacity-70 h-10 w-10"
                                           alt="Add"
                                         />
                                       </div>
@@ -1019,7 +953,7 @@ const SideBar = ({ usage, data, currentuserdata }) => {
                                         <Image
                                           src="/icons/message.svg"
                                           height={50}
-                                          className="dark:invert h-10 w-10"
+                                          className="dark:invert h-10 w-10 opacity-70"
                                           width={50}
                                           alt="Message"
                                         />

@@ -231,7 +231,7 @@ const Reels = () => {
       {userdata && !reelsloading && (
         <div>
           <div className="main2 grid md:rounded-2xl bg-slate-100 dark:bg-black  shadow-2xl border-1  pb-1  App  border-black w-full h-full">
-            <div className="flex justify-between bg-white dark:bg-feedheader md:rounded-t-xl md:mb-10 rounded-b-3xl shadow-2xl shadow-fuchsia-100 dark:shadow-none px-4 md:py-4 py-2 ">
+            <div className="flex justify-between bg-white dark:bg-feedheader md:mb-5 md:rounded-t-xl  rounded-b-3xl shadow-2xl shadow-fuchsia-100 dark:shadow-none px-4  py-2 ">
               <h1 class="bg-gradient-to-r from-purple-500 via-fuchsia-400 to-pink-400  text-4xl inline-block text-transparent bg-clip-text">
                 Reels
               </h1>

@@ -7,6 +7,7 @@ import {
   onAuthStateChanged,
   signOut,
 } from "firebase/auth";
+import { motion } from "framer-motion";
 const CreatePost = dynamic(() => import("@/components/Createpost"), {
   ssr: false,
 });
@@ -204,6 +205,9 @@ const Home = () => {
       toggleload();
     }
   }, [postloading]);
+  const scaleUpVariants = {
+    hover: { scale: 1.2, transition: { duration: 0.2 } },
+  };
   return (
     <div className=" w-full h-full">
       {sharemenu && (
@@ -285,22 +289,35 @@ const Home = () => {
                 Muse
               </h1>
               <div className="sd flex ">
-                <Image
-                  src="/icons/plus.png"
-                  height={100}
-                  width={100}
-                  className="  w-8 h-8 mt-1 mr-4"
-                  alt="Create Post"
-                  onClick={handleCreatePost}
-                />
-                <Image
-                  src="/icons/reel.png"
-                  height={100}
-                  width={100}
-                  className="  w-7 h-7 mt-1.5 mr-4"
-                  alt="Create Post"
-                  onClick={() => setcreatereelopen(!createreelopen)}
-                />
+                <motion.div
+                  // className="bt text-2xl"
+                  whileHover="hover"
+                  variants={scaleUpVariants}
+                >
+                  <Image
+                    src="/icons/plus.png"
+                    height={100}
+                    width={100}
+                    className="  w-8 h-8 mt-1 mr-4"
+                    alt="Create Post"
+                    onClick={handleCreatePost}
+                  />
+                </motion.div>
+                <motion.div
+                  // className="bt text-2xl"
+                  whileHover="hover"
+                  variants={scaleUpVariants}
+                >
+                  <Image
+                    src="/icons/reel.png"
+                    height={100}
+                    width={100}
+                    className="  w-7 h-7 mt-1.5 mr-4"
+                    alt="Create Post"
+                    onClick={() => setcreatereelopen(!createreelopen)}
+                  />
+                </motion.div>
+
                 <button onClick={toggle}>
                   <Image
                     src="/icons/sidebar.png"
@@ -361,7 +378,13 @@ const Home = () => {
                   </>
                 ) : (
                   <div className="flex justify-center items-center h-96 w-full text-3xl font-bold">
-                    No posts to show
+                    <div className="sd text-center">
+                      No Posts to Show{" "}
+                      <div className="d text-center mt-20 text-xl mx-10 opacity-80">
+                        Explore More People, Friends and Closed Ones on Explore
+                        Page and Follow them..
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>

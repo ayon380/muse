@@ -406,11 +406,38 @@ const FeedPost = ({
                       <div />
                     </CoolMode> */}
                   </motion.div>
+
                   <div className="flex  ml-2 ">
-                    <div className="count text-2xl font-bold mr-1">
+                    <div className="count text-2xl  font-bold mr-5">
                       {postdata.likecount ? postdata.likecount : 0}
                     </div>
-                    <div className="likes text-sm mt-2 opacity-75 ">likes</div>
+                    {/* <div className="likes text-sm mt-2 opacity-75 ">likes</div> */}
+                  </div>
+                  <div
+                    className="om flex"
+                    onClick={() => {
+                      setShowComments(true);
+                      setCommentpostdata(postdata);
+                    }}
+                  >
+                    <motion.div
+                      className="btnl mt-0.5 text-2xl"
+                      whileHover="hover"
+                      variants={scaleUpVariants}
+                    >
+                      <button>
+                        <Image
+                          src="/icons/comment.png"
+                          className=" h-7 dark:invert w-7"
+                          width={100}
+                          height={100}
+                          alt="Comment"
+                        />
+                      </button>
+                    </motion.div>
+                    <div className="k mt-1 ml-3 text-xl  opacity-80">
+                      {postdata ? postdata.commentcount : 0}
+                    </div>
                   </div>
                 </div>
                 <div className="l12 flex text-3xl">
@@ -421,52 +448,77 @@ const FeedPost = ({
                       setSharemenu(true);
                     }}
                   >
-                    <Image
-                      src="/icons/feedsend.png"
-                      alt="Share"
-                      className="dark:invert w-7 h-7 mr-1"
-                      width={100}
-                      height={100}
-                    />
+                    <motion.div
+                      className="btnl mt-0.5 text-2xl"
+                      whileHover="hover"
+                      variants={scaleUpVariants}
+                    >
+                      <Image
+                        src="/icons/feedsend.png"
+                        alt="Share"
+                        className="dark:invert w-7 h-7 mr-1"
+                        width={100}
+                        height={100}
+                      />
+                    </motion.div>
                   </div>
-                  <div
-                    className="tagged h-7 w-7 flex mr-2"
-                    onClick={() => {
-                      setCommentpostdata(postdata);
-                      setTaggedusermenu(true);
-                    }}
+                  <motion.div
+                    className="btnl mt-0.5 text-2xl"
+                    whileHover="hover"
+                    variants={scaleUpVariants}
                   >
-                    <Image
-                      src="/icons/supermarket.png"
-                      width={50}
-                      height={50}
-                      alt=""
-                      className="dark:invert"
-                    />
-                    <div className="asd text-sm -mt-2 text-red-500 font-bold ">
-                      {postdata.taggedUsers.length}
+                    <div
+                      className="tagged h-7 w-7 flex mr-2"
+                      onClick={() => {
+                        setCommentpostdata(postdata);
+                        setTaggedusermenu(true);
+                      }}
+                    >
+                      <Image
+                        src="/icons/supermarket.png"
+                        width={50}
+                        height={50}
+                        alt=""
+                        className="dark:invert"
+                      />
+
+                      <div className="asd text-sm -mt-2 text-red-500 font-bold ">
+                        {postdata.taggedUsers.length}
+                      </div>
                     </div>
-                  </div>
+                  </motion.div>
                   <div className="sad mr-1" onClick={handleSave}>
-                    <Image
-                      src="/icons/save.png"
-                      alt="Sad"
-                      className="dark:invert w-7 h-7"
-                      width={100}
-                      height={100}
-                    />
+                    <motion.div
+                      className="btnl mt-0.5 text-2xl"
+                      whileHover="hover"
+                      variants={scaleUpVariants}
+                    >
+                      <Image
+                        src="/icons/save.png"
+                        alt="Sad"
+                        className="dark:invert w-7 h-7"
+                        width={100}
+                        height={100}
+                      />
+                    </motion.div>
                   </div>
                   <div
                     className="report cursor-pointer mr-3"
                     onClick={() => Reportposttt()}
                   >
-                    <Image
-                      src="/icons/warning.png"
-                      alt="Report"
-                      className="dark:invert h-7 w-7"
-                      width={100}
-                      height={100}
-                    />
+                    <motion.div
+                      className="btnl mt-0.5 text-2xl"
+                      whileHover="hover"
+                      variants={scaleUpVariants}
+                    >
+                      <Image
+                        src="/icons/warning.png"
+                        alt="Report"
+                        className="dark:invert h-7 w-7"
+                        width={100}
+                        height={100}
+                      />
+                    </motion.div>
                   </div>
                 </div>
               </div>
@@ -474,26 +526,6 @@ const FeedPost = ({
               {postdata.caption && <StyledCaption caption={postdata.caption} />}
 
               <div className="comments flex justify-between mb-1">
-                <div
-                  className="om flex"
-                  onClick={() => {
-                    setShowComments(true);
-                    setCommentpostdata(postdata);
-                  }}
-                >
-                  <button>
-                    <Image
-                      src="/icons/comment.png"
-                      className=" h-7 w-7"
-                      width={100}
-                      height={100}
-                      alt="Comment"
-                    />
-                  </button>
-                  <div className="k mt-0.5 ml-3 opacity-50">
-                    {postdata ? postdata.commentcount : 0} comments
-                  </div>
-                </div>
                 {currentuserdata && currentuserdata.uid === userdata.uid && (
                   <div className="flex">
                     <Image

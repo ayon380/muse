@@ -7,6 +7,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { collection, getDoc, query, setDoc } from "firebase/firestore";
 import { CoolMode } from "./Coolmode";
+import { motion } from "framer-motion";
 import StyledCaption from "./StyledCaption";
 import toast, { Toaster } from "react-hot-toast";
 import {
@@ -357,6 +358,9 @@ const Reel = ({
       toast.error("Error posting comment: " + error.message);
     }
   };
+  const scaleUpVariants = {
+    hover: { scale: 1.2, transition: { duration: 0.2 } },
+  };
   // useEffect(() => {
   //   if (userdata && reeldata)
 
@@ -425,33 +429,63 @@ const Reel = ({
             <div className="lp flex ">
               <div className="btnl text-4xl h-10 w-10 " onClick={handleLike}>
                 <button>
-                  {!liked ? (
-                    <Image
-                      src="/icons/notliked.png"
-                      alt="Not Liked"
-                      className="h-7 invert w-7"
-                      height={50}
-                      width={50}
-                    />
-                  ) : (
-                    <Image
-                      src="/icons/liked.png"
-                      alt="Liked"
-                      className="h-7 w-7"
-                      height={50}
-                      width={50}
-                    />
-                  )}
+                  <motion.div whileHover="hover" variants={scaleUpVariants}>
+                    {!liked ? (
+                      <Image
+                        src="/icons/notliked.png"
+                        alt="Not Liked"
+                        className="h-7 invert w-7"
+                        height={50}
+                        width={50}
+                      />
+                    ) : (
+                      <Image
+                        src="/icons/liked.png"
+                        alt="Liked"
+                        className="h-7 w-7"
+                        height={50}
+                        width={50}
+                      />
+                    )}
+                  </motion.div>
                 </button>
                 <div />
               </div>
               <div
-                style={{ marginTop: "1px" }}
-                className=" ml-2likes text-2xl  font-bold flex"
+                // style={{ marginTop: "1px" }}
+                className=" ml-2likes text-2xl mt-1 mr-5  font-bold flex"
               >
                 {reeldata.likecount}{" "}
-                <div className="ok  font-normal text-base opacity-75 mt-1 ml-1">
-                  likes
+              </div>
+              <div className="d flex">
+                <button
+                  className="show-comments-button "
+                  onClick={() => {
+                    setShowComments(true);
+                    setselectedReelid(reeldata.id);
+                  }}
+                >
+                  <motion.div
+                    className="btnl mt-0.5 text-2xl"
+                    whileHover="hover"
+                    variants={scaleUpVariants}
+                  >
+                    <button>
+                      <Image
+                        src="/icons/comment.png"
+                        className=" h-7 mt-1 dark:invert w-7"
+                        width={100}
+                        height={100}
+                        alt="Comment"
+                      />
+                    </button>
+                  </motion.div>
+                </button>
+                <div
+                  // style={{ marginTop: "1px" }}
+                  className=" ml-2 mt-1  text-2xl mr-5  font-bold flex"
+                >
+                  {reeldata.commentcount}
                 </div>
               </div>
             </div>
@@ -460,49 +494,42 @@ const Reel = ({
                 <Image src="/fullscreen.svg" alt="" height={50} width={50} />
               </button> */}
               <button className="share-button mr-2" onClick={Shareposttt}>
-                <Image
-                  src="/icons/feedsend.png"
-                  alt="Share"
-                  className="invert h-7 w-7 mr-2"
-                  height={50}
-                  width={50}
-                />
+                <motion.div whileHover="hover" variants={scaleUpVariants}>
+                  <Image
+                    src="/icons/feedsend.png"
+                    alt="Share"
+                    className="invert h-7 w-7 mr-2"
+                    height={50}
+                    width={50}
+                  />
+                </motion.div>
               </button>
               <button onClick={toggleGlobalMute} className="">
-                {isGlobalMuted ? (
-                  <Image
-                    src="/icons/soundon.png"
-                    className="invert h-7 w-7"
-                    height={50}
-                    width={50}
-                    alt="sound on"
-                  />
-                ) : (
-                  <Image
-                    className="invert h-7 w-7"
-                    src="/icons/mute.png"
-                    height={50}
-                    width={50}
-                    alt="sound off"
-                  />
-                )}
+                <motion.div whileHover="hover" variants={scaleUpVariants}>
+                  {isGlobalMuted ? (
+                    <Image
+                      src="/icons/soundon.png"
+                      className="invert h-7 w-7"
+                      height={50}
+                      width={50}
+                      alt="sound on"
+                    />
+                  ) : (
+                    <Image
+                      className="invert h-7 w-7"
+                      src="/icons/mute.png"
+                      height={50}
+                      width={50}
+                      alt="sound off"
+                    />
+                  )}
+                </motion.div>
               </button>
             </div>
           </div>
           <div className="caption opacity-90">
             <StyledCaption caption={reeldata.caption} />
-          </div>
-
-          <button
-            className="show-comments-button opacity-50"
-            onClick={() => {
-              setShowComments(true);
-              setselectedReelid(reeldata.id);
-            }}
-          >
-            {" "}
-            {reeldata.commentcount} Comments
-          </button>
+          </div>{" "}
         </div>
       </div>
       <Toaster />

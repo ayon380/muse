@@ -9,7 +9,9 @@ type SidebarStore = {
   initialLoad: boolean;
   postdataupdate: string;
   unread: number;
+  routechanging: boolean;
   usermetadata: Record<string, any>;
+  setroutechanging: () => void;
   setpostdataupdate: (data: string) => void;
   setUserMetadata: (data: Record<string, any>) => void;
   toggleload: () => void;
@@ -68,12 +70,14 @@ export const useSidebarStore = create<SidebarStore>(
       unread: 0,
       initialLoad: true,
       postdataupdate: "",
-      usermetadata,
+      routechanging: false,
+      usermetadata: {},
+      setroutechanging: () => set((state) => ({ routechanging: !state.routechanging })),
       setunread: (data) => set((state) => ({ unread: data })),
       setpostdataupdate: (data) => set((state) => ({ postdataupdate: data })),
       setUserMetadata: (data) =>
         set((state) => ({ usermetadata: { ...state.usermetadata, ...data } })),
-      toggleload: () => set((state) => ({ initialLoad: (state.initialLoad = false) })),
+      toggleload: () => set((state) => ({ initialLoad: false })),
       setchatopen: () => set((state) => ({ chatopen: !state.chatopen })),
       toggle: () => set((state) => ({ isOpen: !state.isOpen })),
       enqueueUserMetadata,

@@ -513,7 +513,7 @@ const Page = ({ params }) => {
                       height: "400px",
                     }}
                   >
-                    <div className="lsad backdrop-blur-lg bg-opacity-50   bg-black z-30 drop-shadow-xl h-full w-full">
+                    <div className="lsad  bg-opacity-50   bg-black z-30 drop-shadow-xl h-full w-full">
                       <div className="flex justify-center">
                         <Image
                           src={userdata.pfp}
@@ -605,7 +605,8 @@ const Page = ({ params }) => {
                       </div>
                     </div>
                   </div>
-                  {currentuserdata?.following?.includes(userdata.uid) ||
+                  {userdata.pubpriv == "Public" ||
+                  currentuserdata?.following?.includes(userdata.uid) ||
                   currentuserdata?.email == userdata?.email ? (
                     <div className="df">
                       <div className="flex justify-center my-4">
@@ -896,7 +897,26 @@ const Page = ({ params }) => {
                       </div>
                     </div>
                   ) : (
-                    <div>Private Account </div>
+                    <div className="sds text-black dark:text-white">
+                      <div className="flex  justify-center">
+                        <div className="sfds mt-10">
+                          Private Account
+                          <div className="flex justify-center">
+                            <Image
+                              className="dark:invert mt-10 w-10 h-10"
+                              src="/icons/padlock.png"
+                              height={100}
+                              width={100}
+                              alt="Locked"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="sdfs mt-20 text-center mx-10 text-xs opacity-65">
+                        This account is private. To see their posts, you can
+                        follow or request to connect.
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>

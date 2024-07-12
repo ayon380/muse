@@ -332,6 +332,17 @@ const Signup = () => {
           // Add other user data as needed
         };
         await setDoc(userRef, userData);
+        const w = await fetch("/api/email", {
+          method: "POST",
+          body: JSON.stringify({
+            email: user.email,
+            subject: "Hi, We are very happy to have you on board😊😊",
+            username: userName,
+            type: "onboard",
+          }),
+        });
+        const q = await w.json();
+        console.log(q.status);
       } catch (err) {
         toast.error(`Error Signing Upc: ${err.message}`);
         return;
@@ -347,10 +358,10 @@ const Signup = () => {
     }
   };
   return (
-    <div className="h-dvh maindiv pt-40">
-      <div className="root hl font-rethink mb-20  text-black">
+    <div className="h-dvh maindiv pt-20 md:pt-40">
+      <div className="root hl font-rethink mb-20   text-black">
         <Toaster />
-        <div className="  mx-12 md:mx-96 bg-gray-700 rounded-xl bg-clip-padding backdrop-filter backdrop-blur-3xl bg-opacity-10 shadow-2xl border-1 border-black">
+        <div className="  mx-2 md:mx-96 bg-gray-700 rounded-xl md:bg-clip-padding md:backdrop-filter md:backdrop-blur-3xl bg-opacity-10 shadow-2xl border-1 border-black">
           <div className="f1 font-lucy text-8xl lg:text-9xl pt-10   text-center">
             <Link href="/">Muse</Link>
           </div>
@@ -582,7 +593,7 @@ const Signup = () => {
             ) : signupstate === 4 ? (
               // Security Measures
               <div>
-                <div className="mx-20">
+                <div className="px-5 md:mx-20 max-h-80 overflow-y-auto">
                   <p>
                     <strong>Vibe Check First:</strong> Keep the vibes positive!
                     Roll with friends who radiate good energy. 🌟 Dodge the
@@ -660,7 +671,7 @@ const Signup = () => {
               </div>
             ) : null}
             <div className="flex justify-center">
-              <div className="q1 text-sm mb-10">
+              <div className="q1 text-sm ">
                 <Link href="/tcs">Terms and Conditions</Link>
               </div>
             </div>

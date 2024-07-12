@@ -1237,6 +1237,19 @@ const Home = () => {
                     )}
                   </div>
                 )}
+                {chats.length == 0 && (
+                  <div className="flex justify-center items-center h-4/5">
+                    <div className="d text-center text-2xl">
+                      No Chats Yet..
+                      <div className="text-center mx-10 mt-20 text-xs opacity-80">
+                        Open Any Friend&apos;s Profile Page, and Click the
+                        Message button to start a Chat instantly..(You both need
+                        to follow each other to start a chat for privacy reasons
+                        and keeping the platform secure.)
+                      </div>
+                    </div>
+                  </div>
+                )}
                 {chats &&
                   chats.map((chat, index) =>
                     chat.type == "p" ? (
