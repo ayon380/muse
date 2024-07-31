@@ -36,6 +36,8 @@ const SearchChat = dynamic(() => import("@/components/SearchChat"));
 const GroupChat = dynamic(() => import("@/components/GroupChat"));
 const MainLoading = dynamic(() => import("@/components/MainLoading"));
 const ChatDetail = dynamic(() => import("@/components/ChatDetail"));
+const Newchat = dynamic(() => import("@/components/Newchat"));
+
 const GroupChatDetail = dynamic(() => import("@/components/GroupChatDetail"));
 import toast, { Toaster } from "react-hot-toast";
 const options = {
@@ -84,6 +86,7 @@ const Home = () => {
   const [chatdetailopen, setchatdetailopen] = useState(false);
   const [roomdata, setroomdata] = useState({});
   const [mainloading, setmainloading] = useState(true);
+  const [newchatdiag, setnewchatdiag] = useState(false);
   const [pfps, setPfps] = useState({});
   const [mediaViewerOpen, setMediaViewerOpen] = useState(false);
   const [mediaviewerfiles, setmediaviewerfiles] = useState([]);
@@ -154,10 +157,25 @@ const Home = () => {
   };
 
   useEffect(() => {
-    const handleRouteChange = () => {
+    const handleRouteChange = async () => {
       const ct = searchParams.get("chattype") || "p";
       const rid = searchParams.get("roomid") || "";
       const cw = searchParams.get("chatwindow") || "none";
+      if (cw !== "none" && rid == "") {
+        enqueueUserMetadata(cw);
+        setChattype(ct);
+        setChatwindow(cw);
+        checkprevchat();
+        setnewchatdiag(true);
+        // const roomdata =await  getroomdata(cw);
+        // setRoomid(roomdata.roomid);
+        // setroomdata(roomdata);
+        // console.log("only chatwindow detected");
+        // console.log(ct,cw,roomdata.roomid);
+        // // setcurrentmsglength(51);
+        // // setchatopen(true);
+        return;
+      }
       if (rid != "" && !chatopen) {
         console.log("Opening chat");
         setcurrentmsglength(51);
@@ -468,7 +486,7 @@ const Home = () => {
         }
         toast.success("Chat started with " + chatwindow);
       }
-      toast.error("Error starting chat");
+      // toast.error("Error starting chat");
     } catch (error) {
       console.error("Error starting chat:", error); // Log any errors that occur
       toast.error("Error " + error.message);
@@ -1062,6 +1080,7 @@ const Home = () => {
             {chatdetailopen &&
               (chattype == "p" ? (
                 <ChatDetail
+                  router={router}
                   userdata={userdata}
                   chatuserdata={chatuserdata}
                   onClose={() => setchatdetailopen(false)}
@@ -1214,28 +1233,18 @@ const Home = () => {
                     />
                   )}
                 </div>
-                {roomid == "" && chatwindow != "none" && (
-                  <div className="df">
-                    <div className="pfp ml-2 cursor-pointer">
-                      <Image
-                        className="h-10 w-10 rounded-full"
-                        src={usermetadata[chatwindow].pfp}
-                        height={50}
-                        width={50}
-                        alt={chatwindow}
-                      ></Image>
-                    </div>
-                    <div className="username text-2xl mt-2 ml-2">
-                      {usermetadata[chatwindow].userName}
-                    </div>
-                    {!chprevchat ? (
-                      <button onClick={startchat}>
-                        Start Chat with {usermetadata[chatwindow].userName}
-                      </button>
-                    ) : (
-                      <></>
-                    )}
-                  </div>
+                {roomid == "" && chatwindow != "none" && newchatdiag && (
+                  <Newchat
+                    onClose={() => {
+                      setnewchatdiag(false);
+                      router.push("/feed/messages");
+                    }}
+                    usermetadata={usermetadata}
+                    userdata={userdata}
+                    chatwindow={chatwindow}
+                    db={db}
+                    startchat={startchat}
+                  />
                 )}
                 {chats.length == 0 && (
                   <div className="flex justify-center items-center h-4/5">
@@ -1407,7 +1416,11 @@ const Home = () => {
                           <div className="flex items-center justify-between">
                             <button
                               onClick={() => {
+                                setRoomid("");
+                                setChatwindow("none");
+                                setchatopen(false);
                                 router.push("/feed/messages");
+
                                 // Additional actions if needed
                               }}
                               className="p-2 -ml-2 rounded-full text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition duration-200 focus:outline-none"

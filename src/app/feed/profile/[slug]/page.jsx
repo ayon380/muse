@@ -165,7 +165,7 @@ const Page = ({ params }) => {
       // console.log(docSnap.data());
       console.log(temp);
     }
-    setPosts(temp);
+    setPosts(temp.reverse());
     toggleload();
   };
   // console.log(user);
@@ -382,6 +382,11 @@ const Page = ({ params }) => {
     } else return false;
   };
   const handlestartchat = async () => {
+    //     const w=await getDoc(doc(db,"messagerooms",where participants array-contains [currentuserdata.uid,userdata.uid]))
+    //     if(w.exists()){
+    //       router.push(`/feed/messages?chatwindow=${userdata.uid}&chattype=p&roomid=${w.id}`);
+    //     }
+    // else
     router.push(`/feed/messages?chatwindow=${userdata.uid}`);
   };
   function formatFirebaseTimestamp(timestamp) {

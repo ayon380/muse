@@ -3,13 +3,17 @@ import { Toaster } from "react-hot-toast";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
+import { deleteDoc } from "firebase/firestore";
 import Image from "next/image";
 import BottomSheet from "./BottomSheet";
 import { updateDoc, doc } from "firebase/firestore";
+import dynamic from "next/dynamic";
+const Modal = dynamic(() => import("./Modal"));
 const ChatDetail = ({
   onClose,
   roomdata,
   usermetadata,
+  router,
   userdata,
   db,
   refetchroomdata,
@@ -17,9 +21,32 @@ const ChatDetail = ({
   const [theme, setTheme] = useState(roomdata.theme);
   const [showModal, setShowModal] = useState(false);
 
-  React.useEffect(() => {
-    setShowModal(true);
-  }, []);
+  const deletechat = async () => {
+    try {
+      // Delete the document from "messagerooms" collection
+      console.log("Deleting chat:", roomdata.roomid);
+      await deleteDoc(doc(db, "messagerooms", roomdata.roomid));
+
+      // Update each participant's document in the "chats" collection
+      await Promise.all(
+        roomdata.participants.map(async (participant) => {
+          // Get the participant's chat document reference
+          const participantDoc = doc(db, "chats", participant);
+
+          // Remove the room ID from the participant's "rooms" array
+          await updateDoc(participantDoc, {
+            rooms: roomdata.rooms.filter((room) => room !== roomdata.roomid),
+          });
+        })
+      );
+
+      // Call onClose to perform any closing actions
+      router.push("/feed/messages");
+      onClose();
+    } catch (error) {
+      console.error("Error deleting chat:", error);
+    }
+  };
   const colors = {
     primary: "#ff5e5e",
     secondary: "#ffc107",
@@ -46,6 +73,16 @@ const ChatDetail = ({
   return (
     <BottomSheet show={true} heading="Chat Details" onClose={onClose}>
       <div>
+        {showModal && (
+          <Modal
+            content="Are you sure you want to delete this chat? This action cannot be undone. All the Messages and memories will be lost.🥹"
+            title="Delete Chat"
+            setShowModal={setShowModal}
+            type="deletepost"
+            handleDelete={deletechat}
+            handleinfofunc={null}
+          />
+        )}
         <Toaster />
 
         <>
@@ -71,7 +108,8 @@ const ChatDetail = ({
               }`}
             >
               <p className="font-bold text-center text-xl mb-2">
-                @{roomdata.participants[0] != userdata.uid
+                @
+                {roomdata.participants[0] != userdata.uid
                   ? usermetadata[roomdata.participants[0]].userName
                   : usermetadata[roomdata.participants[1]].userName}
               </p>
@@ -165,6 +203,16 @@ const ChatDetail = ({
                   </button>
                 </motion.div>
               </div>
+            </div>
+            <div className="flex justify-center">
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => setShowModal(true)}
+                className="bg-red-500 text-white px-4 py-2 rounded-lg transition-colors duration-300"
+              >
+                Delete Chat
+              </motion.button>
             </div>
             <div className="flex justify-center ">
               <motion.button

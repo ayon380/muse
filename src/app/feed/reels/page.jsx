@@ -143,7 +143,9 @@ const Reels = () => {
   };
 
   useEffect(() => {
-    if (currentreel > reels.length - 3 && reels.length > 0 && hash == NULL) {
+    console.log("currentreel", reels[currentreel]?.caption);
+    document.title = `Reels - ${reels[currentreel]?.caption}`;
+    if (currentreel > reels.length - 3 && reels.length > 0 && hash == null) {
       fetchReels();
       console.log("fetching more reels");
     }
