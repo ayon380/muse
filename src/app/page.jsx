@@ -147,10 +147,10 @@ const SparklesPreview = () => {
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              onClick={handleWaitlist}
+              onClick={handlesignup}
               className="transition-colors duration-300 hover:text-blue-500"
             >
-              Join Waitlist
+              Sign Up
             </motion.button>
           </motion.div>
         </motion.div>
@@ -176,68 +176,6 @@ const SparklesPreview = () => {
         title="Muse: Explore the Uncharted Depths of Social Discovery"
         description="Embark on a journey of endless exploration, where each click uncovers new stories, ideas, and connections waiting to be discovered."
       />
-      <section className="waitlist h-dvh pt-60 bg-transparent">
-        <motion.div
-          initial="hidden"
-          animate="visible"
-          variants={itemVariants}
-          className="name text-center mt-20"
-        >
-          <motion.div
-            variants={itemVariants}
-            className=" text-5xl md:text-8xl font-lucy transition-colors duration-300 hover:text-blue-500"
-          >
-            Join the Waitlist
-          </motion.div>
-          <motion.div
-            variants={itemVariants}
-            className="text-lg mt-2 mb-8 text-opacity-60 mx-10"
-          >
-            Be the first to experience Muse. Join Waitlist now!
-          </motion.div>
-        </motion.div>
-        <motion.form
-          initial="hidden"
-          animate="visible"
-          variants={itemVariants}
-          onSubmit={handleWaitlistSubmit}
-          className="flex flex-col items-center"
-        >
-          <motion.div
-            variants={itemVariants}
-            className="flex text-xl flex-col items-center"
-          >
-            <motion.input
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              type="text"
-              value={name}
-              onChange={(e) => setname(e.target.value)}
-              className="mb-2 p-2 rounded-lg transition-all duration-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Name"
-            />
-            <motion.input
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              type="email"
-              value={email}
-              onChange={(e) => setemail(e.target.value)}
-              className="mb-8 p-2 rounded-lg transition-all duration-300
-              hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Email"
-            />
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              type="submit"
-              disabled={loading}
-              className="bg-white bg-opacity-45 hover:bg-opacity-80 shadow-md hover:shadow-2xl font-lucy mt- text-xl mb-8 text-black px-4 py-2 rounded-md transition-all duration-300"
-            >
-              {loading ? "Joining...😬" : "Join Museee  🚀🚀"}
-            </motion.button>
-          </motion.div>
-        </motion.form>
-      </section>
       <motion.div
         initial="hidden"
         animate="visible"
